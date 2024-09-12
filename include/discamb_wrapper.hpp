@@ -1,3 +1,6 @@
 #pragma once
 
-#include "discamb/BasicUtilities/discamb_version.h"
+#include <string>
+
+std::string get_discamb_version();
+

@@ -1,8 +1,8 @@
 #include "discamb_wrapper.hpp"
 
-#include <iostream>
+#include "discamb/BasicUtilities/discamb_version.h"
 
-int main(){
-    std::cout << "DiSCaMB version: " << discamb::discamb_version::version() << std::endl;
-    return 0;
-}
+std::string get_discamb_version(){
+
+    return "DiSCaMB version: " + discamb::discamb_version::version();
+} 
