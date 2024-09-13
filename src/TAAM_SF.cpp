@@ -46,15 +46,39 @@ void cctbx_model_to_discamb_crystal(const py::object model, Crystal &crystal){
         atom.coordinates[1] = xyz_py[1].cast<double>();
         atom.coordinates[2] = xyz_py[2].cast<double>();
 
-        // TODO Basically just copy the above block for all the remaining attributes
+        py::tuple sigxyz_py = atom_py.attr("sigxyz");
+        atom.coordinates_sigma[0] = sigxyz_py[0].cast<double>();
+        atom.coordinates_sigma[1] = sigxyz_py[1].cast<double>();
+        atom.coordinates_sigma[2] = sigxyz_py[2].cast<double>();
 
+        // assume single adp for now
+        atom.adp.resize(1);
+        atom.adp.push_back(atom_py.attr("b").cast<double>());
+        atom.adp_sigma.resize(1);
+        atom.adp_sigma.push_back(atom_py.attr("sigb").cast<double>());
+        
+        atom.label = atom_py.attr("name").cast<string>();
+
+        atom.occupancy = atom_py.attr("occ").cast<double>();
+        atom.occupancy_sigma = atom_py.attr("sigocc").cast<double>();
+
+        // This seems to be unused anyway
+        atom.siteSymetry.resize(1);
+        SpaceGroupOperation identity = SpaceGroupOperation();
+        atom.siteSymetry.push_back(identity);
+
+        atoms.push_back(atom);
     }
+    crystal.atoms = atoms;
+    
+    // Not sure if the coordinate format can change in the python object?
+    crystal.xyzCoordinateSystem = structural_parameters_convention::XyzCoordinateSystem::cartesian;
 }
 
-string test_func(const py::object structure){
+string test_func(const py::object model){
     Crystal crystal;
-    cctbx_model_to_discamb_crystal(structure, crystal);
-    return "a: " + to_string(crystal.spaceGroup.nSymmetryOperations());
+    cctbx_model_to_discamb_crystal(model, crystal);
+    return "Atom 1: " + crystal.atoms[1].label;
 }
 
 PYBIND11_MODULE(_taam_sf, m) {
