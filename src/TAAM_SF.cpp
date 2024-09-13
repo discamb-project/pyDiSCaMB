@@ -75,10 +75,37 @@ void cctbx_model_to_discamb_crystal(const py::object model, Crystal &crystal){
     crystal.xyzCoordinateSystem = structural_parameters_convention::XyzCoordinateSystem::cartesian;
 }
 
+void cctbx_model_to_hkl(py::object model, double d, vector<Vector3i> &hkl){
+    // assume anomolous_flag is False
+    py::object miller_py = model.attr("get_xray_structure")().attr("build_miller_set")(false, d);
+
+    hkl.resize(0);
+    for (auto hkl_py_auto : miller_py.attr("indices")().attr("as_vec3_double")()){
+        py::tuple hkl_py = hkl_py_auto.cast<py::tuple>();
+        Vector3i hkl_i {
+            static_cast<int>(hkl_py[0].cast<double>()),
+            static_cast<int>(hkl_py[1].cast<double>()),
+            static_cast<int>(hkl_py[2].cast<double>())
+        };
+        hkl.push_back(hkl_i);
+    }
+}
+
 string test_func(const py::object model){
     Crystal crystal;
+    vector<Vector3i> hkl;
     cctbx_model_to_discamb_crystal(model, crystal);
-    return "Atom 1: " + crystal.atoms[1].label;
+    cctbx_model_to_hkl(model, 0.15, hkl);
+
+    vector< complex<double> > structureFactors;
+    structureFactors.reserve(hkl.size());
+    calculateSfTaamMinimal(crystal, hkl, structureFactors);
+
+    int ind = 10;
+    complex<double> sf = structureFactors[ind];
+    double sf_real = static_cast<double>(sf.real());
+    double sf_imag = static_cast<double>(sf.imag());
+    return "hkl: " + to_string(hkl[ind][0]) + to_string(hkl[ind][1]) + to_string(hkl[ind][2]) + "\nsf: " + to_string(sf_real) + " + " + to_string(sf_imag) + "j";
 }
 
 PYBIND11_MODULE(_taam_sf, m) {
