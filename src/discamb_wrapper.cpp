@@ -4,7 +4,6 @@
 #include "discamb/AtomTyping/LocalCoordinateSystemCalculator.h"
 
 #include "discamb/BasicUtilities/OnError.h"
-#include "discamb/BasicUtilities/discamb_version.h"
 
 #include "discamb/CrystalStructure/crystal_structure_utilities.h"
 #include "discamb/CrystalStructure/LocalCoordinateSystemInCrystal.h"
@@ -13,6 +12,7 @@
 #include "discamb/IO/structure_io.h"
 #include "discamb/IO/MATTS_BankReader.h"
 
+#include "discamb/Scattering/AnyIamCalculator.h"
 #include "discamb/Scattering/AnyScattererStructureFactorCalculator.h"
 #include "discamb/Scattering/ElectronFromXrayFormFactorCalculationsManager.h"
 #include "discamb/Scattering/HcFormFactorCalculationsManager.h"
@@ -22,12 +22,6 @@
 
 using namespace discamb;
 using namespace std;
-
-
-string get_discamb_version(){
-
-    return "DiSCaMB version: " + discamb_version::version();
-} 
 
 
 void calculateSfTaamMinimal(
@@ -107,4 +101,16 @@ void calculateSfTaamMinimal(
 
 }
 
+void calculateSfIamMinimal(
+    const Crystal& crystal,
+    const vector<Vector3i>& hkl,
+    vector< complex<double> >& structureFactors)
+{
+    bool electronScattering = true;
+    //table can be "Waasmeier-Kirfel", "IT92", "electron-IT"
+    string table = "electron-IT";
+    AnyIamCalculator iamCalculator(crystal, electronScattering, table);
+    vector<bool> countAtomContribution(crystal.atoms.size(), true);
+    iamCalculator.calculateStructureFactors(crystal.atoms, hkl, structureFactors, countAtomContribution);
+}
 

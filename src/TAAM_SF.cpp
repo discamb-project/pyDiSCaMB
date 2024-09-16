@@ -1,9 +1,13 @@
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+#include "pybind11/complex.h"
 
 #include "discamb/CrystalStructure/Crystal.h"
 #include "discamb/CrystalStructure/UnitCell.h"
 #include "discamb/CrystalStructure/SpaceGroup.h"
 #include "discamb/CrystalStructure/SpaceGroupOperation.h"
+
+#include "discamb/BasicUtilities/discamb_version.h"
 
 #include "discamb_wrapper.hpp"
 
@@ -57,7 +61,8 @@ void cctbx_model_to_discamb_crystal(const py::object model, Crystal &crystal){
         atom.adp_sigma.resize(1);
         atom.adp_sigma.push_back(atom_py.attr("sigb").cast<double>());
         
-        atom.label = atom_py.attr("name").cast<string>();
+        // Need to trim the string of whitespace; just use python's string.strip
+        atom.label = atom_py.attr("element").attr("strip")().cast<string>();
 
         atom.occupancy = atom_py.attr("occ").cast<double>();
         atom.occupancy_sigma = atom_py.attr("sigocc").cast<double>();
@@ -91,21 +96,30 @@ void cctbx_model_to_hkl(py::object model, double d, vector<Vector3i> &hkl){
     }
 }
 
-string test_func(const py::object model){
+vector<complex<double>> test_TAAM(const py::object model){
     Crystal crystal;
     vector<Vector3i> hkl;
     cctbx_model_to_discamb_crystal(model, crystal);
-    cctbx_model_to_hkl(model, 0.15, hkl);
+    cctbx_model_to_hkl(model, 1.5, hkl);
 
     vector< complex<double> > structureFactors;
     structureFactors.reserve(hkl.size());
     calculateSfTaamMinimal(crystal, hkl, structureFactors);
 
-    int ind = 10;
-    complex<double> sf = structureFactors[ind];
-    double sf_real = static_cast<double>(sf.real());
-    double sf_imag = static_cast<double>(sf.imag());
-    return "hkl: " + to_string(hkl[ind][0]) + to_string(hkl[ind][1]) + to_string(hkl[ind][2]) + "\nsf: " + to_string(sf_real) + " + " + to_string(sf_imag) + "j";
+    return structureFactors;
+}
+
+vector<complex<double>> test_IAM(const py::object model){
+    Crystal crystal;
+    vector<Vector3i> hkl;
+    cctbx_model_to_discamb_crystal(model, crystal);
+    cctbx_model_to_hkl(model, 1.5, hkl);
+
+    vector< complex<double> > structureFactors;
+    structureFactors.reserve(hkl.size());
+    calculateSfIamMinimal(crystal, hkl, structureFactors);
+
+    return structureFactors;
 }
 
 PYBIND11_MODULE(_taam_sf, m) {
@@ -121,9 +135,10 @@ PYBIND11_MODULE(_taam_sf, m) {
            get_discamb_version
     )pbdoc";
 
-    m.def("get_discamb_version", &get_discamb_version, R"pbdoc(
+    m.def("get_discamb_version", &discamb_version::version, R"pbdoc(
         Get the version string for DiSCaMB
     )pbdoc");
 
-    m.def("test", &test_func, "placeholder");
+    m.def("test_TAAM", &test_TAAM, "placeholder docstring");
+    m.def("test_IAM", &test_IAM, "placeholder docstring");
 }
