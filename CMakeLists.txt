@@ -17,16 +17,12 @@ add_subdirectory(lib/discamb)
 find_package(OpenMP)
 target_link_libraries(discamb PUBLIC OpenMP::OpenMP_CXX)
 
-# discamb wrapper
-add_library(discamb_wrapper src/discamb_wrapper.cpp)
-target_link_libraries(discamb_wrapper PUBLIC discamb)
-target_include_directories(discamb_wrapper PUBLIC include)
-target_include_directories(discamb_wrapper PUBLIC lib/discamb/include)
-target_include_directories(discamb_wrapper PUBLIC lib/discamb/external)
-target_include_directories(discamb_wrapper PUBLIC lib/discamb/build/build/include)
-
 # python module
-python_add_library(_taam_sf MODULE src/TAAM_SF.cpp)
+python_add_library(_taam_sf MODULE src/TAAM_SF.cpp src/discamb_wrapper.cpp)
 target_link_libraries(_taam_sf PRIVATE pybind11::headers)
-target_link_libraries(_taam_sf PRIVATE discamb_wrapper)
+target_include_directories(_taam_sf PUBLIC include)
+target_link_libraries(_taam_sf PRIVATE discamb)
+target_include_directories(_taam_sf PRIVATE lib/discamb/include)
+target_include_directories(_taam_sf PRIVATE lib/discamb/external)
+target_include_directories(_taam_sf PRIVATE lib/discamb/build/build/include)
 install(TARGETS _taam_sf DESTINATION taam_sf)
