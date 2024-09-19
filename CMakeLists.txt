@@ -18,10 +18,11 @@ find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(pybind11 CONFIG REQUIRED)
 
 # discamb
+find_package(OpenMP)
 FIND_LIBRARY(DISCAMB_LIB discamb PATHS 
   ${PROJECT_BINARY_DIR}/build/lib 
   ${PROJECT_SOURCE_DIR}/lib/discamb/build/build/lib 
-  # ${PROJECT_SOURCE_DIR}/lib/discamb/build/build/lib/Release
+  ${PROJECT_SOURCE_DIR}/lib/discamb/build/build/lib/Release
 )
 if(NOT DISCAMB_LIB)
   message("DiSCaMB not found, building...")
@@ -34,7 +35,6 @@ else()
   set_target_properties(discamb PROPERTIES IMPORTED_LOCATION ${DISCAMB_LIB})
   configure_file ("${PROJECT_SOURCE_DIR}/lib/discamb/config.h.in" "${PROJECT_BINARY_DIR}/lib/discamb/build/include/discamb/config.h")
 endif()
-find_package(OpenMP)
 
 # python module
 python_add_library(_taam_sf MODULE src/TAAM_SF.cpp src/discamb_wrapper.cpp)
