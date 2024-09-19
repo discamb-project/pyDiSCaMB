@@ -18,8 +18,7 @@ using namespace std;
 using namespace discamb;
 
 
-void cctbx_model_to_discamb_crystal(const py::object model, Crystal &crystal){
-    py::object structure = model.attr("get_xray_structure")();
+void cctbx_model_to_discamb_crystal(const py::object structure, Crystal &crystal){
     py::tuple cell_params = structure.attr("unit_cell")().attr("parameters")();
     UnitCell cell {
         cell_params[0].cast<double>(), 
@@ -42,30 +41,29 @@ void cctbx_model_to_discamb_crystal(const py::object model, Crystal &crystal){
     crystal.spaceGroup = space_group;
 
     vector<AtomInCrystal> atoms;
-    for (auto atom_py : model.attr("get_atoms")()){
+    for (auto scatterer_py : structure.attr("scatterers")()){
         AtomInCrystal atom;
 
-        py::tuple xyz_py = atom_py.attr("xyz");
+        py::tuple xyz_py = scatterer_py.attr("site");
         atom.coordinates[0] = xyz_py[0].cast<double>();
         atom.coordinates[1] = xyz_py[1].cast<double>();
         atom.coordinates[2] = xyz_py[2].cast<double>();
 
-        py::tuple sigxyz_py = atom_py.attr("sigxyz");
-        atom.coordinates_sigma[0] = sigxyz_py[0].cast<double>();
-        atom.coordinates_sigma[1] = sigxyz_py[1].cast<double>();
-        atom.coordinates_sigma[2] = sigxyz_py[2].cast<double>();
+        atom.coordinates_sigma[0] = 0.0;
+        atom.coordinates_sigma[1] = 0.0;
+        atom.coordinates_sigma[2] = 0.0;
 
         // assume single adp for now
         atom.adp.resize(1);
-        atom.adp.push_back(atom_py.attr("b").cast<double>());
+        atom.adp.push_back(scatterer_py.attr("u_iso").cast<double>());
         atom.adp_sigma.resize(1);
-        atom.adp_sigma.push_back(atom_py.attr("sigb").cast<double>());
+        atom.adp_sigma.push_back(0.0);
         
-        // Need to trim the string of whitespace; just use python's string.strip
-        atom.label = atom_py.attr("element").attr("strip")().cast<string>();
+        atom.label = scatterer_py.attr("scattering_type").cast<string>();
 
-        atom.occupancy = atom_py.attr("occ").cast<double>();
-        atom.occupancy_sigma = atom_py.attr("sigocc").cast<double>();
+        atom.occupancy = scatterer_py.attr("occupancy").cast<double>();
+        atom.multiplicity = scatterer_py.attr("multiplicity")().cast<double>();
+        atom.occupancy_sigma = 0.0;
 
         // This seems to be unused anyway
         atom.siteSymetry.resize(1);
@@ -75,14 +73,14 @@ void cctbx_model_to_discamb_crystal(const py::object model, Crystal &crystal){
         atoms.push_back(atom);
     }
     crystal.atoms = atoms;
-    
-    // Not sure if the coordinate format can change in the python object?
-    crystal.xyzCoordinateSystem = structural_parameters_convention::XyzCoordinateSystem::cartesian;
+
+    crystal.xyzCoordinateSystem = structural_parameters_convention::XyzCoordinateSystem::fractional;
+    crystal.adpConvention = structural_parameters_convention::AdpConvention::U_cif;
 }
 
-void cctbx_model_to_hkl(py::object model, double d, vector<Vector3i> &hkl){
+void cctbx_model_to_hkl(py::object structure, double d, vector<Vector3i> &hkl){
     // assume anomolous_flag is False
-    py::object miller_py = model.attr("get_xray_structure")().attr("build_miller_set")(false, d);
+    py::object miller_py = structure.attr("build_miller_set")(false, d);
 
     hkl.resize(0);
     for (auto hkl_py_auto : miller_py.attr("indices")().attr("as_vec3_double")()){
@@ -96,11 +94,11 @@ void cctbx_model_to_hkl(py::object model, double d, vector<Vector3i> &hkl){
     }
 }
 
-vector<complex<double>> test_TAAM(const py::object model){
+vector<complex<double>> test_TAAM(const py::object structure, double d){
     Crystal crystal;
     vector<Vector3i> hkl;
-    cctbx_model_to_discamb_crystal(model, crystal);
-    cctbx_model_to_hkl(model, 1.5, hkl);
+    cctbx_model_to_discamb_crystal(structure, crystal);
+    cctbx_model_to_hkl(structure, d, hkl);
 
     vector< complex<double> > structureFactors;
     structureFactors.reserve(hkl.size());
@@ -109,11 +107,11 @@ vector<complex<double>> test_TAAM(const py::object model){
     return structureFactors;
 }
 
-vector<complex<double>> test_IAM(const py::object model){
+vector<complex<double>> test_IAM(const py::object structure, double d){
     Crystal crystal;
     vector<Vector3i> hkl;
-    cctbx_model_to_discamb_crystal(model, crystal);
-    cctbx_model_to_hkl(model, 1.5, hkl);
+    cctbx_model_to_discamb_crystal(structure, crystal);
+    cctbx_model_to_hkl(structure, d, hkl);
 
     vector< complex<double> > structureFactors;
     structureFactors.reserve(hkl.size());
