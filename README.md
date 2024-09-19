@@ -8,26 +8,19 @@ Simple pybind11 wrapper to communicate with discamb from cctbx
 - Anaconda
 
 ### Instructions
-Create a conda environment with 
+Create a conda environment and install the package with 
 ```bash
-conda create -n my_env python=3.8
+cd TAAM_SF
+conda env create -f [YOUR_OPERATING_SYSTEM].yml
 ```
-and activate it with 
+with the most appropriate `yml`-file for your operating system.
+Activate it with 
 ```bash
 conda activate my_env
 ```
 
-Now, you can install with
-```bash
-pip install .
-```
-
 ## Example usage
 
-### Requirements
-install cctbx using `conda install -c conda-forge cctbx-base`
-
-### Plot scattering factors
 ```python
 from __future__ import absolute_import, division, print_function
 
@@ -74,11 +67,10 @@ def run():
   model = mmtbx.model.manager(model_input = pdb_inp, log = null_out())
   xrs = model.get_xray_structure()
   xrs.scattering_type_registry(table = "electron")
-  fcalc= xrs.structure_factors(d_min=1.5).f_calc()
+  fcalc= xrs.structure_factors(d_min=5).f_calc()
   fcalc_cctbx = fcalc.data()
 
-  fcalc_iam = taam_sf.test_IAM(model)
-  fcalc_taam = taam_sf.test_TAAM(model)
+  fcalc_iam = taam_sf.test_IAM(structure, 5)
   
   import matplotlib
 #   matplotlib.use("QtAgg")
