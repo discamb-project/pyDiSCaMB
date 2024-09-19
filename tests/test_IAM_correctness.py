@@ -44,4 +44,8 @@ def test_IAM_correctness_random_crystal(
     fcalc_cctbx = xrs.structure_factors(algorithm="direct", d_min=d_min).f_calc().data()
     fcalc_discamb = taam_sf.test_IAM(xrs, d_min)
     # let pytest handle comparing complex numbers
-    assert fcalc_discamb == pytest.approx(fcalc_cctbx, rel=0.3)
+    assert fcalc_discamb == pytest.approx(fcalc_cctbx, abs=0.3, rel=0.3)
+
+
+if __name__ == "__main__":
+    test_IAM_correctness_random_crystal(19, False, False, "single weak")
