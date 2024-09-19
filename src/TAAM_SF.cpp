@@ -45,18 +45,18 @@ void cctbx_model_to_discamb_crystal(const py::object structure, Crystal &crystal
         AtomInCrystal atom;
 
         py::tuple xyz_py = scatterer_py.attr("site");
-        atom.coordinates[0] = xyz_py[0].cast<double>();
-        atom.coordinates[1] = xyz_py[1].cast<double>();
-        atom.coordinates[2] = xyz_py[2].cast<double>();
+        atom.coordinates[0] = xyz_py[0].cast<float>();
+        atom.coordinates[1] = xyz_py[1].cast<float>();
+        atom.coordinates[2] = xyz_py[2].cast<float>();
 
         atom.coordinates_sigma[0] = 0.0;
         atom.coordinates_sigma[1] = 0.0;
         atom.coordinates_sigma[2] = 0.0;
 
         atom.adp.clear();
-        atom.adp.push_back(scatterer_py.attr("u_iso").cast<double>()); // U11
-        // atom.adp.push_back(scatterer_py.attr("u_iso").cast<double>()); // U22
-        // atom.adp.push_back(scatterer_py.attr("u_iso").cast<double>()); // U33
+        atom.adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U11
+        // atom.adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U22
+        // atom.adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U33
         // atom.adp.push_back(0.0); // U12
         // atom.adp.push_back(0.0); // U13
         // atom.adp.push_back(0.0); // U23
@@ -66,8 +66,8 @@ void cctbx_model_to_discamb_crystal(const py::object structure, Crystal &crystal
         
         atom.label = scatterer_py.attr("scattering_type").cast<string>();
 
-        atom.occupancy = scatterer_py.attr("occupancy").cast<double>();
-        atom.multiplicity = scatterer_py.attr("multiplicity")().cast<double>();
+        atom.occupancy = scatterer_py.attr("occupancy").cast<float>();
+        atom.multiplicity = scatterer_py.attr("multiplicity")().cast<float>();
         atom.occupancy_sigma = 0.0;
 
         // This seems to be unused anyway
