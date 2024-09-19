@@ -53,11 +53,16 @@ void cctbx_model_to_discamb_crystal(const py::object structure, Crystal &crystal
         atom.coordinates_sigma[1] = 0.0;
         atom.coordinates_sigma[2] = 0.0;
 
-        // assume single adp for now
-        atom.adp.resize(1);
-        atom.adp.push_back(scatterer_py.attr("u_iso").cast<double>());
-        atom.adp_sigma.resize(1);
+        atom.adp.clear();
+        atom.adp.push_back(scatterer_py.attr("u_iso").cast<double>()); // U11
+        // atom.adp.push_back(scatterer_py.attr("u_iso").cast<double>()); // U22
+        // atom.adp.push_back(scatterer_py.attr("u_iso").cast<double>()); // U33
+        // atom.adp.push_back(0.0); // U12
+        // atom.adp.push_back(0.0); // U13
+        // atom.adp.push_back(0.0); // U23
+        atom.adp_sigma.clear();
         atom.adp_sigma.push_back(0.0);
+        // for(int i = 0; i < 6; i++){atom.adp_sigma.push_back(0.0);}
         
         atom.label = scatterer_py.attr("scattering_type").cast<string>();
 
@@ -66,7 +71,7 @@ void cctbx_model_to_discamb_crystal(const py::object structure, Crystal &crystal
         atom.occupancy_sigma = 0.0;
 
         // This seems to be unused anyway
-        atom.siteSymetry.resize(1);
+        atom.siteSymetry.clear();
         SpaceGroupOperation identity = SpaceGroupOperation();
         atom.siteSymetry.push_back(identity);
 
@@ -82,7 +87,7 @@ void cctbx_model_to_hkl(py::object structure, double d, vector<Vector3i> &hkl){
     // assume anomolous_flag is False
     py::object miller_py = structure.attr("build_miller_set")(false, d);
 
-    hkl.resize(0);
+    hkl.clear();
     for (auto hkl_py_auto : miller_py.attr("indices")().attr("as_vec3_double")()){
         py::tuple hkl_py = hkl_py_auto.cast<py::tuple>();
         Vector3i hkl_i {
