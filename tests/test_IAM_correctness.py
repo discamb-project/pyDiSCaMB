@@ -48,4 +48,6 @@ def test_IAM_correctness_random_crystal(
 
 
 if __name__ == "__main__":
+    print("Testing a random crystal with a single weak scatterer in space group 19")
     test_IAM_correctness_random_crystal(19, False, False, "single weak")
+    print("Test complete, exiting...")
