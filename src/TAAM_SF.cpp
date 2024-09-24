@@ -18,7 +18,7 @@ using namespace std;
 using namespace discamb;
 
 
-void cctbx_model_to_discamb_crystal(const py::object structure, Crystal &crystal){
+void cctbx_structure_to_discamb_crystal(const py::object structure, Crystal &crystal){
     py::tuple cell_params = structure.attr("unit_cell")().attr("parameters")();
     UnitCell cell {
         cell_params[0].cast<double>(), 
@@ -83,7 +83,7 @@ void cctbx_model_to_discamb_crystal(const py::object structure, Crystal &crystal
     crystal.adpConvention = structural_parameters_convention::AdpConvention::U_cif;
 }
 
-void cctbx_model_to_hkl(py::object structure, double d, vector<Vector3i> &hkl){
+void cctbx_structure_to_hkl(const py::object structure, double d, vector<Vector3i> &hkl){
     // assume anomolous_flag is False
     py::object miller_py = structure.attr("build_miller_set")(false, d);
 
@@ -102,8 +102,8 @@ void cctbx_model_to_hkl(py::object structure, double d, vector<Vector3i> &hkl){
 vector<complex<double>> test_TAAM(const py::object structure, double d){
     Crystal crystal;
     vector<Vector3i> hkl;
-    cctbx_model_to_discamb_crystal(structure, crystal);
-    cctbx_model_to_hkl(structure, d, hkl);
+    cctbx_structure_to_discamb_crystal(structure, crystal);
+    cctbx_structure_to_hkl(structure, d, hkl);
 
     vector< complex<double> > structureFactors;
     structureFactors.reserve(hkl.size());
@@ -115,8 +115,8 @@ vector<complex<double>> test_TAAM(const py::object structure, double d){
 vector<complex<double>> test_IAM(const py::object structure, double d){
     Crystal crystal;
     vector<Vector3i> hkl;
-    cctbx_model_to_discamb_crystal(structure, crystal);
-    cctbx_model_to_hkl(structure, d, hkl);
+    cctbx_structure_to_discamb_crystal(structure, crystal);
+    cctbx_structure_to_hkl(structure, d, hkl);
 
     vector< complex<double> > structureFactors;
     structureFactors.reserve(hkl.size());
@@ -124,6 +124,36 @@ vector<complex<double>> test_IAM(const py::object structure, double d){
 
     return structureFactors;
 }
+
+class PybindDiscambWrapper : public DiscambWrapper {
+
+    using DiscambWrapper::DiscambWrapper;
+
+    public:
+        static PybindDiscambWrapper from_structure(const py::object &structure){
+            Crystal crystal;
+            cctbx_structure_to_discamb_crystal(structure, crystal);
+            PybindDiscambWrapper *out = new PybindDiscambWrapper();
+            out->update_structure(structure);
+            return *out;
+        }
+        void update_structure(const py::object &structure){
+            mStructure = structure;
+            Crystal crystal;
+            cctbx_structure_to_discamb_crystal(mStructure, crystal);
+            update_crystal(crystal);
+        }
+
+    private:
+        py::object mStructure;
+
+        vector<Vector3i> get_hkl(const double d_min) const{
+            vector<Vector3i> hkl;
+            cctbx_structure_to_hkl(mStructure, d_min, hkl);
+            return hkl;
+        }
+};
+
 
 PYBIND11_MODULE(_taam_sf, m) {
     m.doc() = R"pbdoc(
@@ -144,4 +174,12 @@ PYBIND11_MODULE(_taam_sf, m) {
 
     m.def("test_TAAM", &test_TAAM, "placeholder docstring");
     m.def("test_IAM", &test_IAM, "placeholder docstring");
+
+    py::class_<DiscambWrapper>(m, "_DiscambWrapper");
+
+    py::class_<PybindDiscambWrapper, DiscambWrapper>(m, "DiscambWrapper")
+        .def(py::init(&PybindDiscambWrapper::from_structure))
+        .def("update_structure", &PybindDiscambWrapper::update_structure)
+        .def("f_calc", &PybindDiscambWrapper::f_calc)
+    ;
 }

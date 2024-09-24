@@ -52,9 +52,9 @@ void DiscambWrapper::update_crystal(const Crystal &crystal){
 }
     
 
-vector<complex<double>> DiscambWrapper::f_calc(const double d_min, FCalcMethod method){
+vector<complex<double>> DiscambWrapper::f_calc_hkl(const vector<Vector3i> &hkl, FCalcMethod method){
     vector<complex<double>> sf;
-    vector<Vector3i> hkl = get_hkl(d_min);
+    sf.reserve(hkl.size());
     switch (method)
     {
         case FCalcMethod::IAM:
@@ -70,12 +70,17 @@ vector<complex<double>> DiscambWrapper::f_calc(const double d_min, FCalcMethod m
     return sf;
 }
 
+vector<complex<double>> DiscambWrapper::f_calc(const double d_min, FCalcMethod method){
+    vector<Vector3i> hkl = get_hkl(d_min);
+    return f_calc_hkl(hkl, method);
+}
+
 /*
 // This one needs python integration. Moved to the pybind file
 vector<Vector3i> DiscambWrapper::get_hkl(const double d_min) const;
 */
 
-bool DiscambWrapper::is_crystal_valid(const Crystal crystal) const{
+bool DiscambWrapper::is_crystal_valid(const Crystal &crystal) const{
     // TODO
     return true;
 }
