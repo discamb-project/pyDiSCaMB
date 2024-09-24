@@ -24,6 +24,63 @@ using namespace discamb;
 using namespace std;
 
 
+// Forward declarations
+void calculateSfTaamMinimal(
+    const Crystal& crystal,
+    const vector<Vector3i>& hkl,
+    vector< complex<double> > &structureFactors);
+
+void calculateSfIamMinimal(
+    const Crystal& crystal,
+    const vector<Vector3i>& hkl,
+    vector< complex<double> >& structureFactors);
+
+
+void DiscambWrapper::update_crystal(const Crystal &crystal){
+    if (!is_crystal_valid(crystal)){
+        on_error::throwException("Incompatible crystal");
+    }
+    for (int i = 0; i < crystal.atoms.size(); i++){
+        mCrystal.atoms[i].coordinates[0] = crystal.atoms[i].coordinates[0];
+        mCrystal.atoms[i].coordinates[1] = crystal.atoms[i].coordinates[1];
+        mCrystal.atoms[i].coordinates[2] = crystal.atoms[i].coordinates[2];
+        for (int j = 0; j < crystal.atoms[i].adp.size(); j++){
+            mCrystal.atoms[i].adp[j] = crystal.atoms[i].adp[j];
+        }
+        mCrystal.atoms[i].occupancy = crystal.atoms[i].occupancy;
+    }
+}
+    
+
+vector<complex<double>> DiscambWrapper::f_calc(const double d_min, FCalcMethod method){
+    vector<complex<double>> sf;
+    vector<Vector3i> hkl = get_hkl(d_min);
+    switch (method)
+    {
+        case FCalcMethod::IAM:
+            calculateSfIamMinimal(mCrystal, hkl, sf);
+            break;
+        case FCalcMethod::TAAM:
+            calculateSfTaamMinimal(mCrystal, hkl, sf);
+            break;
+        default:
+            on_error::throwException("Invalid method requested");
+            break;
+    }
+    return sf;
+}
+
+/*
+// This one needs python integration. Moved to the pybind file
+vector<Vector3i> DiscambWrapper::get_hkl(const double d_min) const;
+*/
+
+bool DiscambWrapper::is_crystal_valid(const Crystal crystal) const{
+    // TODO
+    return true;
+}
+
+
 void calculateSfTaamMinimal(
     const Crystal& crystal,
     const vector<Vector3i>& hkl,
@@ -113,4 +170,3 @@ void calculateSfIamMinimal(
     vector<bool> countAtomContribution(crystal.atoms.size(), true);
     iamCalculator.calculateStructureFactors(crystal.atoms, hkl, structureFactors, countAtomContribution);
 }
-
