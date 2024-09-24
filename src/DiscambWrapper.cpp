@@ -1,4 +1,4 @@
-#include "discamb_wrapper.hpp"
+#include "DiscambWrapper.hpp"
 
 #include "discamb/AtomTyping/CrystalAtomTypeAssigner.h"
 #include "discamb/AtomTyping/LocalCoordinateSystemCalculator.h"

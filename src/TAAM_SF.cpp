@@ -9,7 +9,7 @@
 
 #include "discamb/BasicUtilities/discamb_version.h"
 
-#include "discamb_wrapper.hpp"
+#include "DiscambWrapper.hpp"
 
 
 namespace py = pybind11;
