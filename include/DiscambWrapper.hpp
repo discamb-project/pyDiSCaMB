@@ -11,9 +11,9 @@
 #include <string>
 #include <vector>
 #include <complex>
+#include <utility>
 
 
-// TODO: Declare cctbx to discamb funcs for crystal
 // TODO: write throughput tests
 // TODO: avoid recalculating hkl every time
 
@@ -28,25 +28,23 @@ enum FCalcMethod {
 
 class DiscambWrapper {
     public:
-        DiscambWrapper(py::object structure, std::string table) : mStructure(structure), mCrystal(), mTableString(table) { structure_to_crystal(mStructure, mCrystal); };
-        DiscambWrapper(py::object structure) { DiscambWrapper(structure, "electron-IT"); }
+        DiscambWrapper(py::object structure, std::string table = "electron-IT") : 
+            mStructure(std::move(structure)),
+            mTableString(table) {};
         
-        void update_structure(const py::object structure);
-        void update_crystal(const discamb::Crystal &crystal);
-
         std::vector<std::complex<double>> f_calc(const double d_min, FCalcMethod method);
+        std::vector<std::complex<double>> f_calc_IAM(const double d_min) { return f_calc(d_min, FCalcMethod::IAM); };
+        std::vector<std::complex<double>> f_calc_TAAM(const double d_min) { return f_calc(d_min, FCalcMethod::TAAM); };
 
+        void test_get_crystal();
     private:
         py::object mStructure;
-        discamb::Crystal mCrystal;
         std::string mTableString;
 
-        std::vector<std::complex<double>> f_calc_hkl(const std::vector<discamb::Vector3i> &hkl, FCalcMethod method);
-        std::vector<discamb::Vector3i> get_hkl(const double d_min) const;
+        void f_calc_hkl(const std::vector<discamb::Vector3i> &hkl, FCalcMethod method, std::vector<std::complex<double>> &sf);
 
-        static void structure_to_crystal(const py::object structure, discamb::Crystal &crystal);
-        static void structure_to_hkl(const py::object structure, double d, std::vector<discamb::Vector3i> &hkl);
-        bool is_crystal_valid(const discamb::Crystal &crystal) const;
+        void get_crystal(discamb::Crystal &crystal);
+        void get_hkl(double d, std::vector<discamb::Vector3i> &hkl);
 
 };
 
