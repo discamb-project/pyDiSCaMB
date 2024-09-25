@@ -14,8 +14,6 @@
 #include <utility>
 
 
-// TODO: avoid recalculating hkl every time
-
 namespace py = pybind11;
 
 

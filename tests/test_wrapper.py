@@ -41,9 +41,9 @@ def test_update_structure_recalculate_fcalc(random_structure):
 
 
 def test_update_structure_interactive(random_structure):
-    from taam_sf import InteractiveDiscambWrapper
+    from taam_sf import InteractiveDiscambWrapper, FCalcMethod
 
-    wrapper = InteractiveDiscambWrapper(random_structure, 2.0, "electron-IT")
+    wrapper = InteractiveDiscambWrapper(random_structure, 2.0, FCalcMethod.IAM)
     sf_before = wrapper.f_calc()
     assert pytest.approx(sf_before) == wrapper.f_calc()
     site = random_structure.scatterers()[0].site
