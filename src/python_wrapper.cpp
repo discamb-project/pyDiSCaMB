@@ -54,6 +54,11 @@ PYBIND11_MODULE(_taam_sf, m) {
     m.def("test_TAAM", &test_TAAM, "placeholder docstring");
     m.def("test_IAM", &test_IAM, "placeholder docstring");
 
+    py::enum_<FCalcMethod>(m, "FCalcMethod")
+        .value("IAM", FCalcMethod::IAM)
+        .value("TAAM", FCalcMethod::TAAM)
+        .export_values();
+
     py::class_<DiscambWrapper>(m, "DiscambWrapper")
         .def(py::init<py::object>())
         .def("f_calc_IAM", &DiscambWrapper::f_calc_IAM)
@@ -67,7 +72,7 @@ PYBIND11_MODULE(_taam_sf, m) {
     ;
 
     py::class_<InteractiveDiscambWrapper, DiscambWrapper>(m, "InteractiveDiscambWrapper")
-        .def(py::init<py::object, double, string>())
+        .def(py::init<py::object, double, FCalcMethod>())
         .def("f_calc", &InteractiveDiscambWrapper::f_calc)
     ;
 }

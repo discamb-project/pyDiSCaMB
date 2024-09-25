@@ -13,7 +13,7 @@ class InteractiveDiscambWrapper : public DiscambWrapper {
         InteractiveDiscambWrapper(
             py::object structure, 
             double d_min, 
-            std::string method
+            FCalcMethod method
         ): 
             DiscambWrapper(structure),
             mManager(manager_setup(d_min, method))
@@ -47,7 +47,7 @@ class InteractiveDiscambWrapper : public DiscambWrapper {
             friend class InteractiveDiscambWrapper;
 
         };
-        FCalcManager manager_setup(double d_min, std::string method);
+        FCalcManager manager_setup(double d_min, FCalcMethod method);
         FCalcManager mManager;
         
 };

@@ -39,6 +39,7 @@ def test_update_structure_recalculate_fcalc(random_structure):
     sf_after = wrapper.f_calc_IAM(5)
     assert not pytest.approx(sf_before) == sf_after
 
+
 def test_update_structure_interactive(random_structure):
     from taam_sf import InteractiveDiscambWrapper
 
