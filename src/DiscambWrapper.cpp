@@ -15,6 +15,7 @@
 #include "discamb/Scattering/AnyIamCalculator.h"
 #include "discamb/Scattering/AnyScattererStructureFactorCalculator.h"
 #include "discamb/Scattering/ElectronFromXrayFormFactorCalculationsManager.h"
+#include "discamb/Scattering/IamFormFactorCalculationsManager.h"
 #include "discamb/Scattering/HcFormFactorCalculationsManager.h"
 #include "discamb/Scattering/MATTS_Default.h"
 #include "discamb/Scattering/taam_utilities.h"
@@ -275,10 +276,12 @@ void calculateSfIamMinimal(
     const vector<Vector3i>& hkl,
     vector< complex<double> >& structureFactors)
 {
-    bool electronScattering = true;
-    //table can be "Waasmeier-Kirfel", "IT92", "electron-IT"
-    string table = "electron-IT";
-    AnyIamCalculator iamCalculator(crystal, electronScattering, table);
-    vector<bool> countAtomContribution(crystal.atoms.size(), true);
-    iamCalculator.calculateStructureFactors(crystal.atoms, hkl, structureFactors, countAtomContribution);
+    shared_ptr<AtomicFormFactorCalculationsManager> formfactorCalculator;
+
+    formfactorCalculator = shared_ptr<AtomicFormFactorCalculationsManager>(
+        new IamFormFactorCalculationsManager(crystal, "electron-IT"));
+
+    AnyScattererStructureFactorCalculator sfCalc(crystal);
+    sfCalc.setAtomicFormfactorManager(formfactorCalculator);
+    sfCalc.calculateStructureFactors(hkl, structureFactors);
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "discamb/Scattering/AnyIamCalculator.h"
 #include "discamb/Scattering/AnyScattererStructureFactorCalculator.h"
 
 #include "DiscambWrapper.hpp"
@@ -25,12 +24,11 @@ class InteractiveDiscambWrapper : public DiscambWrapper {
     private:
         
         // a little context manager to avoid some data transfer and re-calculations
-        // TODO template the calculator
         class FCalcManager {
 
             public:
                 FCalcManager(
-                    discamb::AnyIamCalculator &calculator, 
+                    discamb::AnyScattererStructureFactorCalculator &calculator, 
                     discamb::Crystal &crystal,
                     std::vector<discamb::Vector3i> &hkl
                 ):
@@ -42,7 +40,7 @@ class InteractiveDiscambWrapper : public DiscambWrapper {
                 std::vector<std::complex<double>> f_calc();
 
             private:
-                discamb::AnyIamCalculator mCalculator;
+                discamb::AnyScattererStructureFactorCalculator mCalculator;
                 discamb::Crystal mCrystal;
                 std::vector<discamb::Vector3i> mHkl;
             
