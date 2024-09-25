@@ -38,3 +38,14 @@ def test_update_structure_recalculate_fcalc(random_structure):
     random_structure.scatterers()[0].site = (site[2], site[1], site[0])
     sf_after = wrapper.f_calc_IAM(5)
     assert not pytest.approx(sf_before) == sf_after
+
+def test_update_structure_interactive(random_structure):
+    from taam_sf import InteractiveDiscambWrapper
+
+    wrapper = InteractiveDiscambWrapper(random_structure, 2.0, "electron-IT")
+    sf_before = wrapper.f_calc()
+    assert pytest.approx(sf_before) == wrapper.f_calc()
+    site = random_structure.scatterers()[0].site
+    random_structure.scatterers()[0].site = (site[2], site[1], site[0])
+    sf_after = wrapper.f_calc()
+    assert not pytest.approx(sf_before) == sf_after

@@ -11,6 +11,7 @@
 
 #include "DiscambWrapper.hpp"
 #include "DiscambWrapperTests.hpp"
+#include "InteractiveDiscambWrapper.hpp"
 
 
 namespace py = pybind11;
@@ -63,5 +64,10 @@ PYBIND11_MODULE(_taam_sf, m) {
         .def(py::init<py::object>())
         .def("test_get_crystal", &DiscambWrapperTests::test_get_crystal)
         .def("test_update_atoms", &DiscambWrapperTests::test_update_atoms)
+    ;
+
+    py::class_<InteractiveDiscambWrapper, DiscambWrapper>(m, "InteractiveDiscambWrapper")
+        .def(py::init<py::object, double, string>())
+        .def("f_calc", &InteractiveDiscambWrapper::f_calc)
     ;
 }

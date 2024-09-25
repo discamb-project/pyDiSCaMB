@@ -37,7 +37,12 @@ else()
 endif()
 
 # python module
-python_add_library(_taam_sf MODULE src/python_wrapper.cpp src/DiscambWrapper.cpp src/DiscambWrapperTests.cpp)
+python_add_library(_taam_sf MODULE 
+  src/python_wrapper.cpp 
+  src/DiscambWrapper.cpp 
+  src/DiscambWrapperTests.cpp
+  src/InteractiveDiscambWrapper.cpp
+)
 target_link_libraries(_taam_sf PRIVATE pybind11::headers)
 target_link_libraries(_taam_sf PUBLIC discamb PRIVATE OpenMP::OpenMP_CXX)
 target_include_directories(_taam_sf PRIVATE lib/discamb/include)

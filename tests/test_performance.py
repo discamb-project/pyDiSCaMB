@@ -73,3 +73,22 @@ def test_f_calc_TAAM_performance(lysosyme):
     print(
         f"Runtime for {n_iter = :3_}, {len(lysosyme.scatterers())} scatterers, {len(sf)} reflections: {end - start :.1f}s"
     )
+
+@pytest.mark.slow
+def test_f_calc_interactive_performance(large_random_structure):
+    from time import perf_counter
+    from taam_sf import InteractiveDiscambWrapper
+
+    n_iter = 100
+    d_min = 4.0
+
+    wrapper = InteractiveDiscambWrapper(large_random_structure, d_min, "electron-IT")
+
+    start = perf_counter()
+    for _ in range(n_iter):
+        sf = wrapper.f_calc()
+    end = perf_counter()
+
+    print(
+        f"Runtime for {n_iter = :3_}, {len(large_random_structure.scatterers())} scatterers, {len(sf)} reflections: {end - start :.1f}s"
+    )
