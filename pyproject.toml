@@ -28,3 +28,12 @@ build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 wheel.expand-macos-universal-tags = true
+
+[tool.pytest.ini_options]
+testpaths = [
+  "tests"
+]
+addopts = "-raP"
+markers = [
+  "slow",
+]
