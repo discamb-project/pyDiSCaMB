@@ -17,6 +17,21 @@ def random_structure() -> structure:
     )
     return xrs
 
+@pytest.fixture
+def large_random_structure() -> structure:
+    from cctbx.development import random_structure as cctbx_random_structure
+    from cctbx.sgtbx import space_group_info
+    group = space_group_info(19)
+    xrs = cctbx_random_structure.xray_structure(
+        space_group_info=group,
+        elements=["Au", "C", "H", "N", "O", "Ni", "Fe", "C", "O"] * 100,
+        general_positions_only=False,
+        use_u_iso=True,
+        random_u_iso=False,
+        random_occupancy=False,
+    )
+    return xrs
+
 
 @pytest.fixture
 def lysosyme() -> structure:
