@@ -14,7 +14,6 @@
 #include <utility>
 
 
-// TODO: write throughput tests
 // TODO: avoid recalculating hkl every time
 
 namespace py = pybind11;
@@ -56,14 +55,3 @@ class DiscambWrapperTests : public DiscambWrapper{
         void test_get_crystal(int n_iter);
         void test_update_atoms(int n_iter);
 };
-
-// TEMPORARY
-void calculateSfTaamMinimal(
-    const discamb::Crystal& crystal,
-    const std::vector<discamb::Vector3i>& hkl,
-    std::vector< std::complex<double> > &structureFactors);
-
-void calculateSfIamMinimal(
-    const discamb::Crystal& crystal,
-    const std::vector<discamb::Vector3i>& hkl,
-    std::vector< std::complex<double> >& structureFactors);
