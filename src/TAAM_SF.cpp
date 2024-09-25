@@ -56,6 +56,11 @@ PYBIND11_MODULE(_taam_sf, m) {
         .def(py::init<py::object>())
         .def("f_calc_IAM", &DiscambWrapper::f_calc_IAM)
         .def("f_calc_TAAM", &DiscambWrapper::f_calc_TAAM)
-        .def("_test_get_crystal", &DiscambWrapper::test_get_crystal)
+    ;
+
+    py::class_<DiscambWrapperTests, DiscambWrapper>(m, "DiscambWrapperTests")
+        .def(py::init<py::object>())
+        .def("test_get_crystal", &DiscambWrapperTests::test_get_crystal)
+        .def("test_update_atoms", &DiscambWrapperTests::test_update_atoms)
     ;
 }

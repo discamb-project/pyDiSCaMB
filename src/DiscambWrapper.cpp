@@ -145,9 +145,66 @@ void DiscambWrapper::get_hkl(double d, vector<Vector3i> &hkl){
     }
 }
 
-void DiscambWrapper::test_get_crystal(){
+void DiscambWrapper::update_atoms(Crystal &crystal){
+    int idx = 0;
+    for (auto scatterer_py : mStructure.attr("scatterers")()){
+
+        py::tuple xyz_py = scatterer_py.attr("site");
+        crystal.atoms[idx].coordinates[0] = xyz_py[0].cast<float>();
+        crystal.atoms[idx].coordinates[1] = xyz_py[1].cast<float>();
+        crystal.atoms[idx].coordinates[2] = xyz_py[2].cast<float>();
+
+        crystal.atoms[idx].coordinates_sigma[0] = 0.0;
+        crystal.atoms[idx].coordinates_sigma[1] = 0.0;
+        crystal.atoms[idx].coordinates_sigma[2] = 0.0;
+
+        crystal.atoms[idx].coordinates_precision[0] = 0.0;
+        crystal.atoms[idx].coordinates_precision[1] = 0.0;
+        crystal.atoms[idx].coordinates_precision[2] = 0.0;
+
+        crystal.atoms[idx].adp.clear();
+        crystal.atoms[idx].adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U11
+        // crystal.atoms[idx].adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U22
+        // crystal.atoms[idx].adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U33
+        // crystal.atoms[idx].adp.push_back(0.0); // U12
+        // crystal.atoms[idx].adp.push_back(0.0); // U13
+        // crystal.atoms[idx].adp.push_back(0.0); // U23
+
+        crystal.atoms[idx].adp_sigma.clear();
+        crystal.atoms[idx].adp_sigma.push_back(0.0);
+        // for(int i = 0; i < 6; i++){crystal.atoms[idx].adp_sigma.push_back(0.0);}
+
+        crystal.atoms[idx].adp_precision.clear();
+        crystal.atoms[idx].adp_precision.push_back(0.0);
+        // for(int i = 0; i < 6; i++){crystal.atoms[idx].adp_precision.push_back(0.0);}
+        
+        crystal.atoms[idx].label = scatterer_py.attr("scattering_type").cast<string>();
+
+        crystal.atoms[idx].occupancy = scatterer_py.attr("occupancy").cast<float>();
+        crystal.atoms[idx].multiplicity = scatterer_py.attr("multiplicity")().cast<float>();
+        crystal.atoms[idx].occupancy_sigma = 0.0;
+
+        // This seems to be unused anyway
+        crystal.atoms[idx].siteSymetry.clear();
+        crystal.atoms[idx].siteSymetry.push_back(SpaceGroupOperation());
+
+        idx++;
+    }
+}
+
+void DiscambWrapperTests::test_get_crystal(int n_iter){
+    for (int i = 0; i < n_iter; i++){
+        Crystal crystal;
+        get_crystal(crystal);
+    }
+}
+
+void DiscambWrapperTests::test_update_atoms(int n_iter){
     Crystal crystal;
     get_crystal(crystal);
+    for (int i = 0; i < n_iter; i++){
+        update_atoms(crystal);
+    }
 }
 
 void calculateSfTaamMinimal(

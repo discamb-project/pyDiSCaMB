@@ -36,8 +36,8 @@ class DiscambWrapper {
         std::vector<std::complex<double>> f_calc_IAM(const double d_min) { return f_calc(d_min, FCalcMethod::IAM); };
         std::vector<std::complex<double>> f_calc_TAAM(const double d_min) { return f_calc(d_min, FCalcMethod::TAAM); };
 
-        void test_get_crystal();
-    private:
+        
+    protected:
         py::object mStructure;
         std::string mTableString;
 
@@ -45,7 +45,16 @@ class DiscambWrapper {
 
         void get_crystal(discamb::Crystal &crystal);
         void get_hkl(double d, std::vector<discamb::Vector3i> &hkl);
+        void update_atoms(discamb::Crystal &crystal);
+};
 
+class DiscambWrapperTests : public DiscambWrapper{
+
+    using DiscambWrapper::DiscambWrapper;
+
+    public:
+        void test_get_crystal(int n_iter);
+        void test_update_atoms(int n_iter);
 };
 
 // TEMPORARY
