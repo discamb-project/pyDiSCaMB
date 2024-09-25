@@ -5,6 +5,7 @@ from cctbx.sgtbx import space_group_info
 
 import pytest
 
+
 @pytest.mark.slow
 @pytest.mark.parametrize("space_group", range(1, 231))
 @pytest.mark.parametrize("with_adps", ["random adps", None])

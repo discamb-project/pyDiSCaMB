@@ -2,6 +2,7 @@ import taam_sf
 
 import pytest
 
+
 @pytest.mark.parametrize("model", [taam_sf.test_IAM, taam_sf.test_TAAM])
 class TestSF:
 

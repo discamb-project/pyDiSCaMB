@@ -2,10 +2,12 @@ import pytest
 
 from cctbx.xray import structure
 
+
 @pytest.fixture
 def random_structure() -> structure:
     from cctbx.development import random_structure as cctbx_random_structure
     from cctbx.sgtbx import space_group_info
+
     group = space_group_info(19)
     xrs = cctbx_random_structure.xray_structure(
         space_group_info=group,
@@ -17,10 +19,12 @@ def random_structure() -> structure:
     )
     return xrs
 
+
 @pytest.fixture
 def large_random_structure() -> structure:
     from cctbx.development import random_structure as cctbx_random_structure
     from cctbx.sgtbx import space_group_info
+
     group = space_group_info(19)
     xrs = cctbx_random_structure.xray_structure(
         space_group_info=group,
@@ -72,4 +76,3 @@ ATOM     24  HH  TYR A   4       4.712   5.804   4.444  1.00 30.00           H
     pdb_inp = iotbx.pdb.input(lines=pdb_str.split("\n"), source_info=None)
     model = mmtbx.model.manager(model_input=pdb_inp, log=null_out())
     return model.get_xray_structure()
-
