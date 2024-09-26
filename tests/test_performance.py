@@ -80,12 +80,12 @@ def test_f_calc_TAAM_performance(lysosyme):
 @pytest.mark.slow
 def test_f_calc_TAAM_interactive_performance(lysosyme):
     from time import perf_counter
-    from taam_sf import InteractiveDiscambWrapper, FCalcMethod
+    from taam_sf import ManagedDiscambWrapper, FCalcMethod
 
     n_iter = 100
     d_min = 3.0
 
-    wrapper = InteractiveDiscambWrapper(lysosyme, d_min, FCalcMethod.TAAM)
+    wrapper = ManagedDiscambWrapper(lysosyme, d_min, FCalcMethod.TAAM)
 
     start = perf_counter()
     for _ in range(n_iter):
@@ -100,12 +100,12 @@ def test_f_calc_TAAM_interactive_performance(lysosyme):
 @pytest.mark.slow
 def test_f_calc_IAM_interactive_performance(large_random_structure):
     from time import perf_counter
-    from taam_sf import InteractiveDiscambWrapper, FCalcMethod
+    from taam_sf import ManagedDiscambWrapper, FCalcMethod
 
     n_iter = 100
     d_min = 4.0
 
-    wrapper = InteractiveDiscambWrapper(large_random_structure, d_min, FCalcMethod.IAM)
+    wrapper = ManagedDiscambWrapper(large_random_structure, d_min, FCalcMethod.IAM)
 
     start = perf_counter()
     for _ in range(n_iter):
@@ -119,12 +119,12 @@ def test_f_calc_IAM_interactive_performance(large_random_structure):
 def test_f_calc_IAM_update_structure_interactive_performance(large_random_structure):
     from time import perf_counter
     from random import random, choices
-    from taam_sf import InteractiveDiscambWrapper, FCalcMethod
+    from taam_sf import ManagedDiscambWrapper, FCalcMethod
 
     n_iter = 100
     d_min = 4.0
 
-    wrapper = InteractiveDiscambWrapper(large_random_structure, d_min, FCalcMethod.IAM)
+    wrapper = ManagedDiscambWrapper(large_random_structure, d_min, FCalcMethod.IAM)
     sf_before = wrapper.f_calc()
     runtime = 0
     for _ in range(n_iter):

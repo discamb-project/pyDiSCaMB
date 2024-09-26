@@ -1,4 +1,4 @@
-#include "InteractiveDiscambWrapper.hpp"
+#include "ManagedDiscambWrapper.hpp"
 
 #include "discamb/Scattering/IamFormFactorCalculationsManager.h"
 #include "discamb/Scattering/AnyScattererStructureFactorCalculator.h"
@@ -21,7 +21,7 @@ namespace py = pybind11;
 using namespace std;
 using namespace discamb;
 
-vector<complex<double>> InteractiveDiscambWrapper::f_calc(){
+vector<complex<double>> ManagedDiscambWrapper::f_calc(){
     update_atoms(mManager.mCrystal);
     return mManager.f_calc();
 }
@@ -31,7 +31,7 @@ AnyScattererStructureFactorCalculator get_IAM_calculator(Crystal &crystal, strin
 AnyScattererStructureFactorCalculator get_TAAM_calculator(Crystal &crystal);
 
 
-InteractiveDiscambWrapper::FCalcManager InteractiveDiscambWrapper::manager_setup(double d_min, FCalcMethod method){
+ManagedDiscambWrapper::FCalcManager ManagedDiscambWrapper::manager_setup(double d_min, FCalcMethod method){
     Crystal crystal;
     get_crystal(crystal);
     vector<Vector3i> hkl;
@@ -54,7 +54,7 @@ InteractiveDiscambWrapper::FCalcManager InteractiveDiscambWrapper::manager_setup
     }
 }
 
-vector<complex<double>> InteractiveDiscambWrapper::FCalcManager::f_calc(){
+vector<complex<double>> ManagedDiscambWrapper::FCalcManager::f_calc(){
     vector<complex<double>> sf;
     mCalculator.update(mCrystal.atoms);
     mCalculator.calculateStructureFactors(mHkl, sf);

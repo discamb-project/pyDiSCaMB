@@ -11,7 +11,7 @@
 
 #include "DiscambWrapper.hpp"
 #include "DiscambWrapperTests.hpp"
-#include "InteractiveDiscambWrapper.hpp"
+#include "ManagedDiscambWrapper.hpp"
 
 
 namespace py = pybind11;
@@ -71,8 +71,8 @@ PYBIND11_MODULE(_taam_sf, m) {
         .def("test_update_atoms", &DiscambWrapperTests::test_update_atoms)
     ;
 
-    py::class_<InteractiveDiscambWrapper, DiscambWrapper>(m, "InteractiveDiscambWrapper")
+    py::class_<ManagedDiscambWrapper, DiscambWrapper>(m, "ManagedDiscambWrapper")
         .def(py::init<py::object, double, FCalcMethod>(), py::arg("structure"), py::arg("d_min"), py::arg("method") = FCalcMethod::IAM)
-        .def("f_calc", &InteractiveDiscambWrapper::f_calc)
+        .def("f_calc", &ManagedDiscambWrapper::f_calc)
     ;
 }

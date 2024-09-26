@@ -6,11 +6,11 @@
 
 namespace py = pybind11;
 
-class InteractiveDiscambWrapper : public DiscambWrapper {
+class ManagedDiscambWrapper : public DiscambWrapper {
     using DiscambWrapper::DiscambWrapper;
 
     public:
-        InteractiveDiscambWrapper(
+        ManagedDiscambWrapper(
             py::object structure, 
             double d_min, 
             FCalcMethod method = FCalcMethod::IAM
@@ -44,7 +44,7 @@ class InteractiveDiscambWrapper : public DiscambWrapper {
                 discamb::Crystal mCrystal;
                 std::vector<discamb::Vector3i> mHkl;
             
-            friend class InteractiveDiscambWrapper;
+            friend class ManagedDiscambWrapper;
 
         };
         FCalcManager manager_setup(double d_min, FCalcMethod method);
