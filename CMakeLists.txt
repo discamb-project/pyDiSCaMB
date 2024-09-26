@@ -38,7 +38,7 @@ endif()
 
 # python module
 python_add_library(_taam_sf MODULE 
-  src/python_wrapper.cpp 
+  src/python_module.cpp 
   src/DiscambWrapper.cpp 
   src/DiscambWrapperTests.cpp
   src/InteractiveDiscambWrapper.cpp
