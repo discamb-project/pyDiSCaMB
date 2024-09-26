@@ -3,7 +3,7 @@ import taam_sf
 import pytest
 
 
-@pytest.mark.parametrize("model", [taam_sf.test_IAM, taam_sf.test_TAAM])
+@pytest.mark.parametrize("model", [taam_sf.calculate_structure_factors_IAM, taam_sf.calculate_structure_factors_TAAM])
 class TestSF:
 
     def test_is_callable(self, model):
