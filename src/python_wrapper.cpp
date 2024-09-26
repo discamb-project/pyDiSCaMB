@@ -72,7 +72,7 @@ PYBIND11_MODULE(_taam_sf, m) {
     ;
 
     py::class_<InteractiveDiscambWrapper, DiscambWrapper>(m, "InteractiveDiscambWrapper")
-        .def(py::init<py::object, double, FCalcMethod>())
+        .def(py::init<py::object, double, FCalcMethod>(), py::arg("structure"), py::arg("d_min"), py::arg("method") = FCalcMethod::IAM)
         .def("f_calc", &InteractiveDiscambWrapper::f_calc)
     ;
 }
