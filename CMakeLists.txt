@@ -49,5 +49,13 @@ target_include_directories(_taam_sf PRIVATE lib/discamb/include)
 target_include_directories(_taam_sf PRIVATE lib/discamb/external)
 target_include_directories(_taam_sf PRIVATE ${PROJECT_BINARY_DIR}/lib/discamb/build/include) # For the config.h
 target_include_directories(_taam_sf PUBLIC include)
-
 install(TARGETS _taam_sf DESTINATION taam_sf)
+
+add_custom_command(TARGET _taam_sf POST_BUILD
+COMMAND stubgen -m _taam_sf -o ${CMAKE_BINARY_DIR}/stubs
+WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+BYPRODUCTS ${CMAKE_BINARY_DIR}/stubs
+COMMENT "Use stubgen to create .pyi for statement completion"
+)
+install(FILES ${CMAKE_BINARY_DIR}/stubs/_taam_sf.pyi DESTINATION taam_sf)
+

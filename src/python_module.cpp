@@ -46,54 +46,77 @@ PYBIND11_MODULE(_taam_sf, m) {
 
     )pbdoc";
 
-    m.def("get_discamb_version", &discamb_version::version, R"pbdoc(
-        Get the version string for DiSCaMB
-    )pbdoc");
+    m.def(
+        "get_discamb_version", 
+        &discamb_version::version, 
+        R"pbdoc(Get the version string for DiSCaMB)pbdoc"
+    );
 
-    m.def("calculate_structure_factors_TAAM", &calculate_structure_factors_TAAM, R"pbdoc(
-        Calculate structure factors for a given structure up to a given d-spacing, using the Independent Atom Model
-    )pbdoc");
-    m.def("calculate_structure_factors_IAM", &calculate_structure_factors_IAM, R"pbdoc(
-        Calculate structure factors for a given structure up to a given d-spacing, using the Transferable Aspherical Atom Model
-    )pbdoc");
+    m.def(
+        "calculate_structure_factors_TAAM", 
+        &calculate_structure_factors_TAAM, 
+        R"pbdoc(Calculate structure factors for a given structure up to a given d-spacing, using the Independent Atom Model)pbdoc",
+        py::arg("structure"),
+        py::arg("d_min")
+    );
+    m.def(
+        "calculate_structure_factors_IAM", 
+        &calculate_structure_factors_IAM, 
+        R"pbdoc(Calculate structure factors for a given structure up to a given d-spacing, using the Transferable Aspherical Atom Model)pbdoc",
+        py::arg("structure"),
+        py::arg("d_min")
+    );
 
-    py::enum_<FCalcMethod>(m, "FCalcMethod", R"pbdoc(
-        Enum for specifying the model for atomic form factor calculations
-    )pbdoc")
-        .value("IAM", FCalcMethod::IAM, R"pbdoc(
-        Independent Atom Model
-    )pbdoc")
-        .value("TAAM", FCalcMethod::TAAM, R"pbdoc(
-        Transferable Aspherical Atom Model
-    )pbdoc")
+    py::enum_<FCalcMethod>(m, 
+            "FCalcMethod", 
+            R"pbdoc(Enum for specifying the model for atomic form factor calculations)pbdoc"
+        )
+        .value("IAM", FCalcMethod::IAM, R"pbdoc(Independent Atom Model)pbdoc")
+        .value("TAAM", FCalcMethod::TAAM, R"pbdoc(Transferable Aspherical Atom Model)pbdoc")
         .export_values();
 
-    py::class_<DiscambWrapper>(m, "DiscambWrapper", R"pbdoc(
-        Calculate structure factors using DiSCaMB
-    )pbdoc")
-        .def(py::init<py::object>())
-        .def("f_calc_IAM", &DiscambWrapper::f_calc_IAM, R"pbdoc(
-        Calculate the structure factors up to a given d-spacing, using the Independent Atom Model
-    )pbdoc")
-        .def("f_calc_TAAM", &DiscambWrapper::f_calc_TAAM, R"pbdoc(
-        Calculate the structure factors up to a given d-spacing, using the Transferable Aspherical Atom Model
-    )pbdoc")
+    py::class_<DiscambWrapper>(m, 
+            "DiscambWrapper", 
+            R"pbdoc(Calculate structure factors using DiSCaMB)pbdoc"
+        )
+        .def(py::init<py::object>(), py::arg("structure"))
+        .def(
+            "f_calc_IAM", 
+            &DiscambWrapper::f_calc_IAM, 
+            R"pbdoc(Calculate the structure factors up to a given d-spacing, using the Independent Atom Model)pbdoc",
+            py::arg("d_min")
+        )
+        .def(
+            "f_calc_TAAM", 
+            &DiscambWrapper::f_calc_TAAM, 
+            R"pbdoc(Calculate the structure factors up to a given d-spacing, using the Transferable Aspherical Atom Model)pbdoc",
+            py::arg("d_min")
+        )
     ;
 
-    py::class_<DiscambWrapperTests, DiscambWrapper>(m, "DiscambWrapperTests", R"pbdoc(
-        Class for testing the wrapper
-    )pbdoc")
+    py::class_<DiscambWrapperTests, DiscambWrapper>(m, 
+        "DiscambWrapperTests", 
+        R"pbdoc(Class for testing the wrapper)pbdoc"
+        )
         .def(py::init<py::object>())
         .def("test_get_crystal", &DiscambWrapperTests::test_get_crystal)
         .def("test_update_atoms", &DiscambWrapperTests::test_update_atoms)
     ;
 
-    py::class_<ManagedDiscambWrapper, DiscambWrapper>(m, "ManagedDiscambWrapper", R"pbdoc(
-        Calculate structure factors more efficiently by avoiding unnecessary data transfer and re-computation.
-    )pbdoc")
-        .def(py::init<py::object, double, FCalcMethod>(), py::arg("structure"), py::arg("d_min"), py::arg("method") = FCalcMethod::IAM)
-        .def("f_calc", &ManagedDiscambWrapper::f_calc, R"pbdoc(
-        Calculate the structure factors with the parameters supplied to the constructor
-    )pbdoc")
+    py::class_<ManagedDiscambWrapper, DiscambWrapper>(m, 
+        "ManagedDiscambWrapper", 
+        R"pbdoc(Calculate structure factors more efficiently by avoiding unnecessary data transfer and re-computation.)pbdoc"
+        )
+        .def(
+            py::init<py::object, double, FCalcMethod>(), 
+            py::arg("structure"), 
+            py::arg("d_min"), 
+            py::arg("method") = FCalcMethod::IAM
+        )
+        .def(
+            "f_calc", 
+            &ManagedDiscambWrapper::f_calc, 
+            R"pbdoc(Calculate the structure factors with the parameters supplied to the constructor)pbdoc"
+        )
     ;
 }
