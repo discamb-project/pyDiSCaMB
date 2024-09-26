@@ -1,0 +1,40 @@
+{% set name = "taam_sf" %}
+{% set version = "0.0.1" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  path: ../
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install ./ -vv
+
+requirements:
+  build:
+    - python=3.8                              
+    - scikit-build-core             
+    - {{ stdlib('c') }}
+    - {{ compiler('cxx') }}
+    - ninja
+    - cmake
+    - openMP
+    - pybind11
+  host:
+    - python=3.8
+    - pip
+    - scikit-build-core
+    - openMP
+    - pybind11
+  run:
+    - python=3.8
+
+
+test:
+  imports:
+    - taam_sf
+    - importlib
+  commands:
+    - python -c "from importlib.metadata import version; assert version(\"taam_sf\") == '{{ version }}'"

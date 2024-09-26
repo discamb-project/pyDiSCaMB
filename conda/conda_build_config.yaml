@@ -1,0 +1,7 @@
+cxx_compiler:
+  - clangxx                    # [osx]
+  - vs2022_win-64              # [win]
+cxx_compiler_version:          # [unix]
+  - 11.4                       # [linux]
+c_stdlib:
+  - sysroot                     # [linux]
