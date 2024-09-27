@@ -4,7 +4,17 @@ Simple pybind11 wrapper to communicate with discamb from cctbx
 
 ## Installation
 
-## Installation with conda
+Only tested with Cmake 3.22.3, gcc 11.4 on WSL2 ubuntu in Windows 11.
+These can also be installed with conda (`conda install gcc=11.4`).
+
+```bash
+conda create --name taam_sf_dev python=3.8 -y
+conda activate taam_sf_dev
+conda install openmp -c conda-forge -y
+pip install .
+```
+
+## Build with conda
 Install conda-build [(recommended to do in base env)](https://docs.conda.io/projects/conda-build/en/latest/install-conda-build.html)
 
 ```bash
@@ -16,18 +26,6 @@ Build the package
 ```bash
 cd TAAM_SF
 conda build ./conda -c conda-forge
-```
-
-## Installation manually
-
-Only tested with Cmake 3.22.3, gcc 11.4 on WSL2 ubuntu in Windows 11.
-These can also be installed with conda.
-
-```bash
-conda create --name taam_sf_dev python=3.8 -y
-conda activate taam_sf_dev
-conda install openmp -c conda-forge -y
-pip install .
 ```
 
 ## Example usage
@@ -70,6 +68,7 @@ if (__name__ == "__main__"):
 ## Testing
 
 ```bash
+conda install cctbx-base
 pip install pytest
 pytest
 ```
