@@ -55,14 +55,14 @@ PYBIND11_MODULE(_taam_sf, m) {
     m.def(
         "calculate_structure_factors_TAAM", 
         &calculate_structure_factors_TAAM, 
-        R"pbdoc(Calculate structure factors for a given structure up to a given d-spacing, using the Independent Atom Model)pbdoc",
+        R"pbdoc(Calculate structure factors for a given structure up to a given d-spacing, using the Transferable Aspherical Atom Model)pbdoc",
         py::arg("structure"),
         py::arg("d_min")
     );
     m.def(
         "calculate_structure_factors_IAM", 
         &calculate_structure_factors_IAM, 
-        R"pbdoc(Calculate structure factors for a given structure up to a given d-spacing, using the Transferable Aspherical Atom Model)pbdoc",
+        R"pbdoc(Calculate structure factors for a given structure up to a given d-spacing, using the Independent Atom Model)pbdoc",
         py::arg("structure"),
         py::arg("d_min")
     );
