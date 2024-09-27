@@ -51,6 +51,7 @@ target_include_directories(_taam_sf PRIVATE ${PROJECT_BINARY_DIR}/lib/discamb/bu
 target_include_directories(_taam_sf PUBLIC include)
 install(TARGETS _taam_sf DESTINATION taam_sf)
 
+if (NOT MSVC) # Does not work properly on windows. Might be due to windows adding "Release" to the folder structure.
 add_custom_command(TARGET _taam_sf POST_BUILD
 COMMAND stubgen -m _taam_sf --include-docstrings -o ${CMAKE_BINARY_DIR}/stubs
 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -58,4 +59,4 @@ BYPRODUCTS ${CMAKE_BINARY_DIR}/stubs
 COMMENT "Use stubgen to create .pyi for statement completion"
 )
 install(FILES ${CMAKE_BINARY_DIR}/stubs/_taam_sf.pyi DESTINATION taam_sf)
-
+endif()
