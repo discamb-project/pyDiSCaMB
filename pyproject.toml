@@ -1,5 +1,5 @@
 [project]
-name = "pyDiSCaMB"
+name = "pydiscamb"
 version = "0.0.1"
 description="A python wrapper for DiSCaMB"
 readme = "README.md"
