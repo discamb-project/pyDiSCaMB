@@ -5,7 +5,6 @@
 #include "discamb/Scattering/ElectronFromXrayFormFactorCalculationsManager.h"
 #include "discamb/Scattering/IamFormFactorCalculationsManager.h"
 #include "discamb/Scattering/HcFormFactorCalculationsManager.h"
-#include "discamb/Scattering/MATTS_Default.h"
 #include "discamb/Scattering/taam_utilities.h"
 
 #include "discamb/IO/MATTS_BankReader.h"
@@ -78,10 +77,7 @@ AnyScattererStructureFactorCalculator get_TAAM_calculator(Crystal &crystal){
     vector<AtomTypeHC_Parameters> hcParameters;
     BankSettings bankSettings;
 
-    string bankString;
-    stringstream bankStream;
-    default_ubdb_bank_string(bankString);
-    bankStream << bankString;
+    ifstream bankStream {"data/empty_TAAM_databank.txt"};
     bankReader.read(bankStream, atomTypes, hcParameters, bankSettings, true);
 
     // assign atom types

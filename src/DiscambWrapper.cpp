@@ -3,7 +3,7 @@
 #include "discamb/AtomTyping/CrystalAtomTypeAssigner.h"
 #include "discamb/AtomTyping/LocalCoordinateSystemCalculator.h"
 
-#include "discamb/BasicUtilities/OnError.h"
+#include "discamb/BasicUtilities/on_error.h"
 
 #include "discamb/CrystalStructure/crystal_structure_utilities.h"
 #include "discamb/CrystalStructure/LocalCoordinateSystemInCrystal.h"
@@ -17,7 +17,6 @@
 #include "discamb/Scattering/ElectronFromXrayFormFactorCalculationsManager.h"
 #include "discamb/Scattering/IamFormFactorCalculationsManager.h"
 #include "discamb/Scattering/HcFormFactorCalculationsManager.h"
-#include "discamb/Scattering/MATTS_Default.h"
 #include "discamb/Scattering/taam_utilities.h"
 
 
@@ -209,10 +208,7 @@ void calculateSfTaamMinimal(
     vector<AtomTypeHC_Parameters> hcParameters;
     BankSettings bankSettings;
 
-    string bankString;
-    stringstream bankStream;
-    default_ubdb_bank_string(bankString);
-    bankStream << bankString;
+    ifstream bankStream {"data/empty_TAAM_databank.txt"};
     bankReader.read(bankStream, atomTypes, hcParameters, bankSettings, true);
 
     // assign atom types

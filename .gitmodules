@@ -1,0 +1,3 @@
+[submodule "lib/discamb"]
+	path = lib/discamb
+	url = git@github.com:discamb-project/DiSCaMB.git
