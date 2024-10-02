@@ -1,4 +1,4 @@
-import taam_sf
+import pydiscamb
 
 from cctbx.development import random_structure
 from cctbx.sgtbx import space_group_info
@@ -43,7 +43,7 @@ def test_IAM_correctness_random_crystal(
     )
     xrs.scattering_type_registry(table="electron")
     fcalc_cctbx = xrs.structure_factors(algorithm="direct", d_min=d_min).f_calc().data()
-    fcalc_discamb = taam_sf.calculate_structure_factors_IAM(xrs, d_min)
+    fcalc_discamb = pydiscamb.calculate_structure_factors_IAM(xrs, d_min)
     # let pytest handle comparing complex numbers
     assert fcalc_discamb == pytest.approx(fcalc_cctbx, abs=0.3, rel=0.3)
 

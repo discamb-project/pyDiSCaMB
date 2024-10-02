@@ -4,7 +4,7 @@ import pytest
 @pytest.mark.slow
 def test_get_crystal_performance(large_random_structure):
     from time import perf_counter
-    from taam_sf import DiscambWrapperTests
+    from pydiscamb import DiscambWrapperTests
 
     n_iter = 1_000
 
@@ -22,7 +22,7 @@ def test_get_crystal_performance(large_random_structure):
 @pytest.mark.slow
 def test_update_atoms_performance(large_random_structure):
     from time import perf_counter
-    from taam_sf import DiscambWrapperTests
+    from pydiscamb import DiscambWrapperTests
 
     n_iter = 10_000
 
@@ -40,7 +40,7 @@ def test_update_atoms_performance(large_random_structure):
 @pytest.mark.slow
 def test_f_calc_IAM_performance(large_random_structure):
     from time import perf_counter
-    from taam_sf import DiscambWrapper
+    from pydiscamb import DiscambWrapper
 
     n_iter = 100
     d_min = 4.0
@@ -60,7 +60,7 @@ def test_f_calc_IAM_performance(large_random_structure):
 @pytest.mark.slow
 def test_f_calc_TAAM_performance(lysosyme):
     from time import perf_counter
-    from taam_sf import DiscambWrapper
+    from pydiscamb import DiscambWrapper
 
     n_iter = 100
     d_min = 3.0
@@ -80,7 +80,7 @@ def test_f_calc_TAAM_performance(lysosyme):
 @pytest.mark.slow
 def test_f_calc_TAAM_interactive_performance(lysosyme):
     from time import perf_counter
-    from taam_sf import ManagedDiscambWrapper, FCalcMethod
+    from pydiscamb import ManagedDiscambWrapper, FCalcMethod
 
     n_iter = 100
     d_min = 3.0
@@ -100,7 +100,7 @@ def test_f_calc_TAAM_interactive_performance(lysosyme):
 @pytest.mark.slow
 def test_f_calc_IAM_interactive_performance(large_random_structure):
     from time import perf_counter
-    from taam_sf import ManagedDiscambWrapper, FCalcMethod
+    from pydiscamb import ManagedDiscambWrapper, FCalcMethod
 
     n_iter = 100
     d_min = 4.0
@@ -119,7 +119,7 @@ def test_f_calc_IAM_interactive_performance(large_random_structure):
 def test_f_calc_IAM_update_structure_interactive_performance(large_random_structure):
     from time import perf_counter
     from random import random, choices
-    from taam_sf import ManagedDiscambWrapper, FCalcMethod
+    from pydiscamb import ManagedDiscambWrapper, FCalcMethod
 
     n_iter = 100
     d_min = 4.0

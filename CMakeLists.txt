@@ -46,33 +46,30 @@ endif()
 
 # TAAM databank
 file(GLOB_RECURSE TAAM_DATA_FILES "${PROJECT_SOURCE_DIR}/data/*databank.txt") 
-message(Data files:)
-message("${TAAM_DATA_FILES}")
 file(COPY ${TAAM_DATA_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
 
 # python module
-python_add_library(_taam_sf MODULE 
+python_add_library(_pydiscamb MODULE 
 src/python_module.cpp 
 src/DiscambWrapper.cpp 
 src/DiscambWrapperTests.cpp
 src/ManagedDiscambWrapper.cpp
 )
-target_link_libraries(_taam_sf PRIVATE pybind11::headers)
-target_link_libraries(_taam_sf PRIVATE OpenMP::OpenMP_CXX)
-target_link_libraries(_taam_sf PUBLIC discamb)
+target_link_libraries(_pydiscamb PRIVATE pybind11::headers)
+target_link_libraries(_pydiscamb PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(_pydiscamb PUBLIC discamb)
 # For some reason, the include directories are not propagated when linking
 get_target_property(DISCAMB_INCLUDE_DIRECTORIES discamb INCLUDE_DIRECTORIES)
-target_include_directories(_taam_sf PUBLIC ${DISCAMB_INCLUDE_DIRECTORIES})
-target_include_directories(_taam_sf PUBLIC include)
-install(TARGETS _taam_sf DESTINATION taam_sf)
+target_include_directories(_pydiscamb PUBLIC ${DISCAMB_INCLUDE_DIRECTORIES})
+target_include_directories(_pydiscamb PUBLIC include)
+install(TARGETS _pydiscamb DESTINATION pydiscamb)
 
 # Generate stub
 if (NOT MSVC) # Does not work properly on windows. Might be due to windows adding "Release" to the folder structure.
-add_custom_command(TARGET _taam_sf POST_BUILD
-COMMAND stubgen -m _taam_sf --include-docstrings -o ${CMAKE_BINARY_DIR}/stubs
-WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+add_custom_command(TARGET _pydiscamb POST_BUILD
+COMMAND stubgen -m _pydiscamb --include-docstrings -o ${CMAKE_BINARY_DIR}/stubs
 BYPRODUCTS ${CMAKE_BINARY_DIR}/stubs
 COMMENT "Use stubgen to create .pyi for statement completion"
 )
-install(FILES ${CMAKE_BINARY_DIR}/stubs/_taam_sf.pyi DESTINATION taam_sf)
+install(FILES ${CMAKE_BINARY_DIR}/stubs/_pydiscamb.pyi DESTINATION pydiscamb)
 endif()

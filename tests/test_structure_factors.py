@@ -1,9 +1,9 @@
-import taam_sf
+import pydiscamb
 
 import pytest
 
 
-@pytest.mark.parametrize("model", [taam_sf.calculate_structure_factors_IAM, taam_sf.calculate_structure_factors_TAAM])
+@pytest.mark.parametrize("model", [pydiscamb.calculate_structure_factors_IAM, pydiscamb.calculate_structure_factors_TAAM])
 class TestSF:
 
     def test_is_callable(self, model):

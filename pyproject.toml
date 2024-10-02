@@ -1,7 +1,7 @@
 [project]
-name = "taam_sf"
+name = "pyDiSCaMB"
 version = "0.0.1"
-description="A minimal example package (with pybind11)"
+description="A python wrapper for DiSCaMB"
 readme = "README.md"
 authors = [
   { name = "Viljar Femoen", email = "viljar.femoen@mmk.su.se" },

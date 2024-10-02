@@ -34,12 +34,12 @@ vector<complex<double>> calculate_structure_factors_IAM(py::object &structure, d
 }
 
 
-PYBIND11_MODULE(_taam_sf, m) {
+PYBIND11_MODULE(_pydiscamb, m) {
     m.doc() = R"pbdoc(
         DiSCaMB wrapper using pybind11
         -----------------------
 
-        .. currentmodule:: taam_sf
+        .. currentmodule:: pydiscamb
 
         .. autosummary::
            :toctree: _generate

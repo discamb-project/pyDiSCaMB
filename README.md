@@ -1,6 +1,6 @@
-# TAAM_SF
+# pyDiSCaMB
 
-Simple pybind11 wrapper to communicate with discamb from cctbx
+Simple pybind11 wrapper to communicate with DiSCaMB from cctbx
 
 ## Installation
 
@@ -9,8 +9,8 @@ These can be installed with conda (`conda install gcc=11.4`).
 Also verified using MSVC 19.41.
 
 ```bash
-conda create --name taam_sf_dev python=3.8 -y
-conda activate taam_sf_dev
+conda create --name pyDiSCaMB_dev python=3.8 -y
+conda activate pyDiSCaMB_dev
 conda install openmp -c conda-forge -y
 pip install .
 ```
@@ -27,7 +27,7 @@ conda install conda-build
 
 Build the package
 ```bash
-cd TAAM_SF
+cd pyDiSCaMB
 conda build ./conda -c conda-forge
 ```
 
@@ -36,7 +36,7 @@ conda build ./conda -c conda-forge
 ```python
 from __future__ import absolute_import, division, print_function
 
-import taam_sf
+import pydiscamb
 
 def run():
   # Generate a random structure
@@ -57,7 +57,7 @@ def run():
   fcalc_cctbx = fcalc.data()
 
   # Calculate structure factors with DiSCaMB
-  fcalc_discamb = taam_sf.calculate_structure_factors_IAM(xrs, d_min)
+  fcalc_discamb = pydiscamb.calculate_structure_factors_IAM(xrs, d_min)
 
   # Output the difference of the results
   diff = [fc - fd for fc, fd in zip(fcalc_cctbx, fcalc_discamb)]
