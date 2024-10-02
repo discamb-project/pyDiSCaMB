@@ -1,3 +1,6 @@
 [submodule "lib/discamb"]
 	path = lib/discamb
 	url = git@github.com:discamb-project/DiSCaMB.git
+[submodule "data/MATTS"]
+	path = data/MATTS
+	url = git@github.com:discamb-project/MATTS.git
