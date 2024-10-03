@@ -8,7 +8,7 @@ import pytest
 
 @pytest.mark.slow
 @pytest.mark.parametrize("space_group", range(1, 231))
-@pytest.mark.parametrize("with_adps", ["random adps", None])
+@pytest.mark.parametrize("with_adps", ["random u_iso", "random u_aniso", None])
 @pytest.mark.parametrize("with_occupancy", ["random occupancy", None])
 @pytest.mark.parametrize(
     "atoms",
@@ -37,11 +37,13 @@ def test_IAM_correctness_random_crystal(
         space_group_info=group,
         elements=elements,
         general_positions_only=False,
-        use_u_iso=True,
+        use_u_iso=with_adps == "random u_iso",
+        use_u_aniso=with_adps == "random u_aniso",
         random_u_iso=bool(with_adps),
         random_occupancy=bool(with_occupancy),
     )
     xrs.scattering_type_registry(table="electron")
+
     fcalc_cctbx = xrs.structure_factors(algorithm="direct", d_min=d_min).f_calc().data()
     fcalc_discamb = pydiscamb.calculate_structure_factors_IAM(xrs, d_min)
     # let pytest handle comparing complex numbers
@@ -50,5 +52,5 @@ def test_IAM_correctness_random_crystal(
 
 if __name__ == "__main__":
     print("Testing a random crystal with a single weak scatterer in space group 19")
-    test_IAM_correctness_random_crystal(19, False, False, "single weak")
+    test_IAM_correctness_random_crystal(19, "random u_aniso", False, "single weak")
     print("Test complete, exiting...")

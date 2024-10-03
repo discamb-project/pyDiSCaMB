@@ -101,20 +101,24 @@ void DiscambWrapper::get_crystal(Crystal &crystal){
         crystal.atoms.back().coordinates_precision[2] = 0.0;
 
         crystal.atoms.back().adp.clear();
-        crystal.atoms.back().adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U11
-        // crystal.atoms.back().adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U22
-        // crystal.atoms.back().adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U33
-        // crystal.atoms.back().adp.push_back(0.0); // U12
-        // crystal.atoms.back().adp.push_back(0.0); // U13
-        // crystal.atoms.back().adp.push_back(0.0); // U23
-
+        if (scatterer_py.attr("flags").attr("use_u_iso")().cast<bool>()){
+            crystal.atoms.back().adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U11
+        }
+        else {
+            py::tuple u_star = scatterer_py.attr("u_star");
+            crystal.atoms.back().adp.push_back(u_star[0].cast<float>()); // U11
+            crystal.atoms.back().adp.push_back(u_star[1].cast<float>()); // U22
+            crystal.atoms.back().adp.push_back(u_star[2].cast<float>()); // U33
+            crystal.atoms.back().adp.push_back(u_star[3].cast<float>()); // U12
+            crystal.atoms.back().adp.push_back(u_star[4].cast<float>()); // U13
+            crystal.atoms.back().adp.push_back(u_star[5].cast<float>()); // U23
+        }
         crystal.atoms.back().adp_sigma.clear();
-        crystal.atoms.back().adp_sigma.push_back(0.0);
-        // for(int i = 0; i < 6; i++){crystal.atoms.back().adp_sigma.push_back(0.0);}
-
         crystal.atoms.back().adp_precision.clear();
-        crystal.atoms.back().adp_precision.push_back(0.0);
-        // for(int i = 0; i < 6; i++){crystal.atoms.back().adp_precision.push_back(0.0);}
+        for(int i = 0; i < crystal.atoms.back().adp.size(); i++){
+            crystal.atoms.back().adp_sigma.push_back(0.0);
+            crystal.atoms.back().adp_precision.push_back(0.0);
+        }
         
         crystal.atoms.back().label = scatterer_py.attr("scattering_type").cast<string>();
 
@@ -128,7 +132,13 @@ void DiscambWrapper::get_crystal(Crystal &crystal){
     }
 
     crystal.xyzCoordinateSystem = structural_parameters_convention::XyzCoordinateSystem::fractional;
-    crystal.adpConvention = structural_parameters_convention::AdpConvention::U_cif;
+    // Assume all adps use the same convention
+    if (mStructure.attr("use_u_iso")().attr("__getitem__")(0).cast<bool>()){
+        crystal.adpConvention = structural_parameters_convention::AdpConvention::U_cif;
+    }
+    else{
+        crystal.adpConvention = structural_parameters_convention::AdpConvention::U_star;
+    }
 }
 
 void DiscambWrapper::get_hkl(double d, vector<Vector3i> &hkl){
