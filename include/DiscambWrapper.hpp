@@ -25,7 +25,7 @@ enum FCalcMethod {
 
 class DiscambWrapper {
     public:
-        DiscambWrapper(py::object structure, std::string table = "electron-IT") : 
+        DiscambWrapper(py::object structure, std::string table = "electron-cctbx") : 
             mStructure(std::move(structure)),
             mTableString(table),
             mAnomalous(std::vector<std::complex<double>> {}) {};

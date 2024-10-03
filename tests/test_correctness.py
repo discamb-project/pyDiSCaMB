@@ -2,26 +2,28 @@ import pydiscamb
 
 from cctbx.development import random_structure
 from cctbx.sgtbx import space_group_info
+from cctbx.array_family import flex
 
 import pytest
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize("space_group", range(1, 231))
-@pytest.mark.parametrize("with_adps", ["random u_iso", "random u_aniso", None])
-@pytest.mark.parametrize("with_occupancy", ["random occupancy", None])
-@pytest.mark.parametrize("with_anomalous", ["no anomalous", "fprime", "fdoubleprime", "fprime + fdoubleprime"])
-@pytest.mark.parametrize(
-    "atoms",
-    ["single weak", "single strong", "many weak", "many strong", "mixed strength"],
-)
-def test_IAM_correctness_random_crystal(
+def compare_structure_factors(f_calc_a, f_calc_b):
+    f_calc_a = flex.abs(f_calc_a)
+    f_calc_b = flex.abs(f_calc_b)
+    scale = flex.sum(f_calc_a * f_calc_b) / flex.sum(f_calc_b * f_calc_b)
+    num = flex.sum(flex.abs(f_calc_a - scale * f_calc_b))
+    den = flex.sum(flex.abs(f_calc_a + scale * f_calc_b))
+    diff = flex.abs(f_calc_a - f_calc_b)
+    return num / den * 2 * 100.0  # , flex.mean(diff), flex.max(diff)
+
+
+def get_random_crystal(
     space_group: int,
     with_adps: bool,
     with_occupancy: bool,
     with_anomalous: str,
     atoms: str,
-):
+) -> random_structure.xray_structure:
     # We use bool() on some of the params instead of true/false to make pytest output more readable
     if atoms == "single weak":
         elements = ["C"]
@@ -34,7 +36,6 @@ def test_IAM_correctness_random_crystal(
     elif atoms == "mixed strength":
         elements = ["Au", "Cd", "C", "O", "H"] * 10
     group = space_group_info(space_group)
-    d_min = 4
     xrs = random_structure.xray_structure(
         space_group_info=group,
         elements=elements,
@@ -49,14 +50,41 @@ def test_IAM_correctness_random_crystal(
     if "fdoubleprime" in with_anomalous:
         xrs.shake_fdps()
     xrs.scattering_type_registry(table="electron")
+    return xrs
 
+
+def get_IAM_correctness_score(xrs: random_structure.xray_structure) -> float:
+    d_min = 2
     fcalc_cctbx = xrs.structure_factors(algorithm="direct", d_min=d_min).f_calc().data()
     fcalc_discamb = pydiscamb.calculate_structure_factors_IAM(xrs, d_min)
-    # let pytest handle comparing complex numbers
-    assert fcalc_discamb == pytest.approx(fcalc_cctbx, abs=0.3, rel=0.3)
+
+    fcalc_discamb = flex.complex_double(fcalc_discamb)
+    score = compare_structure_factors(fcalc_cctbx, fcalc_discamb)
+    return score
 
 
-if __name__ == "__main__":
-    print("Testing a random crystal with a single weak scatterer in space group 19")
-    test_IAM_correctness_random_crystal(19, "random u_aniso", False, "No anomalous", "single weak")
-    print("Test complete, exiting...")
+@pytest.mark.slow
+@pytest.mark.parametrize("space_group", range(1, 231))
+@pytest.mark.parametrize("with_adps", ["random u_iso", "random u_aniso", None])
+@pytest.mark.parametrize("with_occupancy", ["random occupancy", None])
+@pytest.mark.parametrize(
+    "with_anomalous",
+    ["no anomalous", "fprime", "fdoubleprime", "fprime + fdoubleprime"],
+)
+@pytest.mark.parametrize(
+    "atoms",
+    ["single weak", "single strong", "many weak", "many strong", "mixed strength"],
+)
+def test_IAM_correctness_random_crystal(
+    space_group: int,
+    with_adps: bool,
+    with_occupancy: bool,
+    with_anomalous: str,
+    atoms: str,
+):
+    xrs = get_random_crystal(
+        space_group, with_adps, with_occupancy, with_anomalous, atoms
+    )
+    score = get_IAM_correctness_score(xrs)
+    # Use 0.05% as threshold
+    assert score < 0.0005
