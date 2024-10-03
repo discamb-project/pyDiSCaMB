@@ -43,15 +43,22 @@ void DiscambWrapper::f_calc_hkl(const vector<Vector3i> &hkl, FCalcMethod method,
     get_crystal(crystal);
     switch (method)
     {
-        case FCalcMethod::IAM:
-            calculateSfIamMinimal(crystal, hkl, sf);
+        case FCalcMethod::IAM: {
+            auto calculator = get_IAM_calculator(crystal, mTableString);
+            calculator.setAnoumalous(mAnomalous);
+            calculator.calculateStructureFactors(hkl, sf);
             break;
-        case FCalcMethod::TAAM:
-            calculateSfTaamMinimal(crystal, hkl, sf);
+        }
+        case FCalcMethod::TAAM: {
+            auto calculator = get_TAAM_calculator(crystal);
+            calculator.setAnoumalous(mAnomalous);
+            calculator.calculateStructureFactors(hkl, sf);
             break;
-        default:
+        }
+        default: {
             on_error::throwException("Invalid method requested");
             break;
+        }
     }
 }
 
@@ -84,6 +91,7 @@ void DiscambWrapper::get_crystal(Crystal &crystal){
     crystal.spaceGroup.set(symops);
 
     crystal.atoms.clear();
+    mAnomalous.clear();
     for (auto scatterer_py : mStructure.attr("scatterers")()){
         crystal.atoms.push_back(AtomInCrystal());
 
@@ -129,6 +137,11 @@ void DiscambWrapper::get_crystal(Crystal &crystal){
         // This seems to be unused anyway
         crystal.atoms.back().siteSymetry.clear();
         crystal.atoms.back().siteSymetry.push_back(SpaceGroupOperation());
+
+        mAnomalous.push_back(complex<double> {
+            scatterer_py.attr("fp").cast<double>(),
+            scatterer_py.attr("fdp").cast<double>()
+        });
     }
 
     crystal.xyzCoordinateSystem = structural_parameters_convention::XyzCoordinateSystem::fractional;
@@ -142,8 +155,8 @@ void DiscambWrapper::get_crystal(Crystal &crystal){
 }
 
 void DiscambWrapper::get_hkl(double d, vector<Vector3i> &hkl){
-    // assume anomolous_flag is False
-    py::object miller_py = mStructure.attr("build_miller_set")(false, d);
+    bool anomalous_flag = mStructure.attr("scatterers")().attr("count_anomalous")().cast<int>() != 0;
+    py::object miller_py = mStructure.attr("build_miller_set")(anomalous_flag, d);
 
     for (auto hkl_py_auto : miller_py.attr("indices")().attr("as_vec3_double")()){
         py::tuple hkl_py = hkl_py_auto.cast<py::tuple>();
@@ -198,19 +211,25 @@ void DiscambWrapper::update_atoms(Crystal &crystal){
         crystal.atoms[idx].siteSymetry.clear();
         crystal.atoms[idx].siteSymetry.push_back(SpaceGroupOperation());
 
+        mAnomalous[idx] = complex<double> {
+            scatterer_py.attr("fp").cast<double>(),
+            scatterer_py.attr("fdp").cast<double>()
+        };
         idx++;
     }
 }
 
 
-void calculateSfTaamMinimal(
-    const Crystal& crystal,
-    const vector<Vector3i>& hkl,
-    vector< complex<double> > &structureFactors)
-{
+AnyScattererStructureFactorCalculator get_IAM_calculator(Crystal &crystal, string &table){
+    shared_ptr<AtomicFormFactorCalculationsManager> formfactorCalculator;
+    formfactorCalculator = shared_ptr<AtomicFormFactorCalculationsManager>(
+        new IamFormFactorCalculationsManager(crystal, table));
+    AnyScattererStructureFactorCalculator calculator(crystal);
+    calculator.setAtomicFormfactorManager(formfactorCalculator);
+    return calculator;
+}
 
-    bool electronScattering = true;
-    bool scaleHcParameters = true;
+AnyScattererStructureFactorCalculator get_TAAM_calculator(Crystal &crystal){
 
     // set bank parameters
     MATTS_BankReader bankReader;
@@ -233,7 +252,6 @@ void calculateSfTaamMinimal(
     // get TAAM parameters with unit cell charge scaled/shifted to 0
 
     HC_ModelParameters multipoleModelPalameters;
-
 
     vector<int> atomicNumbers;
     vector<double> nuclearCharge;
@@ -271,23 +289,7 @@ void calculateSfTaamMinimal(
             nuclearCharge,
             hcManager));
 
-    AnyScattererStructureFactorCalculator sfCalc(crystal);
-    sfCalc.setAtomicFormfactorManager(formfactorCalculator);
-    sfCalc.calculateStructureFactors(hkl, structureFactors);
-
-}
-
-void calculateSfIamMinimal(
-    const Crystal& crystal,
-    const vector<Vector3i>& hkl,
-    vector< complex<double> >& structureFactors)
-{
-    shared_ptr<AtomicFormFactorCalculationsManager> formfactorCalculator;
-
-    formfactorCalculator = shared_ptr<AtomicFormFactorCalculationsManager>(
-        new IamFormFactorCalculationsManager(crystal, "electron-IT"));
-
-    AnyScattererStructureFactorCalculator sfCalc(crystal);
-    sfCalc.setAtomicFormfactorManager(formfactorCalculator);
-    sfCalc.calculateStructureFactors(hkl, structureFactors);
+    AnyScattererStructureFactorCalculator calculator(crystal);
+    calculator.setAtomicFormfactorManager(formfactorCalculator);
+    return calculator;
 }

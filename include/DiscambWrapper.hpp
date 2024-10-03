@@ -6,7 +6,7 @@
 
 #include "discamb/CrystalStructure/Crystal.h"
 #include "discamb/MathUtilities/Vector3.h"
-
+#include "discamb/Scattering/AnyScattererStructureFactorCalculator.h"
 
 #include <string>
 #include <vector>
@@ -27,7 +27,8 @@ class DiscambWrapper {
     public:
         DiscambWrapper(py::object structure, std::string table = "electron-IT") : 
             mStructure(std::move(structure)),
-            mTableString(table) {};
+            mTableString(table),
+            mAnomalous(std::vector<std::complex<double>> {}) {};
         
         std::vector<std::complex<double>> f_calc(const double d_min, FCalcMethod method);
         std::vector<std::complex<double>> f_calc_IAM(const double d_min) { return f_calc(d_min, FCalcMethod::IAM); };
@@ -37,6 +38,7 @@ class DiscambWrapper {
     protected:
         py::object mStructure;
         std::string mTableString;
+        std::vector<std::complex<double>> mAnomalous;
 
         void f_calc_hkl(const std::vector<discamb::Vector3i> &hkl, FCalcMethod method, std::vector<std::complex<double>> &sf);
 
@@ -44,3 +46,6 @@ class DiscambWrapper {
         void get_hkl(double d, std::vector<discamb::Vector3i> &hkl);
         void update_atoms(discamb::Crystal &crystal);
 };
+
+discamb::AnyScattererStructureFactorCalculator get_IAM_calculator(discamb::Crystal &crystal, std::string &table);
+discamb::AnyScattererStructureFactorCalculator get_TAAM_calculator(discamb::Crystal &crystal);
