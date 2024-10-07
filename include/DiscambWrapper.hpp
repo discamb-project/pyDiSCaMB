@@ -25,9 +25,8 @@ enum FCalcMethod {
 
 class DiscambWrapper {
     public:
-        DiscambWrapper(py::object structure, std::string table = "electron-cctbx") : 
+        DiscambWrapper(py::object structure) : 
             mStructure(std::move(structure)),
-            mTableString(table),
             mAnomalous(std::vector<std::complex<double>> {}) {};
         
         std::vector<std::complex<double>> f_calc(const double d_min, FCalcMethod method);
@@ -37,7 +36,6 @@ class DiscambWrapper {
         
     protected:
         py::object mStructure;
-        std::string mTableString;
         std::vector<std::complex<double>> mAnomalous;
 
         void f_calc_hkl(const std::vector<discamb::Vector3i> &hkl, FCalcMethod method, std::vector<std::complex<double>> &sf);
@@ -45,6 +43,7 @@ class DiscambWrapper {
         void get_crystal(discamb::Crystal &crystal);
         void get_hkl(double d, std::vector<discamb::Vector3i> &hkl);
         void update_atoms(discamb::Crystal &crystal);
+        std::string get_discamb_table_string();
 };
 
 discamb::AnyScattererStructureFactorCalculator get_IAM_calculator(discamb::Crystal &crystal, std::string &table);

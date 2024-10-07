@@ -41,10 +41,11 @@ void DiscambWrapper::f_calc_hkl(const vector<Vector3i> &hkl, FCalcMethod method,
     sf.resize(hkl.size());
     Crystal crystal;
     get_crystal(crystal);
+    string table = get_discamb_table_string();
     switch (method)
     {
         case FCalcMethod::IAM: {
-            auto calculator = get_IAM_calculator(crystal, mTableString);
+            auto calculator = get_IAM_calculator(crystal, table);
             calculator.setAnoumalous(mAnomalous);
             calculator.calculateStructureFactors(hkl, sf);
             break;
@@ -219,6 +220,30 @@ void DiscambWrapper::update_atoms(Crystal &crystal){
     }
 }
 
+string DiscambWrapper::get_discamb_table_string(){
+    string cctbx_table_string = mStructure.attr("scattering_type_registry_params").attr("table").cast<string>();
+    string discamb_table_string;
+    // ["n_gaussian", "it1992", "wk1995", "xray", "electron", "neutron"]
+    if (cctbx_table_string == "electron"){
+        discamb_table_string = "electron-cctbx";
+    }
+    else if (cctbx_table_string == "it1992"){
+        discamb_table_string = "IT92";
+    }
+    else if (cctbx_table_string == "wk1995"){
+        discamb_table_string = "Waasmeier-Kirfel";
+    }
+    else if (cctbx_table_string == "xray"){
+        throw std::invalid_argument("Scattering table \"" + cctbx_table_string + "\" is not recognized.");
+    }
+    else if (cctbx_table_string == "neutron"){
+        throw std::invalid_argument("Scattering table \"" + cctbx_table_string + "\" is not recognized.");
+    }
+    else if (cctbx_table_string == "n_gaussian"){
+        throw std::invalid_argument("Scattering table \"" + cctbx_table_string + "\" is not recognized.");
+    }
+    return discamb_table_string;
+}
 
 AnyScattererStructureFactorCalculator get_IAM_calculator(Crystal &crystal, string &table){
     shared_ptr<AtomicFormFactorCalculationsManager> formfactorCalculator;

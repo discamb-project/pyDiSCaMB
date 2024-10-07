@@ -23,6 +23,7 @@ def get_random_crystal(
     with_occupancy: bool,
     with_anomalous: str,
     atoms: str,
+    scattering_table: str,
 ) -> random_structure.xray_structure:
     # We use bool() on some of the params instead of true/false to make pytest output more readable
     if atoms == "single weak":
@@ -49,7 +50,7 @@ def get_random_crystal(
         xrs.shake_fps()
     if "fdoubleprime" in with_anomalous:
         xrs.shake_fdps()
-    xrs.scattering_type_registry(table="electron")
+    xrs.scattering_type_registry(table=scattering_table)
     return xrs
 
 
@@ -64,6 +65,10 @@ def get_IAM_correctness_score(xrs: random_structure.xray_structure) -> float:
 
 
 @pytest.mark.slow
+@pytest.mark.parametrize(
+    "scattering_table",
+    ["it1992", "wk1995", "electron"],
+)
 @pytest.mark.parametrize("space_group", range(1, 231))
 @pytest.mark.parametrize("with_adps", ["random u_iso", "random u_aniso", None])
 @pytest.mark.parametrize("with_occupancy", ["random occupancy", None])
@@ -81,10 +86,23 @@ def test_IAM_correctness_random_crystal(
     with_occupancy: bool,
     with_anomalous: str,
     atoms: str,
+    scattering_table: str,
 ):
     xrs = get_random_crystal(
-        space_group, with_adps, with_occupancy, with_anomalous, atoms
+        space_group, with_adps, with_occupancy, with_anomalous, atoms, scattering_table
     )
     score = get_IAM_correctness_score(xrs)
     # Use 0.05% as threshold
     assert score < 0.0005
+
+if __name__ == "__main__":
+    space_group: int = 19
+    with_adps: bool = False
+    with_occupancy: bool = False
+    with_anomalous: str = ""
+    atoms: str = "single weak"
+    scattering_table: str = "electron"
+    xrs = get_random_crystal(
+        space_group, with_adps, with_occupancy, with_anomalous, atoms, scattering_table
+    )
+    score = get_IAM_correctness_score(xrs)

@@ -31,10 +31,11 @@ ManagedDiscambWrapper::FCalcManager ManagedDiscambWrapper::manager_setup(double 
     get_crystal(crystal);
     vector<Vector3i> hkl;
     get_hkl(d_min, hkl);
+    string table = get_discamb_table_string();
     switch (method)
     {
     case FCalcMethod::IAM:{
-        AnyScattererStructureFactorCalculator calculator = get_IAM_calculator(crystal, mTableString);
+        AnyScattererStructureFactorCalculator calculator = get_IAM_calculator(crystal, table);
         return FCalcManager(calculator, crystal, hkl);
         break;
     }
