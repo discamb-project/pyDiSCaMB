@@ -3,6 +3,7 @@ import pydiscamb
 from cctbx.development import random_structure
 from cctbx.sgtbx import space_group_info
 from cctbx.array_family import flex
+from cctbx.eltbx import xray_scattering
 
 import pytest
 
@@ -106,3 +107,27 @@ if __name__ == "__main__":
         space_group, with_adps, with_occupancy, with_anomalous, atoms, scattering_table
     )
     score = get_IAM_correctness_score(xrs)
+
+
+def test_IAM_custom_table():
+    element = "C"
+    d_min = 2.0
+
+    group = space_group_info(19)
+    xrs = random_structure.xray_structure(
+        space_group_info       = group,
+        elements               = [element,]*10,
+        general_positions_only = False,
+        use_u_iso              = True,
+        random_u_iso           = True)
+    scattering_dictionary = dict()
+    array_of_a = [0.0893, 0.2563, 0.7570, 1.0487, 0.3575]
+    array_of_b = [0.2465, 1.7100, 6.4094, 18.6113, 50.2523]
+    scattering_dictionary[element] = xray_scattering.gaussian(
+        tuple(array_of_a),
+        tuple(array_of_b))
+    xrs.scattering_type_registry(custom_dict = scattering_dictionary)
+    sf_1 = xrs.structure_factors(d_min=d_min, algorithm="direct").f_calc().data()
+    sf_2 = pydiscamb.DiscambWrapperTests(xrs).test_f_calc([element], [array_of_a], [array_of_b], d_min)
+    score = compare_structure_factors(sf_1, flex.complex_double(sf_2))
+    assert score < 1e-4

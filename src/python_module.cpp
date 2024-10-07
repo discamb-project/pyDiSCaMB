@@ -101,6 +101,7 @@ PYBIND11_MODULE(_pydiscamb, m) {
         .def(py::init<py::object>())
         .def("test_get_crystal", &DiscambWrapperTests::test_get_crystal)
         .def("test_update_atoms", &DiscambWrapperTests::test_update_atoms)
+        .def("test_f_calc", &DiscambWrapperTests::test_f_calc)
     ;
 
     py::class_<ManagedDiscambWrapper, DiscambWrapper>(m, 

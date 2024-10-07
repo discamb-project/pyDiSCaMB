@@ -223,6 +223,7 @@ void DiscambWrapper::update_atoms(Crystal &crystal){
 string DiscambWrapper::get_discamb_table_string(){
     string cctbx_table_string = mStructure.attr("scattering_type_registry_params").attr("table").cast<string>();
     string discamb_table_string;
+    // Valid cctbx entries:
     // ["n_gaussian", "it1992", "wk1995", "xray", "electron", "neutron"]
     if (cctbx_table_string == "electron"){
         discamb_table_string = "electron-cctbx";
@@ -233,13 +234,7 @@ string DiscambWrapper::get_discamb_table_string(){
     else if (cctbx_table_string == "wk1995"){
         discamb_table_string = "Waasmeier-Kirfel";
     }
-    else if (cctbx_table_string == "xray"){
-        throw std::invalid_argument("Scattering table \"" + cctbx_table_string + "\" is not recognized.");
-    }
-    else if (cctbx_table_string == "neutron"){
-        throw std::invalid_argument("Scattering table \"" + cctbx_table_string + "\" is not recognized.");
-    }
-    else if (cctbx_table_string == "n_gaussian"){
+    else {
         throw std::invalid_argument("Scattering table \"" + cctbx_table_string + "\" is not recognized.");
     }
     return discamb_table_string;
