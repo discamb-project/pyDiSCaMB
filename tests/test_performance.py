@@ -36,106 +36,37 @@ def test_update_atoms_performance(large_random_structure):
         f"Runtime for {n_iter = :3_}, {len(large_random_structure.scatterers())} scatterers: {end - start :.1f}s"
     )
 
-
-@pytest.mark.slow
-def test_f_calc_IAM_performance(large_random_structure):
+def _test_f_calc_performance(structure, method, n_iter, d_min):
     from time import perf_counter
-    from pydiscamb import DiscambWrapper
+    from pydiscamb import DiscambWrapperTests, FCalcMethod
+    method = {"IAM": FCalcMethod.IAM, "TAAM": FCalcMethod.TAAM}[method]
 
-    n_iter = 100
-    d_min = 4.0
-
-    wrapper = DiscambWrapper(large_random_structure)
+    wrapper = DiscambWrapperTests(structure, method)
 
     start = perf_counter()
-    for _ in range(n_iter):
-        sf = wrapper.f_calc_IAM(d_min)
+    runtime = wrapper.get_f_calc_runtime(n_iter, d_min)
+    mid = perf_counter()
+    long_runtime = wrapper.get_f_calc_runtime_with_atom_updates(n_iter, d_min)
     end = perf_counter()
 
-    print(
-        f"Runtime for {n_iter = :3_}, {len(large_random_structure.scatterers())} scatterers, {len(sf)} reflections: {end - start :.1f}s"
-    )
+    for _ in range(n_iter):
+        structure.structure_factors(d_min=d_min, algorithm="direct").f_calc().data()
+    cctbx_end = perf_counter()
 
+    print(
+        f"""{method.name} runtime for {n_iter = :3_}, {len(structure.scatterers())} scatterers, {d_min = :.1f} ({len(wrapper.f_calc(d_min))} hkls): 
+        No updates:   {runtime / 1000 :.1f}s ({(mid - start) * 1000 - runtime :.1f}ms overhead)
+        With updates: {long_runtime / 1000 :.1f}s ({(end - mid) * 1000 - runtime :.1f}ms overhead)
+        cctbx (IAM):  {cctbx_end - end :.1f}s
+        """
+    )
 
 @pytest.mark.slow
-def test_f_calc_TAAM_performance(lysosyme):
-    from time import perf_counter
-    from pydiscamb import DiscambWrapper
-
-    n_iter = 100
-    d_min = 3.0
-
-    wrapper = DiscambWrapper(lysosyme)
-
-    start = perf_counter()
-    for _ in range(n_iter):
-        sf = wrapper.f_calc_TAAM(d_min)
-    end = perf_counter()
-
-    print(
-        f"Runtime for {n_iter = :3_}, {len(lysosyme.scatterers())} scatterers, {len(sf)} reflections: {end - start :.1f}s"
-    )
-
+@pytest.mark.parametrize("method", ["IAM", "TAAM"])
+def test_f_calc_performance_large_structure(lysozyme, method):
+    _test_f_calc_performance(lysozyme, method, n_iter=10, d_min=1)
 
 @pytest.mark.slow
-def test_f_calc_TAAM_interactive_performance(lysosyme):
-    from time import perf_counter
-    from pydiscamb import ManagedDiscambWrapper, FCalcMethod
-
-    n_iter = 100
-    d_min = 3.0
-
-    wrapper = ManagedDiscambWrapper(lysosyme, d_min, FCalcMethod.TAAM)
-
-    start = perf_counter()
-    for _ in range(n_iter):
-        sf = wrapper.f_calc()
-    end = perf_counter()
-
-    print(
-        f"Runtime for {n_iter = :3_}, {len(lysosyme.scatterers())} scatterers, {len(sf)} reflections: {end - start :.1f}s"
-    )
-
-
-@pytest.mark.slow
-def test_f_calc_IAM_interactive_performance(large_random_structure):
-    from time import perf_counter
-    from pydiscamb import ManagedDiscambWrapper, FCalcMethod
-
-    n_iter = 100
-    d_min = 4.0
-
-    wrapper = ManagedDiscambWrapper(large_random_structure, d_min, FCalcMethod.IAM)
-
-    start = perf_counter()
-    for _ in range(n_iter):
-        sf = wrapper.f_calc()
-    end = perf_counter()
-
-    print(
-        f"Runtime for {n_iter = :3_}, {len(large_random_structure.scatterers())} scatterers, {len(sf)} reflections: {end - start :.1f}s"
-    )
-
-def test_f_calc_IAM_update_structure_interactive_performance(large_random_structure):
-    from time import perf_counter
-    from random import random, choices
-    from pydiscamb import ManagedDiscambWrapper, FCalcMethod
-
-    n_iter = 100
-    d_min = 4.0
-
-    wrapper = ManagedDiscambWrapper(large_random_structure, d_min, FCalcMethod.IAM)
-    sf_before = wrapper.f_calc()
-    runtime = 0
-    for _ in range(n_iter):
-        # Only move 20% of the scatterers each time
-        n_scatterers = len(large_random_structure.scatterers())
-        for i in choices(list(range(n_scatterers)), k=n_scatterers // 5):
-            large_random_structure.scatterers()[i].site = (random(), random(), random())
-        start = perf_counter()
-        sf_after = wrapper.f_calc()
-        runtime += perf_counter() - start
-    print(
-        f"Runtime for {n_iter = :3_}, {len(large_random_structure.scatterers())} scatterers, {len(sf_before)} reflections: {runtime :.1f}s"
-    )
-    assert not pytest.approx(sf_before) == sf_after
+@pytest.mark.parametrize("method", ["IAM", "TAAM"])
+def test_f_calc_performance_small_structure(tyrosine, method):
+    _test_f_calc_performance(tyrosine, method, n_iter=10_000, d_min=3)
