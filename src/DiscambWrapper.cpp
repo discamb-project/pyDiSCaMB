@@ -24,57 +24,51 @@ using namespace discamb;
 using namespace std;
 
 
-// Forward declarations
-void calculateSfTaamMinimal(
-    const Crystal& crystal,
-    const vector<Vector3i>& hkl,
-    vector< complex<double> > &structureFactors);
+DiscambWrapper::DiscambWrapper(py::object structure, FCalcMethod method) :
+            mStructure(std::move(structure)),
+            mAnomalous(std::vector<std::complex<double>> {}),
+            mCrystal(),
+            mCalculator(mCrystal)
+            {
+                init_crystal();
+                mCalculator = discamb::AnyScattererStructureFactorCalculator(mCrystal);
+                switch (method)
+                {
+                case FCalcMethod::IAM: {
+                    string table = get_discamb_table_string();
+                    set_IAM_calculator(mCalculator, mCrystal, table);
+                    break;
+                }
+                case FCalcMethod::TAAM: {
+                    set_TAAM_calculator(mCalculator, mCrystal);
+                    break;
+                }
+                default:
+                    break;
+                }
+            };
 
-void calculateSfIamMinimal(
-    const Crystal& crystal,
-    const vector<Vector3i>& hkl,
-    vector< complex<double> >& structureFactors);
-    
-
-void DiscambWrapper::f_calc_hkl(const vector<Vector3i> &hkl, FCalcMethod method, vector<complex<double>> &sf){
-    sf.clear();
-    sf.resize(hkl.size());
-    Crystal crystal;
-    get_crystal(crystal);
-    string table = get_discamb_table_string();
-    switch (method)
-    {
-        case FCalcMethod::IAM: {
-            auto calculator = get_IAM_calculator(crystal, table);
-            calculator.setAnoumalous(mAnomalous);
-            calculator.calculateStructureFactors(hkl, sf);
-            break;
-        }
-        case FCalcMethod::TAAM: {
-            auto calculator = get_TAAM_calculator(crystal);
-            calculator.setAnoumalous(mAnomalous);
-            calculator.calculateStructureFactors(hkl, sf);
-            break;
-        }
-        default: {
-            on_error::throwException("Invalid method requested");
-            break;
-        }
-    }
+void DiscambWrapper::update(){
+    update_atoms();
+    mCalculator.setAnoumalous(mAnomalous);
+    mCalculator.update(mCrystal.atoms);
 }
 
-vector<complex<double>> DiscambWrapper::f_calc(const double d_min, FCalcMethod method){
+
+vector<complex<double>> DiscambWrapper::f_calc(const double d_min){
     vector<Vector3i> hkl;
     get_hkl(d_min, hkl);
     vector<complex<double>> sf;
-    f_calc_hkl(hkl, method, sf);
+    sf.resize(hkl.size());
+    update();
+    mCalculator.calculateStructureFactors(hkl, sf);
     return sf;
 }
 
 
-void DiscambWrapper::get_crystal(Crystal &crystal){
+void DiscambWrapper::init_crystal(){
     py::tuple cell_params = mStructure.attr("unit_cell")().attr("parameters")();
-    crystal.unitCell.set(
+    mCrystal.unitCell.set(
         cell_params[0].cast<double>(), 
         cell_params[1].cast<double>(), 
         cell_params[2].cast<double>(), 
@@ -89,69 +83,24 @@ void DiscambWrapper::get_crystal(Crystal &crystal){
         SpaceGroupOperation symop {symop_str};
         symops.push_back(symop);
     }
-    crystal.spaceGroup.set(symops);
+    mCrystal.spaceGroup.set(symops);
 
-    crystal.atoms.clear();
+
+    int num_atoms = mStructure.attr("scatterers")().attr("size")().cast<int>();
+    mCrystal.atoms.clear();
+    mCrystal.atoms.assign(num_atoms, AtomInCrystal());
     mAnomalous.clear();
-    for (auto scatterer_py : mStructure.attr("scatterers")()){
-        crystal.atoms.push_back(AtomInCrystal());
+    mAnomalous.assign(num_atoms, complex<double> (0.0, 0.0));
+    update_atoms();
+    
 
-        py::tuple xyz_py = scatterer_py.attr("site");
-        crystal.atoms.back().coordinates[0] = xyz_py[0].cast<float>();
-        crystal.atoms.back().coordinates[1] = xyz_py[1].cast<float>();
-        crystal.atoms.back().coordinates[2] = xyz_py[2].cast<float>();
-
-        crystal.atoms.back().coordinates_sigma[0] = 0.0;
-        crystal.atoms.back().coordinates_sigma[1] = 0.0;
-        crystal.atoms.back().coordinates_sigma[2] = 0.0;
-
-        crystal.atoms.back().coordinates_precision[0] = 0.0;
-        crystal.atoms.back().coordinates_precision[1] = 0.0;
-        crystal.atoms.back().coordinates_precision[2] = 0.0;
-
-        crystal.atoms.back().adp.clear();
-        if (scatterer_py.attr("flags").attr("use_u_iso")().cast<bool>()){
-            crystal.atoms.back().adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U11
-        }
-        else {
-            py::tuple u_star = scatterer_py.attr("u_star");
-            crystal.atoms.back().adp.push_back(u_star[0].cast<float>()); // U11
-            crystal.atoms.back().adp.push_back(u_star[1].cast<float>()); // U22
-            crystal.atoms.back().adp.push_back(u_star[2].cast<float>()); // U33
-            crystal.atoms.back().adp.push_back(u_star[3].cast<float>()); // U12
-            crystal.atoms.back().adp.push_back(u_star[4].cast<float>()); // U13
-            crystal.atoms.back().adp.push_back(u_star[5].cast<float>()); // U23
-        }
-        crystal.atoms.back().adp_sigma.clear();
-        crystal.atoms.back().adp_precision.clear();
-        for(int i = 0; i < crystal.atoms.back().adp.size(); i++){
-            crystal.atoms.back().adp_sigma.push_back(0.0);
-            crystal.atoms.back().adp_precision.push_back(0.0);
-        }
-        
-        crystal.atoms.back().label = scatterer_py.attr("scattering_type").cast<string>();
-
-        crystal.atoms.back().occupancy = scatterer_py.attr("occupancy").cast<float>();
-        crystal.atoms.back().multiplicity = scatterer_py.attr("multiplicity")().cast<float>();
-        crystal.atoms.back().occupancy_sigma = 0.0;
-
-        // This seems to be unused anyway
-        crystal.atoms.back().siteSymetry.clear();
-        crystal.atoms.back().siteSymetry.push_back(SpaceGroupOperation());
-
-        mAnomalous.push_back(complex<double> {
-            scatterer_py.attr("fp").cast<double>(),
-            scatterer_py.attr("fdp").cast<double>()
-        });
-    }
-
-    crystal.xyzCoordinateSystem = structural_parameters_convention::XyzCoordinateSystem::fractional;
+    mCrystal.xyzCoordinateSystem = structural_parameters_convention::XyzCoordinateSystem::fractional;
     // Assume all adps use the same convention
     if (mStructure.attr("use_u_iso")().attr("__getitem__")(0).cast<bool>()){
-        crystal.adpConvention = structural_parameters_convention::AdpConvention::U_cif;
+        mCrystal.adpConvention = structural_parameters_convention::AdpConvention::U_cif;
     }
     else{
-        crystal.adpConvention = structural_parameters_convention::AdpConvention::U_star;
+        mCrystal.adpConvention = structural_parameters_convention::AdpConvention::U_star;
     }
 }
 
@@ -169,48 +118,51 @@ void DiscambWrapper::get_hkl(double d, vector<Vector3i> &hkl){
     }
 }
 
-void DiscambWrapper::update_atoms(Crystal &crystal){
+void DiscambWrapper::update_atoms(){
     int idx = 0;
     for (auto scatterer_py : mStructure.attr("scatterers")()){
-
         py::tuple xyz_py = scatterer_py.attr("site");
-        crystal.atoms[idx].coordinates[0] = xyz_py[0].cast<float>();
-        crystal.atoms[idx].coordinates[1] = xyz_py[1].cast<float>();
-        crystal.atoms[idx].coordinates[2] = xyz_py[2].cast<float>();
+        mCrystal.atoms[idx].coordinates[0] = xyz_py[0].cast<float>();
+        mCrystal.atoms[idx].coordinates[1] = xyz_py[1].cast<float>();
+        mCrystal.atoms[idx].coordinates[2] = xyz_py[2].cast<float>();
 
-        crystal.atoms[idx].coordinates_sigma[0] = 0.0;
-        crystal.atoms[idx].coordinates_sigma[1] = 0.0;
-        crystal.atoms[idx].coordinates_sigma[2] = 0.0;
+        mCrystal.atoms[idx].coordinates_sigma[0] = 0.0;
+        mCrystal.atoms[idx].coordinates_sigma[1] = 0.0;
+        mCrystal.atoms[idx].coordinates_sigma[2] = 0.0;
 
-        crystal.atoms[idx].coordinates_precision[0] = 0.0;
-        crystal.atoms[idx].coordinates_precision[1] = 0.0;
-        crystal.atoms[idx].coordinates_precision[2] = 0.0;
+        mCrystal.atoms[idx].coordinates_precision[0] = 0.0;
+        mCrystal.atoms[idx].coordinates_precision[1] = 0.0;
+        mCrystal.atoms[idx].coordinates_precision[2] = 0.0;
 
-        crystal.atoms[idx].adp.clear();
-        crystal.atoms[idx].adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U11
-        // crystal.atoms[idx].adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U22
-        // crystal.atoms[idx].adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U33
-        // crystal.atoms[idx].adp.push_back(0.0); // U12
-        // crystal.atoms[idx].adp.push_back(0.0); // U13
-        // crystal.atoms[idx].adp.push_back(0.0); // U23
-
-        crystal.atoms[idx].adp_sigma.clear();
-        crystal.atoms[idx].adp_sigma.push_back(0.0);
-        // for(int i = 0; i < 6; i++){crystal.atoms[idx].adp_sigma.push_back(0.0);}
-
-        crystal.atoms[idx].adp_precision.clear();
-        crystal.atoms[idx].adp_precision.push_back(0.0);
-        // for(int i = 0; i < 6; i++){crystal.atoms[idx].adp_precision.push_back(0.0);}
+        mCrystal.atoms[idx].adp.clear();
+        if (scatterer_py.attr("flags").attr("use_u_iso")().cast<bool>()){
+            mCrystal.atoms[idx].adp.push_back(scatterer_py.attr("u_iso").cast<float>()); // U11
+        }
+        else {
+            py::tuple u_star = scatterer_py.attr("u_star");
+            mCrystal.atoms[idx].adp.push_back(u_star[0].cast<float>()); // U11
+            mCrystal.atoms[idx].adp.push_back(u_star[1].cast<float>()); // U22
+            mCrystal.atoms[idx].adp.push_back(u_star[2].cast<float>()); // U33
+            mCrystal.atoms[idx].adp.push_back(u_star[3].cast<float>()); // U12
+            mCrystal.atoms[idx].adp.push_back(u_star[4].cast<float>()); // U13
+            mCrystal.atoms[idx].adp.push_back(u_star[5].cast<float>()); // U23
+        }
+        mCrystal.atoms[idx].adp_sigma.clear();
+        mCrystal.atoms[idx].adp_precision.clear();
+        for(int i = 0; i < mCrystal.atoms[idx].adp.size(); i++){
+            mCrystal.atoms[idx].adp_sigma.push_back(0.0);
+            mCrystal.atoms[idx].adp_precision.push_back(0.0);
+        }
         
-        crystal.atoms[idx].label = scatterer_py.attr("scattering_type").cast<string>();
+        mCrystal.atoms[idx].label = scatterer_py.attr("scattering_type").cast<string>();
 
-        crystal.atoms[idx].occupancy = scatterer_py.attr("occupancy").cast<float>();
-        crystal.atoms[idx].multiplicity = scatterer_py.attr("multiplicity")().cast<float>();
-        crystal.atoms[idx].occupancy_sigma = 0.0;
+        mCrystal.atoms[idx].occupancy = scatterer_py.attr("occupancy").cast<float>();
+        mCrystal.atoms[idx].multiplicity = scatterer_py.attr("multiplicity")().cast<float>();
+        mCrystal.atoms[idx].occupancy_sigma = 0.0;
 
         // This seems to be unused anyway
-        crystal.atoms[idx].siteSymetry.clear();
-        crystal.atoms[idx].siteSymetry.push_back(SpaceGroupOperation());
+        mCrystal.atoms[idx].siteSymetry.clear();
+        mCrystal.atoms[idx].siteSymetry.push_back(SpaceGroupOperation());
 
         mAnomalous[idx] = complex<double> {
             scatterer_py.attr("fp").cast<double>(),
@@ -240,16 +192,14 @@ string DiscambWrapper::get_discamb_table_string(){
     return discamb_table_string;
 }
 
-AnyScattererStructureFactorCalculator get_IAM_calculator(Crystal &crystal, string &table){
+void set_IAM_calculator(AnyScattererStructureFactorCalculator &calculator, Crystal &crystal, string &table){
     shared_ptr<AtomicFormFactorCalculationsManager> formfactorCalculator;
     formfactorCalculator = shared_ptr<AtomicFormFactorCalculationsManager>(
         new IamFormFactorCalculationsManager(crystal, table));
-    AnyScattererStructureFactorCalculator calculator(crystal);
     calculator.setAtomicFormfactorManager(formfactorCalculator);
-    return calculator;
 }
 
-AnyScattererStructureFactorCalculator get_TAAM_calculator(Crystal &crystal){
+void set_TAAM_calculator(AnyScattererStructureFactorCalculator &calculator, Crystal &crystal){
 
     // set bank parameters
     MATTS_BankReader bankReader;
@@ -257,7 +207,7 @@ AnyScattererStructureFactorCalculator get_TAAM_calculator(Crystal &crystal){
     vector<AtomTypeHC_Parameters> hcParameters;
     BankSettings bankSettings;
 
-    ifstream bankStream {"data/empty_TAAM_databank.txt"};
+    ifstream bankStream {"/home/vife5188/testing/pyDiSCaMB/data/MATTS/MATTS2021databank.txt"};
     bankReader.read(bankStream, atomTypes, hcParameters, bankSettings, true);
 
     // assign atom types
@@ -309,7 +259,5 @@ AnyScattererStructureFactorCalculator get_TAAM_calculator(Crystal &crystal){
             nuclearCharge,
             hcManager));
 
-    AnyScattererStructureFactorCalculator calculator(crystal);
     calculator.setAtomicFormfactorManager(formfactorCalculator);
-    return calculator;
 }

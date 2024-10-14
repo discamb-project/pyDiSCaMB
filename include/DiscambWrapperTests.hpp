@@ -16,4 +16,6 @@ class DiscambWrapperTests : public DiscambWrapper{
             std::vector<std::vector<double>> b,
             double d_min
         );
+        double get_f_calc_runtime(int n_iter, double d_min = 2.0);
+        double get_f_calc_runtime_with_atom_updates(int n_iter, double d_min = 2.0);
 };

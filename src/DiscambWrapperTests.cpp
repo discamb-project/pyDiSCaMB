@@ -1,5 +1,7 @@
 #include "DiscambWrapperTests.hpp"
 
+#include "discamb/BasicUtilities/Timer.h"
+
 #include "discamb/Scattering/NGaussianFormFactor.h"
 #include "discamb/Scattering/IamFormFactorCalculationsManager.h"
 
@@ -10,16 +12,13 @@ using namespace discamb;
 
 void DiscambWrapperTests::test_get_crystal(int n_iter){
     for (int i = 0; i < n_iter; i++){
-        Crystal crystal;
-        get_crystal(crystal);
+        init_crystal();
     }
 }
 
 void DiscambWrapperTests::test_update_atoms(int n_iter){
-    Crystal crystal;
-    get_crystal(crystal);
     for (int i = 0; i < n_iter; i++){
-        update_atoms(crystal);
+        update_atoms();
     }
 }
 
@@ -31,8 +30,6 @@ vector<complex<double>> DiscambWrapperTests::test_f_calc(
 ){
     vector<Vector3i> hkl;
     get_hkl(d_min, hkl);
-    Crystal crystal;
-    get_crystal(crystal);
     vector<complex<double>> sf;
 
     map<string, NGaussianFormFactor> scatterers;
@@ -47,10 +44,39 @@ vector<complex<double>> DiscambWrapperTests::test_f_calc(
 
     shared_ptr<AtomicFormFactorCalculationsManager> formfactorCalculator;
     formfactorCalculator = shared_ptr<AtomicFormFactorCalculationsManager>(
-        new IamFormFactorCalculationsManager(crystal, scatterers));
-    AnyScattererStructureFactorCalculator calculator(crystal);
+        new IamFormFactorCalculationsManager(mCrystal, scatterers));
+    AnyScattererStructureFactorCalculator calculator(mCrystal);
     calculator.setAtomicFormfactorManager(formfactorCalculator);
 
     calculator.calculateStructureFactors(hkl, sf);
     return sf;
+}
+
+double DiscambWrapperTests::get_f_calc_runtime(int n_iter, double d_min){
+    CpuTimer timer;
+
+    vector<Vector3i> hkl;
+    get_hkl(d_min, hkl);
+    vector<complex<double>> sf;
+    sf.resize(hkl.size());
+    update();
+    timer.start();
+    for (int i = 0; i < n_iter; i++){
+        mCalculator.calculateStructureFactors(hkl, sf);
+    }
+    return timer.stop();
+}
+double DiscambWrapperTests::get_f_calc_runtime_with_atom_updates(int n_iter, double d_min){
+    CpuTimer timer;
+
+    vector<Vector3i> hkl;
+    get_hkl(d_min, hkl);
+    vector<complex<double>> sf;
+    sf.resize(hkl.size());
+    timer.start();
+    for (int i = 0; i < n_iter; i++){
+        update();
+        mCalculator.calculateStructureFactors(hkl, sf);
+    }
+    return timer.stop();
 }
