@@ -17,6 +17,7 @@ def random_structure() -> structure:
         random_u_iso=False,
         random_occupancy=False,
     )
+    xrs.scattering_type_registry(table="electron")
     return xrs
 
 
@@ -34,11 +35,12 @@ def large_random_structure() -> structure:
         random_u_iso=False,
         random_occupancy=False,
     )
+    xrs.scattering_type_registry(table="electron")
     return xrs
 
 
 @pytest.fixture
-def lysosyme() -> structure:
+def tyrosine() -> structure:
     import mmtbx.model
     import iotbx.pdb
     from libtbx.utils import null_out
@@ -75,4 +77,25 @@ ATOM     24  HH  TYR A   4       4.712   5.804   4.444  1.00 30.00           H
 """
     pdb_inp = iotbx.pdb.input(lines=pdb_str.split("\n"), source_info=None)
     model = mmtbx.model.manager(model_input=pdb_inp, log=null_out())
-    return model.get_xray_structure()
+    xrs = model.get_xray_structure()
+    xrs.scattering_type_registry(table="electron")
+    return xrs
+
+
+@pytest.fixture
+def lysozyme() -> structure:
+    import mmtbx.model
+    import iotbx.pdb
+    from libtbx.utils import null_out
+    import requests
+
+    data = requests.get("https://files.rcsb.org/view/1JKB.pdb")
+    pdb_str = data.content.decode("utf-8")
+    
+    pdb_inp = iotbx.pdb.input(lines=pdb_str.split("\n"), source_info=None)
+    model = mmtbx.model.manager(model_input=pdb_inp, log=null_out())
+    xrs = model.get_xray_structure()
+    xrs.scattering_type_registry(table="electron")
+    return xrs
+
+
