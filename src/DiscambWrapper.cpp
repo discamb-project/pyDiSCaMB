@@ -173,7 +173,12 @@ void DiscambWrapper::update_atoms(){
 }
 
 string DiscambWrapper::get_discamb_table_string(){
-    string cctbx_table_string = mStructure.attr("scattering_type_registry_params").attr("table").cast<string>();
+    auto py_table_string = mStructure.attr("scattering_type_registry_params").attr("table");
+    // default (i.e. no table provided)
+    if (py::isinstance<py::none>(py_table_string)){
+        return "Waasmeier-Kirfel";
+    }
+    string cctbx_table_string = py_table_string.cast<string>();
     string discamb_table_string;
     // Valid cctbx entries:
     // ["n_gaussian", "it1992", "wk1995", "xray", "electron", "neutron"]
