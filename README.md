@@ -2,6 +2,12 @@
 
 Simple pybind11 wrapper to communicate with DiSCaMB from cctbx
 
+`git clone --recursive git@github.com:viljarjf/pyDiSCaMB.git`
+
+**LICENSE NOTE**
+Recursive cloning installs the [MATTS databank](https://www.github.com/discamb-project/MATTS), which uses a license restricting commercial use.
+Building the project with the databank will **include the databank in the built module**, which should be taken into account if the build is distributed.
+
 ## Installation
 
 Tested with Cmake 3.22.3, gcc 11.4 on WSL2 ubuntu in Windows 11.

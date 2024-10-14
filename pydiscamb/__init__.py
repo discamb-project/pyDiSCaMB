@@ -16,3 +16,7 @@ __all__ = [
     "DiscambWrapper",
     "FCalcMethod",
 ]
+
+def _get_TAAM_databank_directory() -> str:
+    from pathlib import Path
+    return str(Path(__file__).parent / "data")

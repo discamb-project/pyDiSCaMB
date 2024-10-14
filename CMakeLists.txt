@@ -44,16 +44,11 @@ else()
   add_subdirectory(lib/discamb)
 endif()
 
-# TAAM databank
-file(GLOB_RECURSE TAAM_DATA_FILES "${PROJECT_SOURCE_DIR}/data/*databank.txt") 
-file(COPY ${TAAM_DATA_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
-
 # python module
 python_add_library(_pydiscamb MODULE 
 src/python_module.cpp 
 src/DiscambWrapper.cpp 
 src/DiscambWrapperTests.cpp
-src/ManagedDiscambWrapper.cpp
 )
 target_link_libraries(_pydiscamb PRIVATE pybind11::headers)
 target_link_libraries(_pydiscamb PRIVATE OpenMP::OpenMP_CXX)
@@ -73,3 +68,9 @@ COMMENT "Use stubgen to create .pyi for statement completion"
 )
 install(FILES ${CMAKE_BINARY_DIR}/stubs/_pydiscamb.pyi DESTINATION pydiscamb)
 endif()
+
+# TAAM databank
+file(GLOB_RECURSE TAAM_DATA_FILES "${PROJECT_SOURCE_DIR}/data/*databank.txt") 
+foreach(TAAM_BANK ${TAAM_DATA_FILES})
+  install(FILES ${TAAM_BANK} DESTINATION pydiscamb/data)
+endforeach(TAAM_BANK ${TAAM_DATA_FILES})
