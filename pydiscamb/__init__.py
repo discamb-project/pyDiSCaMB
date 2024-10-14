@@ -5,7 +5,6 @@ from ._pydiscamb import (
     calculate_structure_factors_TAAM,
     DiscambWrapper,
     DiscambWrapperTests,
-    ManagedDiscambWrapper,
     FCalcMethod,
 )
 
@@ -15,6 +14,5 @@ __all__ = [
     calculate_structure_factors_IAM,
     calculate_structure_factors_TAAM,
     "DiscambWrapper",
-    "ManagedDiscambWrapper",
     "FCalcMethod",
 ]
