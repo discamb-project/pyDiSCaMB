@@ -154,7 +154,8 @@ void DiscambWrapper::update_atoms(){
             mCrystal.atoms[idx].adp_precision.push_back(0.0);
         }
         
-        mCrystal.atoms[idx].label = scatterer_py.attr("scattering_type").cast<string>();
+        mCrystal.atoms[idx].type = scatterer_py.attr("scattering_type").cast<string>();
+        mCrystal.atoms[idx].label = scatterer_py.attr("label").cast<string>();
 
         mCrystal.atoms[idx].occupancy = scatterer_py.attr("occupancy").cast<float>();
         mCrystal.atoms[idx].multiplicity = scatterer_py.attr("multiplicity")().cast<float>();
