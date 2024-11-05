@@ -26,7 +26,9 @@ enum FCalcMethod {
 class DiscambWrapper {
     public:
         DiscambWrapper(py::object structure, FCalcMethod method = FCalcMethod::IAM);
-        
+        void set_indices(py::object indices);
+        void set_d_min(const double d_min);
+        std::vector<std::complex<double>> f_calc();
         std::vector<std::complex<double>> f_calc(const double d_min);
 
         
@@ -35,11 +37,11 @@ class DiscambWrapper {
         discamb::Crystal mCrystal;
         discamb::AnyScattererStructureFactorCalculator mCalculator;
         std::vector<std::complex<double>> mAnomalous;
+        std::vector<discamb::Vector3i> mHkl;
 
 
         void update();
         void init_crystal();
-        void get_hkl(double d, std::vector<discamb::Vector3i> &hkl);
         discamb::AnyScattererStructureFactorCalculator get_calculator();
         void update_atoms();
         std::string get_discamb_table_string();

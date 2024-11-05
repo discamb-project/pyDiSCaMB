@@ -81,8 +81,25 @@ PYBIND11_MODULE(_pydiscamb, m) {
         .def(py::init<py::object, FCalcMethod>(), py::arg("structure"), py::arg("method") = FCalcMethod::IAM)
         .def(
             "f_calc", 
-            &DiscambWrapper::f_calc, 
+            py::overload_cast<double>(&DiscambWrapper::f_calc), 
             R"pbdoc(Calculate the structure factors up to a given d-spacing)pbdoc",
+            py::arg("d_min")
+        )
+        .def(
+            "f_calc", 
+            py::overload_cast<>(&DiscambWrapper::f_calc), 
+            R"pbdoc(Calculate the structure factors for previously set hkl)pbdoc"
+        )
+        .def(
+            "set_indices",
+            &DiscambWrapper::set_indices,
+            R"pbdoc(Set indices for calculating f_calc. Input must be iterable of tuples with three ints)pbdoc",
+            py::arg("indices")
+        )
+        .def(
+            "set_d_min",
+            &DiscambWrapper::set_d_min,
+            R"pbdoc(Set minimum d-spacing for calculating f_calc)pbdoc",
             py::arg("d_min")
         )
     ;

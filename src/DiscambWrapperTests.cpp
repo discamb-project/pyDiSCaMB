@@ -28,9 +28,10 @@ vector<complex<double>> DiscambWrapperTests::test_f_calc(
     vector<vector<double>> b,
     double d_min
 ){
-    vector<Vector3i> hkl;
-    get_hkl(d_min, hkl);
+    set_d_min(d_min);
+
     vector<complex<double>> sf;
+    sf.resize(mHkl.size());
 
     map<string, NGaussianFormFactor> scatterers;
     for (int i = 0; i < atom_labels.size(); i++){
@@ -48,35 +49,33 @@ vector<complex<double>> DiscambWrapperTests::test_f_calc(
     AnyScattererStructureFactorCalculator calculator(mCrystal);
     calculator.setAtomicFormfactorManager(formfactorCalculator);
 
-    calculator.calculateStructureFactors(hkl, sf);
+    calculator.calculateStructureFactors(mHkl, sf);
     return sf;
 }
 
 double DiscambWrapperTests::get_f_calc_runtime(int n_iter, double d_min){
     CpuTimer timer;
-
-    vector<Vector3i> hkl;
-    get_hkl(d_min, hkl);
+    
+    set_d_min(d_min);
     vector<complex<double>> sf;
-    sf.resize(hkl.size());
+    sf.resize(mHkl.size());
     update();
     timer.start();
     for (int i = 0; i < n_iter; i++){
-        mCalculator.calculateStructureFactors(hkl, sf);
+        mCalculator.calculateStructureFactors(mHkl, sf);
     }
     return timer.stop();
 }
 double DiscambWrapperTests::get_f_calc_runtime_with_atom_updates(int n_iter, double d_min){
     CpuTimer timer;
 
-    vector<Vector3i> hkl;
-    get_hkl(d_min, hkl);
+    set_d_min(d_min);
     vector<complex<double>> sf;
-    sf.resize(hkl.size());
+    sf.resize(mHkl.size());
     timer.start();
     for (int i = 0; i < n_iter; i++){
         update();
-        mCalculator.calculateStructureFactors(hkl, sf);
+        mCalculator.calculateStructureFactors(mHkl, sf);
     }
     return timer.stop();
 }

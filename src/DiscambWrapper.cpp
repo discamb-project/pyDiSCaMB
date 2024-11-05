@@ -28,7 +28,8 @@ DiscambWrapper::DiscambWrapper(py::object structure, FCalcMethod method) :
             mStructure(std::move(structure)),
             mAnomalous(std::vector<std::complex<double>> {}),
             mCrystal(),
-            mCalculator(mCrystal)
+            mCalculator(mCrystal),
+            mHkl(vector<Vector3i> {{0, 0, 0}})
             {
                 init_crystal();
                 mCalculator = discamb::AnyScattererStructureFactorCalculator(mCrystal);
@@ -55,14 +56,17 @@ void DiscambWrapper::update(){
 }
 
 
-vector<complex<double>> DiscambWrapper::f_calc(const double d_min){
-    vector<Vector3i> hkl;
-    get_hkl(d_min, hkl);
+vector<complex<double>> DiscambWrapper::f_calc(){
     vector<complex<double>> sf;
-    sf.resize(hkl.size());
+    sf.resize(mHkl.size());
     update();
-    mCalculator.calculateStructureFactors(hkl, sf);
+    mCalculator.calculateStructureFactors(mHkl, sf);
     return sf;
+}
+
+vector<complex<double>> DiscambWrapper::f_calc(const double d_min){
+    set_d_min(d_min);
+    return f_calc();
 }
 
 
@@ -104,16 +108,21 @@ void DiscambWrapper::init_crystal(){
     }
 }
 
-void DiscambWrapper::get_hkl(double d, vector<Vector3i> &hkl){
+void DiscambWrapper::set_d_min(const double d_min){
     bool anomalous_flag = mStructure.attr("scatterers")().attr("count_anomalous")().cast<int>() != 0;
-    py::object miller_py = mStructure.attr("build_miller_set")(anomalous_flag, d);
+    py::object miller_py = mStructure.attr("build_miller_set")(anomalous_flag, d_min);
 
-    for (auto hkl_py_auto : miller_py.attr("indices")().attr("as_vec3_double")()){
+    set_indices(miller_py.attr("indices")());
+}
+
+void DiscambWrapper::set_indices(py::object indices){
+    mHkl.clear();
+    for (auto hkl_py_auto : indices){
         py::tuple hkl_py = hkl_py_auto.cast<py::tuple>();
-        hkl.push_back(Vector3i {
-            static_cast<int>(hkl_py[0].cast<double>()),
-            static_cast<int>(hkl_py[1].cast<double>()),
-            static_cast<int>(hkl_py[2].cast<double>())
+        mHkl.push_back(Vector3i {
+            hkl_py[0].cast<int>(),
+            hkl_py[1].cast<int>(),
+            hkl_py[2].cast<int>()
         });
     }
 }
@@ -230,6 +239,10 @@ void set_TAAM_calculator(AnyScattererStructureFactorCalculator &calculator, Crys
     vector < LocalCoordinateSystem<AtomInCrystalID> > lcs;
     vector<int> types;
     assigner.assign(crystal, types, lcs);
+
+    // ofstream log_file {"discamb_assigner_log.txt"};
+    // assigner.printAssignment(log_file, crystal, types, lcs);
+    // log_file.close();
 
     // get TAAM parameters with unit cell charge scaled/shifted to 0
 
