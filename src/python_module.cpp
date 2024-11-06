@@ -117,11 +117,11 @@ PYBIND11_MODULE(_pydiscamb, m) {
         .def("get_f_calc_runtime_with_atom_updates", &DiscambWrapperTests::get_f_calc_runtime_with_atom_updates)
     ;
 
-    py::class_<GaussianScatterer>(m, "GaussianScatterer")
-        .def_readwrite("a", &GaussianScatterer::a)
-        .def_readwrite("b", &GaussianScatterer::b)
-        .def_readwrite("c", &GaussianScatterer::c)
-        .def("__repr__", &GaussianScatterer::repr)
+    py::class_<GaussianScatteringParameters>(m, "GaussianScatteringParameters")
+        .def_readwrite("a", &GaussianScatteringParameters::a)
+        .def_readwrite("b", &GaussianScatteringParameters::b)
+        .def_readwrite("c", &GaussianScatteringParameters::c)
+        .def("__repr__", &GaussianScatteringParameters::repr)
     ;
 
     m.def(

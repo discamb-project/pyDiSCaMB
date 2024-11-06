@@ -57,9 +57,9 @@ vector<string> get_possible_entries(string atom){
     return out;
 }
 
-map<string, GaussianScatterer> get_table(string table){
+map<string, GaussianScatteringParameters> get_table(string table){
     string alias = table_alias(table);
-    map<string, GaussianScatterer> out;
+    map<string, GaussianScatteringParameters> out;
     for (int z = 1; z < 120; z++){
         string atom = periodic_table::symbol(z);
         vector<string> possible_entries = get_possible_entries(atom);
@@ -68,7 +68,7 @@ map<string, GaussianScatterer> get_table(string table){
                 continue;
             }
             NGaussianFormFactor ff = n_gaussian_form_factors_table::getFormFactor(possible_entry, alias);
-            GaussianScatterer s;
+            GaussianScatteringParameters s;
             ff.get_parameters(s.a, s.b, s.c);
             out[possible_entry] = s;
         }
@@ -76,10 +76,10 @@ map<string, GaussianScatterer> get_table(string table){
     return out;
 }
 
-string GaussianScatterer::repr(){
+string GaussianScatteringParameters::repr(){
     stringstream out;
     out << fixed << setprecision(2);
-    out << "GaussianScatterer(" << endl;
+    out << "GaussianScatteringParameters(" << endl;
     out << "    a = [";
     for (double ai: a){
         out << ai << ", ";

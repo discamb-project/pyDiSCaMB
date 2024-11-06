@@ -4,11 +4,11 @@
 #include <map>
 #include <vector>
 
-struct GaussianScatterer {
+struct GaussianScatteringParameters {
     std::vector<double> a;
     std::vector<double> b;
     double c;
     std::string repr();
 };
 
-std::map<std::string, GaussianScatterer> get_table(std::string table);
+std::map<std::string, GaussianScatteringParameters> get_table(std::string table);
