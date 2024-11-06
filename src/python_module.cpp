@@ -11,6 +11,7 @@
 
 #include "DiscambWrapper.hpp"
 #include "DiscambWrapperTests.hpp"
+#include "scattering_table.hpp"
 
 
 namespace py = pybind11;
@@ -115,4 +116,18 @@ PYBIND11_MODULE(_pydiscamb, m) {
         .def("get_f_calc_runtime", &DiscambWrapperTests::get_f_calc_runtime)
         .def("get_f_calc_runtime_with_atom_updates", &DiscambWrapperTests::get_f_calc_runtime_with_atom_updates)
     ;
+
+    py::class_<GaussianScatterer>(m, "GaussianScatterer")
+        .def_readwrite("a", &GaussianScatterer::a)
+        .def_readwrite("b", &GaussianScatterer::b)
+        .def_readwrite("c", &GaussianScatterer::c)
+        .def("__repr__", &GaussianScatterer::repr)
+    ;
+
+    m.def(
+        "get_table",
+        &get_table,
+        R"pbdoc(Get a dict of all scatterers in a given table)pbdoc",
+        py::arg("table")
+    );
 }

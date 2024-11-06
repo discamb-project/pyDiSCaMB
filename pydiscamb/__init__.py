@@ -6,6 +6,7 @@ from ._pydiscamb import (
     DiscambWrapper,
     DiscambWrapperTests,
     FCalcMethod,
+    get_table,
 )
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     calculate_structure_factors_TAAM,
     "DiscambWrapper",
     "FCalcMethod",
+    "get_table",
 ]
 
 def _get_TAAM_databank_directory() -> str:

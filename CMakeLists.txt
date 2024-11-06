@@ -49,6 +49,7 @@ python_add_library(_pydiscamb MODULE
 src/python_module.cpp 
 src/DiscambWrapper.cpp 
 src/DiscambWrapperTests.cpp
+src/scattering_table.cpp
 )
 target_link_libraries(_pydiscamb PRIVATE pybind11::headers)
 target_link_libraries(_pydiscamb PRIVATE OpenMP::OpenMP_CXX)
