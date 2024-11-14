@@ -23,6 +23,18 @@
 using namespace discamb;
 using namespace std;
 
+vector<vector<complex<double>>> FCalcDerivatives::siteDerivatives(){
+    vector<vector<complex<double>>> out;
+    for (int i = 0; i < atomicPostionDerivatives.size(); i++){
+        out.push_back({
+            atomicPostionDerivatives[i].x,
+            atomicPostionDerivatives[i].y,
+            atomicPostionDerivatives[i].z
+        });
+    }
+    return out;
+}
+
 
 DiscambWrapper::DiscambWrapper(py::object structure, FCalcMethod method) :
             mStructure(std::move(structure)),
@@ -69,6 +81,23 @@ vector<complex<double>> DiscambWrapper::f_calc(const double d_min){
     return f_calc();
 }
 
+vector<FCalcDerivatives> DiscambWrapper::d_f_calc_d_params(){
+    vector<FCalcDerivatives> out;
+    out.resize(mHkl.size());
+
+    vector<bool> count_atom_contribution {mCrystal.atoms.size(), false};
+
+    for (int i = 0; i < mHkl.size(); i++){
+        out[i].hkl = {mHkl[i].x, mHkl[i].y, mHkl[i].z};
+        mCalculator.calculateStructureFactorsAndDerivatives(
+            out[i].hkl,
+            out[i].structure_factor,
+            out[i],
+            count_atom_contribution
+        );
+    }
+    return out;
+}
 
 void DiscambWrapper::init_crystal(){
     py::tuple cell_params = mStructure.attr("unit_cell")().attr("parameters")();

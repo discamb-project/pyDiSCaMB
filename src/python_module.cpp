@@ -75,6 +75,14 @@ PYBIND11_MODULE(_pydiscamb, m) {
         .value("TAAM", FCalcMethod::TAAM, R"pbdoc(Transferable Aspherical Atom Model)pbdoc")
         .export_values();
 
+    py::class_<FCalcDerivatives>(m, "FCalcDerivatives")
+        .def_readwrite("hkl", &FCalcDerivatives::hkl)
+        .def_readwrite("structure_factor", &FCalcDerivatives::structure_factor)
+        .def_property_readonly("site_derivatives", &FCalcDerivatives::siteDerivatives)
+        .def_readwrite("adp_derivatives", &FCalcDerivatives::adpDerivatives)
+        .def_readwrite("occupancy_derivatives", &FCalcDerivatives::occupancyDerivatives)
+    ;
+
     py::class_<DiscambWrapper>(m, 
             "DiscambWrapper", 
             R"pbdoc(Calculate structure factors using DiSCaMB)pbdoc"
@@ -90,6 +98,11 @@ PYBIND11_MODULE(_pydiscamb, m) {
             "f_calc", 
             py::overload_cast<>(&DiscambWrapper::f_calc), 
             R"pbdoc(Calculate the structure factors for previously set hkl)pbdoc"
+        )
+        .def(
+            "d_f_calc_d_params",
+            &DiscambWrapper::d_f_calc_d_params,
+            R"pbdoc(Calculate the structure factors, and derivatives, for previously set hkl)pbdoc"
         )
         .def(
             "set_indices",

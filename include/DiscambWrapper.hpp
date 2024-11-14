@@ -22,6 +22,16 @@ enum FCalcMethod {
     TAAM
 };
 
+struct FCalcDerivatives : discamb::SfDerivativesAtHkl {
+    std::vector<int> hkl;
+    std::complex<double> structure_factor;
+    std::complex<double> fpDerivative {0.0, 0.0};
+    std::complex<double> fdpDerivative {0.0, 0.0};
+
+    // Translate discamb::Vector3 to std::vector
+    std::vector<std::vector<std::complex<double>>> siteDerivatives();
+};
+
 
 class DiscambWrapper {
     public:
@@ -30,7 +40,7 @@ class DiscambWrapper {
         void set_d_min(const double d_min);
         std::vector<std::complex<double>> f_calc();
         std::vector<std::complex<double>> f_calc(const double d_min);
-
+        std::vector<FCalcDerivatives> d_f_calc_d_params();
         
     protected:
         py::object mStructure;
