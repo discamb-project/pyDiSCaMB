@@ -83,6 +83,18 @@ PYBIND11_MODULE(_pydiscamb, m) {
         .def_readwrite("occupancy_derivatives", &FCalcDerivatives::occupancyDerivatives)
     ;
 
+    py::class_<TargetFunctionAtomicParamDerivatives>(m, "TargetDerivatives")
+        .def_property_readonly("site_derivatives", [](const TargetFunctionAtomicParamDerivatives &t) {
+            return vector<double> {
+                t.atomic_position_derivatives.x, 
+                t.atomic_position_derivatives.y, 
+                t.atomic_position_derivatives.z
+            };
+        })
+        .def_readwrite("adp_derivatives", &TargetFunctionAtomicParamDerivatives::adp_derivatives)
+        .def_readwrite("occupancy_derivatives", &TargetFunctionAtomicParamDerivatives::occupancy_derivatives)
+    ;
+
     py::class_<DiscambWrapper>(m, 
             "DiscambWrapper", 
             R"pbdoc(Calculate structure factors using DiSCaMB)pbdoc"
@@ -103,6 +115,13 @@ PYBIND11_MODULE(_pydiscamb, m) {
             "d_f_calc_d_params",
             &DiscambWrapper::d_f_calc_d_params,
             R"pbdoc(Calculate the structure factors, and derivatives, for previously set hkl)pbdoc"
+        )
+        .def(
+            "d_target_d_params",
+            &DiscambWrapper::d_target_d_params,
+            py::return_value_policy::take_ownership,
+            R"pbdoc(Calculate the derivatives of a target function)pbdoc",
+            py::arg("d_target_d_f_calc")
         )
         .def(
             "set_indices",

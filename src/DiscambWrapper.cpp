@@ -35,38 +35,30 @@ vector<vector<complex<double>>> FCalcDerivatives::siteDerivatives(){
     return out;
 }
 
-
 DiscambWrapper::DiscambWrapper(py::object structure, FCalcMethod method) :
-            mStructure(std::move(structure)),
-            mAnomalous(std::vector<std::complex<double>> {}),
-            mCrystal(),
-            mCalculator(mCrystal),
-            mHkl(vector<Vector3i> {{0, 0, 0}})
-            {
-                init_crystal();
-                mCalculator = discamb::AnyScattererStructureFactorCalculator(mCrystal);
-                switch (method)
-                {
-                case FCalcMethod::IAM: {
-                    string table = get_discamb_table_string();
-                    set_IAM_calculator(mCalculator, mCrystal, table);
-                    break;
-                }
-                case FCalcMethod::TAAM: {
-                    set_TAAM_calculator(mCalculator, mCrystal);
-                    break;
-                }
-                default:
-                    break;
-                }
-            };
-
-void DiscambWrapper::update(){
-    update_atoms();
-    mCalculator.setAnoumalous(mAnomalous);
-    mCalculator.update(mCrystal.atoms);
-}
-
+    mStructure(std::move(structure)),
+    mAnomalous(std::vector<std::complex<double>> {}),
+    mCrystal(),
+    mCalculator(mCrystal),
+    mHkl(vector<Vector3i> {{0, 0, 0}}
+){
+    init_crystal();
+    mCalculator = discamb::AnyScattererStructureFactorCalculator(mCrystal);
+    switch (method)
+    {
+    case FCalcMethod::IAM: {
+        string table = get_discamb_table_string();
+        set_IAM_calculator(mCalculator, mCrystal, table);
+        break;
+    }
+    case FCalcMethod::TAAM: {
+        set_TAAM_calculator(mCalculator, mCrystal);
+        break;
+    }
+    default:
+        break;
+    }
+};
 
 vector<complex<double>> DiscambWrapper::f_calc(){
     vector<complex<double>> sf;
@@ -97,6 +89,40 @@ vector<FCalcDerivatives> DiscambWrapper::d_f_calc_d_params(){
         );
     }
     return out;
+}
+
+vector<TargetFunctionAtomicParamDerivatives> DiscambWrapper::d_target_d_params(vector<complex<double>> d_target_d_f_calc){
+
+    vector<complex<double>> sf;
+    vector<TargetFunctionAtomicParamDerivatives> out;
+    out.resize(mCrystal.atoms.size());
+    vector<bool> count_atom_contribution {mCrystal.atoms.size(), true};
+
+    // Ensure correct convention
+    structural_parameters_convention::AdpConvention ac;
+    structural_parameters_convention::XyzCoordinateSystem xyzc;
+    mCalculator.getParametersConvention(xyzc, ac);
+
+    mCalculator.setParametersConvention(
+        structural_parameters_convention::XyzCoordinateSystem::cartesian,
+        structural_parameters_convention::AdpConvention::U_cart
+    ),
+
+    mCalculator.calculateStructureFactorsAndDerivatives(
+        mHkl,
+        sf,
+        out,
+        d_target_d_f_calc,
+        count_atom_contribution
+    );
+    mCalculator.setParametersConvention(xyzc, ac);
+    return out;
+}
+
+void DiscambWrapper::update(){
+    update_atoms();
+    mCalculator.setAnoumalous(mAnomalous);
+    mCalculator.update(mCrystal.atoms);
 }
 
 void DiscambWrapper::init_crystal(){

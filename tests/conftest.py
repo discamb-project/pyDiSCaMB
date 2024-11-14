@@ -20,6 +20,39 @@ def random_structure() -> structure:
     xrs.scattering_type_registry(table="electron")
     return xrs
 
+@pytest.fixture
+def random_structure_u_iso() -> structure:
+    from cctbx.development import random_structure as cctbx_random_structure
+    from cctbx.sgtbx import space_group_info
+
+    group = space_group_info(19)
+    xrs = cctbx_random_structure.xray_structure(
+        space_group_info=group,
+        elements=["Au", "C"] * 3,
+        general_positions_only=False,
+        use_u_iso=True,
+        random_u_iso=True,
+        random_occupancy=False,
+    )
+    xrs.scattering_type_registry(table="electron")
+    return xrs
+
+@pytest.fixture
+def random_structure_u_aniso() -> structure:
+    from cctbx.development import random_structure as cctbx_random_structure
+    from cctbx.sgtbx import space_group_info
+
+    group = space_group_info(19)
+    xrs = cctbx_random_structure.xray_structure(
+        space_group_info=group,
+        elements=["Au", "C"] * 3,
+        general_positions_only=False,
+        use_u_aniso=True,
+        random_u_iso=True,
+        random_occupancy=False,
+    )
+    xrs.scattering_type_registry(table="electron")
+    return xrs
 
 @pytest.fixture
 def large_random_structure() -> structure:
