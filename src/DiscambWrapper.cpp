@@ -77,18 +77,26 @@ vector<FCalcDerivatives> DiscambWrapper::d_f_calc_d_params(){
     vector<FCalcDerivatives> out;
     out.resize(mHkl.size());
 
-    //vector<bool> count_atom_contribution{mCrystal.atoms.size(), false};
-    vector<bool> count_atom_contribution (mCrystal.atoms.size(), true);
-
     for (int i = 0; i < mHkl.size(); i++){
-        out[i].hkl = {mHkl[i].x, mHkl[i].y, mHkl[i].z};
-        mCalculator.calculateStructureFactorsAndDerivatives(
-            out[i].hkl,
-            out[i].structure_factor,
-            out[i],
+        out[i] = d_f_calc_hkl_d_params(mHkl[i].x, mHkl[i].y, mHkl[i].z);
+    }
+    return out;
+}
+
+FCalcDerivatives DiscambWrapper::d_f_calc_hkl_d_params(py::tuple hkl){
+    return d_f_calc_hkl_d_params(hkl[0].cast<int>(), hkl[1].cast<int>(), hkl[2].cast<int>());
+}
+
+FCalcDerivatives DiscambWrapper::d_f_calc_hkl_d_params(int h, int k, int l){
+    FCalcDerivatives out;
+    out.hkl = {h, k, l};
+    vector<bool> count_atom_contribution (mCrystal.atoms.size(), true);
+    mCalculator.calculateStructureFactorsAndDerivatives(
+            out.hkl,
+            out.structure_factor,
+            out,
             count_atom_contribution
         );
-    }
     return out;
 }
 

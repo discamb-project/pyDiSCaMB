@@ -117,6 +117,20 @@ PYBIND11_MODULE(_pydiscamb, m) {
             R"pbdoc(Calculate the structure factors, and derivatives, for previously set hkl)pbdoc"
         )
         .def(
+            "d_f_calc_hkl_d_params",
+            py::overload_cast<py::tuple>(&DiscambWrapper::d_f_calc_hkl_d_params),
+            R"pbdoc(Calculate the structure factors, and derivatives, for a given hkl)pbdoc",
+            py::arg("hkl")
+        )
+        .def(
+            "d_f_calc_hkl_d_params",
+            py::overload_cast<int, int, int>(&DiscambWrapper::d_f_calc_hkl_d_params),
+            R"pbdoc(Calculate the structure factors, and derivatives, for a given hkl)pbdoc",
+            py::arg("h"),
+            py::arg("k"),
+            py::arg("l")
+        )
+        .def(
             "d_target_d_params",
             &DiscambWrapper::d_target_d_params,
             py::return_value_policy::take_ownership,

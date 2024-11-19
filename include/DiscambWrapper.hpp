@@ -41,6 +41,8 @@ class DiscambWrapper {
         std::vector<std::complex<double>> f_calc();
         std::vector<std::complex<double>> f_calc(const double d_min);
         std::vector<FCalcDerivatives> d_f_calc_d_params();
+        FCalcDerivatives d_f_calc_hkl_d_params(py::tuple hkl);
+        FCalcDerivatives d_f_calc_hkl_d_params(int h, int k, int l);
         std::vector<discamb::TargetFunctionAtomicParamDerivatives> d_target_d_params(std::vector<std::complex<double>> d_target_d_f_calc);
         
     protected:
