@@ -77,7 +77,8 @@ vector<FCalcDerivatives> DiscambWrapper::d_f_calc_d_params(){
     vector<FCalcDerivatives> out;
     out.resize(mHkl.size());
 
-    vector<bool> count_atom_contribution {mCrystal.atoms.size(), false};
+    //vector<bool> count_atom_contribution{mCrystal.atoms.size(), false};
+    vector<bool> count_atom_contribution (mCrystal.atoms.size(), true);
 
     for (int i = 0; i < mHkl.size(); i++){
         out[i].hkl = {mHkl[i].x, mHkl[i].y, mHkl[i].z};
@@ -96,7 +97,8 @@ vector<TargetFunctionAtomicParamDerivatives> DiscambWrapper::d_target_d_params(v
     vector<complex<double>> sf;
     vector<TargetFunctionAtomicParamDerivatives> out;
     out.resize(mCrystal.atoms.size());
-    vector<bool> count_atom_contribution {mCrystal.atoms.size(), true};
+    //vector<bool> count_atom_contribution {mCrystal.atoms.size(), true};
+    vector<bool> count_atom_contribution( mCrystal.atoms.size(), true );
 
     // Ensure correct convention
     structural_parameters_convention::AdpConvention ac;
