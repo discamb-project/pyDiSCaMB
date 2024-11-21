@@ -88,6 +88,7 @@ FCalcDerivatives DiscambWrapper::d_f_calc_hkl_d_params(py::tuple hkl){
 }
 
 FCalcDerivatives DiscambWrapper::d_f_calc_hkl_d_params(int h, int k, int l){
+    update();
     FCalcDerivatives out;
     out.hkl = {h, k, l};
     vector<bool> count_atom_contribution (mCrystal.atoms.size(), true);
@@ -101,7 +102,7 @@ FCalcDerivatives DiscambWrapper::d_f_calc_hkl_d_params(int h, int k, int l){
 }
 
 vector<TargetFunctionAtomicParamDerivatives> DiscambWrapper::d_target_d_params(vector<complex<double>> d_target_d_f_calc){
-
+    update();
     vector<complex<double>> sf;
     vector<TargetFunctionAtomicParamDerivatives> out;
     out.resize(mCrystal.atoms.size());
