@@ -45,6 +45,7 @@ class DiscambWrapper {
         FCalcDerivatives d_f_calc_hkl_d_params(int h, int k, int l);
         std::vector<discamb::TargetFunctionAtomicParamDerivatives> d_target_d_params(std::vector<std::complex<double>> d_target_d_f_calc);
         
+        void use_TAAM_databank(std::string databank_filepath, bool log_assignment = false);
     protected:
         py::object mStructure;
         discamb::Crystal mCrystal;
@@ -59,6 +60,3 @@ class DiscambWrapper {
         void update_atoms();
         std::string get_discamb_table_string();
 };
-
-void set_IAM_calculator( discamb::AnyScattererStructureFactorCalculator &calculator, discamb::Crystal &crystal, std::string &table);
-void set_TAAM_calculator( discamb::AnyScattererStructureFactorCalculator &calculator, discamb::Crystal &crystal);

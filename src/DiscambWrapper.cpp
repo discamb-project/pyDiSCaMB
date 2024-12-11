@@ -23,6 +23,19 @@
 using namespace discamb;
 using namespace std;
 
+void set_IAM_calculator(
+    discamb::AnyScattererStructureFactorCalculator &calculator,
+    discamb::Crystal &crystal,
+    std::string &table
+);
+void set_TAAM_calculator(
+    discamb::AnyScattererStructureFactorCalculator &calculator, 
+    discamb::Crystal &crystal, 
+    std::string bank_filepath,
+    bool log_assignment,
+    bool is_electron
+);
+
 vector<vector<complex<double>>> FCalcDerivatives::siteDerivatives(){
     vector<vector<complex<double>>> out;
     for (int i = 0; i < atomicPostionDerivatives.size(); i++){
@@ -52,7 +65,15 @@ DiscambWrapper::DiscambWrapper(py::object structure, FCalcMethod method) :
         break;
     }
     case FCalcMethod::TAAM: {
-        set_TAAM_calculator(mCalculator, mCrystal);
+        auto pydiscamb = py::module::import("pydiscamb.taam_parameters");
+        string bank_path = pydiscamb.attr("get_TAAM_root")().cast<string>();
+        if (pydiscamb.attr("is_MATTS_installed")()){
+            bank_path += "/MATTS2021databank.txt";
+        }
+        else {
+            bank_path += "/empty_taam_databank.txt";
+        }
+        use_TAAM_databank(bank_path);
         break;
     }
     default:
@@ -258,19 +279,33 @@ string DiscambWrapper::get_discamb_table_string(){
     string discamb_table_string;
     // Valid cctbx entries:
     // ["n_gaussian", "it1992", "wk1995", "xray", "electron", "neutron"]
-    if (cctbx_table_string == "electron"){
-        discamb_table_string = "electron-cctbx";
-    }
-    else if (cctbx_table_string == "it1992"){
+    
+    if (cctbx_table_string == "it1992"){
         discamb_table_string = "IT92";
     }
     else if (cctbx_table_string == "wk1995"){
         discamb_table_string = "Waasmeier-Kirfel";
     }
+    else if (cctbx_table_string == "xray"){
+        discamb_table_string = "Waasmeier-Kirfel";
+    }
+    else if (cctbx_table_string == "electron"){
+        discamb_table_string = "electron-cctbx";
+    }
     else {
         throw std::invalid_argument("Scattering table \"" + cctbx_table_string + "\" is not recognized.");
     }
     return discamb_table_string;
+}
+
+void DiscambWrapper::use_TAAM_databank(string databank_filepath, bool log_assignment){
+    set_TAAM_calculator(
+        mCalculator, 
+        mCrystal, 
+        databank_filepath, 
+        log_assignment, 
+        get_discamb_table_string() == "electron-cctbx"
+    );
 }
 
 void set_IAM_calculator(AnyScattererStructureFactorCalculator &calculator, Crystal &crystal, string &table){
@@ -280,25 +315,24 @@ void set_IAM_calculator(AnyScattererStructureFactorCalculator &calculator, Cryst
     calculator.setAtomicFormfactorManager(formfactorCalculator);
 }
 
-void set_TAAM_calculator(AnyScattererStructureFactorCalculator &calculator, Crystal &crystal){
+void set_TAAM_calculator(
+    AnyScattererStructureFactorCalculator &calculator, 
+    Crystal &crystal, 
+    string bank_filepath,
+    bool log_assignment,
+    bool is_electron
+    ){
 
-    // set bank parameters
+    // read bank parameters
     MATTS_BankReader bankReader;
     vector<AtomType> atomTypes;
     vector<AtomTypeHC_Parameters> hcParameters;
     BankSettings bankSettings;
 
-    string TAAM_root = py::module::import("pydiscamb").attr("get_TAAM_root")().cast<string>();
-
-    // Try to load the MATTS bank
-    ifstream bankStream { TAAM_root + "/MATTS2021databank.txt" };
-    if (!bankStream.good()){
-        bankStream = ifstream { TAAM_root + "/empty_TAAM_databank.txt" };
-    }
+    ifstream bankStream { bank_filepath };
     bankReader.read(bankStream, atomTypes, hcParameters, bankSettings, true);
 
     // assign atom types
-
     CrystalAtomTypeAssigner assigner;
     assigner.setAtomTypes(atomTypes);
     assigner.setDescriptorsSettings(DescriptorsSettings());
@@ -306,28 +340,34 @@ void set_TAAM_calculator(AnyScattererStructureFactorCalculator &calculator, Crys
     vector<int> types;
     assigner.assign(crystal, types, lcs);
 
-    // ofstream log_file {"discamb_assigner_log.txt"};
-    // assigner.printAssignment(log_file, crystal, types, lcs);
-    // log_file.close();
+    if (log_assignment){
+        // TODO expose the filename?
+        ofstream log_file {"discamb_assigner_log.txt"};
+        assigner.printAssignment(log_file, crystal, types, lcs);
+        log_file.close();
+    }
 
     // get TAAM parameters with unit cell charge scaled/shifted to 0
-
     HC_ModelParameters multipoleModelPalameters;
 
     vector<int> atomicNumbers;
-    vector<double> nuclearCharge;
     vector<int> nonMultipolarAtoms;
     crystal_structure_utilities::atomicNumbers(crystal, atomicNumbers);
-    for (int z : atomicNumbers)
-        nuclearCharge.push_back(z);
 
     vector<double> multiplicityTimesOccupancy;
     for (auto& atom : crystal.atoms)
         multiplicityTimesOccupancy.push_back(atom.multiplicity * atom.occupancy);
     double unitCellCharge = 0.0;
     taam_utilities::type_assignment_to_HC_parameters(
-            hcParameters, types, multiplicityTimesOccupancy, atomicNumbers, unitCellCharge,
-            multipoleModelPalameters, true, nonMultipolarAtoms);
+        hcParameters, 
+        types, 
+        multiplicityTimesOccupancy, 
+        atomicNumbers, 
+        unitCellCharge,
+        multipoleModelPalameters, 
+        true, 
+        nonMultipolarAtoms
+    );
 
     vector<shared_ptr<LocalCoordinateSystemInCrystal> > lcaCalculators;
     for (auto coordinateSystem : lcs)
@@ -335,20 +375,21 @@ void set_TAAM_calculator(AnyScattererStructureFactorCalculator &calculator, Crys
             shared_ptr<LocalCoordinateSystemInCrystal>(
                 new LocalCoordinateSystemCalculator(coordinateSystem, crystal)));
 
-
-    //calculate electron structure factors 
-
-    shared_ptr<AtomicFormFactorCalculationsManager> formfactorCalculator;
-
-    shared_ptr<AtomicFormFactorCalculationsManager> hcManager =
+    shared_ptr<AtomicFormFactorCalculationsManager> formfactorCalculator =
         shared_ptr<AtomicFormFactorCalculationsManager>(
             new HcFormFactorCalculationsManager(crystal, multipoleModelPalameters, lcaCalculators));
-        
-    formfactorCalculator = shared_ptr<AtomicFormFactorCalculationsManager>(
-        new ElectronFromXrayFormFactorCalculationManager(
-            crystal.unitCell,
-            nuclearCharge,
-            hcManager));
+    
+    //calculate electron structure factors 
+    if (is_electron){
+        vector<double> nuclearCharge; 
+        for (int z : atomicNumbers)
+            nuclearCharge.push_back(z);
+        formfactorCalculator = shared_ptr<AtomicFormFactorCalculationsManager>(
+            new ElectronFromXrayFormFactorCalculationManager(
+                crystal.unitCell,
+                nuclearCharge,
+                formfactorCalculator));
+    }
 
     calculator.setAtomicFormfactorManager(formfactorCalculator);
 }

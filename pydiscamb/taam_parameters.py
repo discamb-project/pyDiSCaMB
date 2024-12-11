@@ -17,3 +17,6 @@ def get_TAAM_databanks() -> List[str]:
 
 def get_TAAM_root() -> str:
     return str(ROOT)
+
+def is_MATTS_installed() -> bool:
+    return any("MATTS" in path for path in get_TAAM_databanks())

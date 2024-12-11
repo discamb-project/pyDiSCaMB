@@ -149,6 +149,23 @@ PYBIND11_MODULE(_pydiscamb, m) {
             R"pbdoc(Set minimum d-spacing for calculating f_calc)pbdoc",
             py::arg("d_min")
         )
+        .def(
+            "use_TAAM_databank",
+            &DiscambWrapper::use_TAAM_databank,
+            R"pbdoc(
+            Set a databank to use for TAAM. 
+            This overrides any previous scattering tables, both IAM and TAAM.
+
+            Parameters
+            ----------
+            databank_filepath : str
+                Full path to databank file.
+            log_assignment : bool
+                Whether to write a log file with atom assignment. Defaults to False
+            )pbdoc",
+            py::arg("databank_filepath"),
+            py::arg("log_assignment") = false
+        )
     ;
 
     py::class_<DiscambWrapperTests, DiscambWrapper>(m, 

@@ -75,7 +75,7 @@ def test_single_hkl(tyrosine, hkl, method):
 @pytest.mark.parametrize(
     "hkl",
     [
-        (0, 0, 0),
+        (0, 0, 1),
         (1, 2, 3),
         (2, -2, 0),
         (10, 20, 30),
