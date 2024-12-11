@@ -288,7 +288,7 @@ void set_TAAM_calculator(AnyScattererStructureFactorCalculator &calculator, Crys
     vector<AtomTypeHC_Parameters> hcParameters;
     BankSettings bankSettings;
 
-    string TAAM_root = py::module::import("pydiscamb").attr("_get_TAAM_databank_directory")().cast<string>();
+    string TAAM_root = py::module::import("pydiscamb").attr("get_TAAM_root")().cast<string>();
 
     // Try to load the MATTS bank
     ifstream bankStream { TAAM_root + "/MATTS2021databank.txt" };

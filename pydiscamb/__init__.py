@@ -8,17 +8,16 @@ from ._pydiscamb import (
     FCalcMethod,
     get_table,
 )
+from .taam_parameters import get_TAAM_databanks, get_TAAM_root
 
 __all__ = [
     "__doc__",
     "get_discamb_version",
-    calculate_structure_factors_IAM,
-    calculate_structure_factors_TAAM,
+    "calculate_structure_factors_IAM",
+    "calculate_structure_factors_TAAM",
     "DiscambWrapper",
     "FCalcMethod",
     "get_table",
+    "get_TAAM_databanks",
+    "get_TAAM_root",
 ]
-
-def _get_TAAM_databank_directory() -> str:
-    from pathlib import Path
-    return str(Path(__file__).parent / "data")
