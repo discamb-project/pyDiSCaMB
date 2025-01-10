@@ -1,4 +1,5 @@
 #include "DiscambWrapper.hpp"
+#include "atom_assignment.hpp"
 
 #include "discamb/AtomTyping/CrystalAtomTypeAssigner.h"
 #include "discamb/AtomTyping/LocalCoordinateSystemCalculator.h"
@@ -10,7 +11,6 @@
 
 #include "discamb/IO/hkl_io.h"
 #include "discamb/IO/structure_io.h"
-#include "discamb/IO/MATTS_BankReader.h"
 
 #include "discamb/Scattering/AnyIamCalculator.h"
 #include "discamb/Scattering/AnyScattererStructureFactorCalculator.h"
@@ -324,27 +324,43 @@ void set_TAAM_calculator(
     ){
 
     // read bank parameters
-    MATTS_BankReader bankReader;
     vector<AtomType> atomTypes;
     vector<AtomTypeHC_Parameters> hcParameters;
     BankSettings bankSettings;
-
-    ifstream bankStream { bank_filepath };
-    bankReader.read(bankStream, atomTypes, hcParameters, bankSettings, true);
-
-    // assign atom types
-    CrystalAtomTypeAssigner assigner;
-    assigner.setAtomTypes(atomTypes);
-    assigner.setDescriptorsSettings(DescriptorsSettings());
+    CrystalAtomTypeAssigner crystalAssigner;
     vector < LocalCoordinateSystem<AtomInCrystalID> > lcs;
-    vector<int> types;
-    assigner.assign(crystal, types, lcs);
+    vector<int> typeIds;
+    int n_atoms;
+    StructureWithDescriptors structure;
+    vector<string> lcs_strings;
+
+    read_bank_and_assign_atoms(
+        bank_filepath,
+        crystal,
+        atomTypes,
+        hcParameters,
+        bankSettings,
+        crystalAssigner,
+        n_atoms,
+        structure,
+        typeIds,
+        lcs,
+        lcs_strings
+    );
 
     if (log_assignment){
-        // TODO expose the filename?
-        ofstream log_file {"discamb_assigner_log.txt"};
-        assigner.printAssignment(log_file, crystal, types, lcs);
-        log_file.close();
+        write_assignment_logs(
+            crystal,
+            atomTypes,
+            hcParameters,
+            bankSettings,
+            crystalAssigner,
+            n_atoms,
+            structure,
+            typeIds,
+            lcs,
+            lcs_strings
+        );
     }
 
     // get TAAM parameters with unit cell charge scaled/shifted to 0
@@ -360,7 +376,7 @@ void set_TAAM_calculator(
     double unitCellCharge = 0.0;
     taam_utilities::type_assignment_to_HC_parameters(
         hcParameters, 
-        types, 
+        typeIds, 
         multiplicityTimesOccupancy, 
         atomicNumbers, 
         unitCellCharge,
