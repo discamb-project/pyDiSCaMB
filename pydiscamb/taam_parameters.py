@@ -20,3 +20,12 @@ def get_TAAM_root() -> str:
 
 def is_MATTS_installed() -> bool:
     return any("MATTS" in path for path in get_TAAM_databanks())
+
+def get_default_databank() -> str:
+    banks = get_TAAM_databanks()
+    search = "MATTS" if is_MATTS_installed() else "default"
+    for bank in banks:
+        if search in bank:
+            return bank
+    # Failsafe
+    return bank
