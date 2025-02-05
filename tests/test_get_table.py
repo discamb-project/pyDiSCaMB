@@ -60,3 +60,31 @@ def test_get_table_alias(table_names):
                 assert other.get(key).a == val.a
                 assert other.get(key).b == val.b
                 assert other.get(key).c == val.c
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        None,
+        "electron",
+        "wk1995",
+    ]
+)
+def test_read_table_from_structure(table):
+    from cctbx.development import random_structure as cctbx_random_structure
+    from cctbx.sgtbx import space_group_info
+
+    group = space_group_info(19)
+    xrs = cctbx_random_structure.xray_structure(
+        space_group_info=group,
+        elements=["Au", "C"],
+        general_positions_only=False,
+        use_u_iso=True,
+        random_u_iso=False,
+        random_occupancy=False,
+    )
+    if table is not None:
+        xrs.scattering_type_registry(table=table)
+    
+    import pydiscamb
+    w = pydiscamb.DiscambWrapper(xrs)
+    fc = w.f_calc(2)

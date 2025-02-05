@@ -270,7 +270,7 @@ void DiscambWrapper::update_atoms(){
 }
 
 string DiscambWrapper::get_discamb_table_string(){
-    auto py_table_string = mStructure.attr("scattering_type_registry_params").attr("table");
+    auto py_table_string = mStructure.attr("get_scattering_table")();
     // default (i.e. no table provided)
     if (py::isinstance<py::none>(py_table_string)){
         return "Waasmeier-Kirfel";
