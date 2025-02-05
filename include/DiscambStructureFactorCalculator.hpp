@@ -21,11 +21,12 @@ struct FCalcDerivatives : discamb::SfDerivativesAtHkl {
 
 class DiscambStructureFactorCalculator {
     public:
+        DiscambStructureFactorCalculator() = default;
         DiscambStructureFactorCalculator(
             discamb::SfCalculator *calculator, 
             discamb::Crystal crystal, 
             std::vector<std::complex<double>> anomalous
-        ) : mCrystal(crystal), mCalculator(calculator), mAnomalous(anomalous) {};
+        );
         // ~DiscambStructureFactorCalculator(); // TODO
 
         std::vector<std::complex<double>> f_calc();
@@ -36,8 +37,12 @@ class DiscambStructureFactorCalculator {
         
         std::vector<discamb::Vector3i> hkl;
 
+        discamb::Crystal &get_crystal(){return mCrystal;}
+        std::vector<std::complex<double>> &get_anomalous(){return mAnomalous;}
+
     private:
-        discamb::Crystal mCrystal;
         discamb::SfCalculator *mCalculator; // Pointer since abstract class
+        discamb::Crystal mCrystal;
         std::vector<std::complex<double>> mAnomalous;
+        void update_calculator();
 };

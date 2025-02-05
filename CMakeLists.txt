@@ -49,7 +49,6 @@ python_add_library(_pydiscamb MODULE
   src/python_module.cpp 
   src/python_wrapper.cpp
   src/DiscambStructureFactorCalculator.cpp 
-  # src/DiscambWrapperTests.cpp
   src/scattering_table.cpp
   src/atom_assignment.cpp
   src/crystal_conversion.cpp

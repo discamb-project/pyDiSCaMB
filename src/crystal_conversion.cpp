@@ -1,7 +1,12 @@
 #include "crystal_conversion.hpp"
 
+#undef NDEBUG
+#include <cassert>
+
 using namespace std;
 using namespace discamb;
+
+namespace py = pybind11;
 
 Crystal crystal_from_xray_structure(const py::object structure){
     Crystal crystal;
@@ -43,7 +48,7 @@ Crystal crystal_from_xray_structure(const py::object structure){
 
 vector<complex<double>> anomalous_from_xray_structure(const py::object structure){
     vector<complex<double>> out;
-    out.reserve(structure.attr("scatterers")().attr("size")().cast<int>());
+    out.resize(structure.attr("scatterers")().attr("size")().cast<int>());
     update_anomalous_from_xray_structure(out, structure);
     return out;
 }
@@ -117,7 +122,7 @@ void update_anomalous_from_xray_structure(vector<complex<double>> &anomalous, co
     assert(anomalous.size() == structure.attr("scatterers")().attr("size")().cast<int>());
     int idx = 0;
     for (auto scatterer_py : structure.attr("scatterers")()){
-        anomalous[idx] = complex<double> {
+        anomalous[idx++] = complex<double> {
             scatterer_py.attr("fp").cast<double>(),
             scatterer_py.attr("fdp").cast<double>()
         };

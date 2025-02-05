@@ -1,8 +1,8 @@
 #include "DiscambStructureFactorCalculator.hpp"
 #include "atom_assignment.hpp"
-#include "crystal_conversion.hpp"
 
-#include "json.hpp"
+#undef NDEBUG
+#include <cassert>
 
 using namespace discamb;
 using namespace std;
@@ -20,8 +20,24 @@ vector<vector<complex<double>>> FCalcDerivatives::siteDerivatives() const{
     return out;
 }
 
+
+DiscambStructureFactorCalculator::DiscambStructureFactorCalculator(
+    SfCalculator *calculator, 
+    Crystal crystal, 
+    vector<complex<double>> anomalous
+) : 
+    mCalculator(calculator), 
+    mCrystal(crystal), 
+    mAnomalous(anomalous)
+{
+    assert(mCrystal.atoms.size() > 0);
+    assert(mAnomalous.size() > 0);
+    assert(mCrystal.atoms.size() == mAnomalous.size());
+    update_calculator();
+}
+
 vector<complex<double>> DiscambStructureFactorCalculator::f_calc(){
-    // py::print("Discamb f_calc");
+    update_calculator();
     vector<complex<double>> sf;
     sf.resize(hkl.size());
     vector<bool> count_atom_contribution (mCrystal.atoms.size(), true);
@@ -40,6 +56,7 @@ vector<FCalcDerivatives> DiscambStructureFactorCalculator::d_f_calc_d_params(){
 }
 
 FCalcDerivatives DiscambStructureFactorCalculator::d_f_calc_hkl_d_params(int h, int k, int l){
+    update_calculator();
     FCalcDerivatives out;
     out.hkl = {h, k, l};
     vector<bool> count_atom_contribution (mCrystal.atoms.size(), true);
@@ -53,6 +70,7 @@ FCalcDerivatives DiscambStructureFactorCalculator::d_f_calc_hkl_d_params(int h, 
 }
 
 vector<TargetFunctionAtomicParamDerivatives> DiscambStructureFactorCalculator::d_target_d_params(vector<complex<double>> d_target_d_f_calc){
+    update_calculator();
     assert(hkl.size() == d_target_d_f_calc.size());
     vector<complex<double>> sf;
     vector<TargetFunctionAtomicParamDerivatives> out;
@@ -90,4 +108,10 @@ vector<TargetFunctionAtomicParamDerivatives> DiscambStructureFactorCalculator::d
         count_atom_contribution
     );
     return out;
+}
+
+void DiscambStructureFactorCalculator::update_calculator(){
+    // mCalculator->update(mCrystal.atoms); // Already handled since we pass atoms to calculations
+    assert(mAnomalous.size() == mCrystal.atoms.size());
+    mCalculator->setAnomalous(mAnomalous);
 }

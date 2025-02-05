@@ -1,6 +1,8 @@
 #pragma once
 
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+#include "pybind11/complex.h"
 
 #include "discamb/Scattering/SfCalculator.h"
 
@@ -48,6 +50,6 @@ class DiscambWrapper {
         DiscambStructureFactorCalculator mDiscambCalculator;
 };
 
-std::vector<std::complex<double>> calculate_structure_factors_TAAM(py::object &structure, const double d);
+std::vector<std::complex<double>> calculate_structure_factors_TAAM(py::object structure, const double d);
 
-std::vector<std::complex<double>> calculate_structure_factors_IAM(py::object &structure, const double d);
+std::vector<std::complex<double>> calculate_structure_factors_IAM(py::object structure, const double d);

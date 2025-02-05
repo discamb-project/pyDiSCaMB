@@ -4,7 +4,6 @@ from ._pydiscamb import (
     calculate_structure_factors_IAM,
     calculate_structure_factors_TAAM,
     DiscambWrapper,
-    DiscambWrapperTests,
     FCalcMethod,
     get_table,
 )

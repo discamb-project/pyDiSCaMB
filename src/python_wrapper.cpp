@@ -23,6 +23,7 @@ SfCalculator *get_calculator(py::object structure, FCalcMethod method){
             {"electron scattering", false},
             {"table", table_alias(structure.attr("get_scattering_table")().cast<string>())},
         };
+        break;
     }
     case FCalcMethod::TAAM: {
         calculator_params = {
@@ -30,6 +31,7 @@ SfCalculator *get_calculator(py::object structure, FCalcMethod method){
             {"electron scattering", table_alias(structure.attr("get_scattering_table")().cast<string>()).find("electron") != string::npos},
             {"bank path", py::module::import("pydiscamb.taam_parameters").attr("get_default_databank")().cast<string>()},
         };
+        break;
     }
     default:
         break;
@@ -37,13 +39,14 @@ SfCalculator *get_calculator(py::object structure, FCalcMethod method){
     return SfCalculator::create(crystal, calculator_params);
 }
 
-DiscambWrapper::DiscambWrapper(py::object structure, FCalcMethod method) : 
+DiscambWrapper::DiscambWrapper(py::object structure, FCalcMethod method) :
     mStructure(std::move(structure)),
     mDiscambCalculator(
-        get_calculator(structure, method),
-        crystal_from_xray_structure(structure),
-        anomalous_from_xray_structure(structure)
-) {};
+        get_calculator(mStructure, method),
+        crystal_from_xray_structure(mStructure),
+        anomalous_from_xray_structure(mStructure)
+    ) 
+    {};
 
 DiscambWrapper DiscambWrapper::from_TAAM_parameters(
     py::object structure,
@@ -115,16 +118,17 @@ vector<TargetFunctionAtomicParamDerivatives> DiscambWrapper::d_target_d_params(v
     return mDiscambCalculator.d_target_d_params(d_target_d_f_calc);
 }
 
-vector<complex<double>> calculate_structure_factors(py::object &structure, double d, FCalcMethod method){
+
+vector<complex<double>> calculate_structure_factors(py::object structure, double d, FCalcMethod method){
     DiscambWrapper w {structure, method};
     vector< complex<double> > structureFactors = w.f_calc(d);
     return structureFactors;
 }
 
-vector<complex<double>> calculate_structure_factors_TAAM(py::object &structure, double d){
+vector<complex<double>> calculate_structure_factors_TAAM(py::object structure, double d){
     return calculate_structure_factors(structure, d, FCalcMethod::TAAM);
 }
 
-vector<complex<double>> calculate_structure_factors_IAM(py::object &structure, double d){
+vector<complex<double>> calculate_structure_factors_IAM(py::object structure, double d){
     return calculate_structure_factors(structure, d, FCalcMethod::IAM);
 }

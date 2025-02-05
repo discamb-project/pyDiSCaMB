@@ -10,7 +10,6 @@
 #include "discamb/BasicUtilities/discamb_version.h"
 
 #include "python_wrapper.hpp"
-#include "DiscambWrapperTests.hpp"
 #include "scattering_table.hpp"
 
 
@@ -167,18 +166,6 @@ PYBIND11_MODULE(_pydiscamb, m) {
             py::arg("unit_cell_charge"),
             py::arg("perform_parameter_scaling_from_unit_cell_charge")
         )
-    ;
-
-    py::class_<DiscambWrapperTests, DiscambWrapper>(m, 
-        "DiscambWrapperTests", 
-        R"pbdoc(Class for testing the wrapper)pbdoc"
-        )
-        .def(py::init<py::object, FCalcMethod>(), py::arg("structure"), py::arg("method") = FCalcMethod::IAM)
-        // .def("test_get_crystal", &DiscambWrapperTests::test_get_crystal)
-        // .def("test_update_atoms", &DiscambWrapperTests::test_update_atoms)
-        // .def("test_f_calc", &DiscambWrapperTests::test_f_calc)
-        // .def("get_f_calc_runtime", &DiscambWrapperTests::get_f_calc_runtime)
-        // .def("get_f_calc_runtime_with_atom_updates", &DiscambWrapperTests::get_f_calc_runtime_with_atom_updates)
     ;
 
     py::class_<GaussianScatteringParameters>(m, "GaussianScatteringParameters")
