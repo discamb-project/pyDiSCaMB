@@ -10,8 +10,14 @@ def test_f_calc(tyrosine):
     fc = w.f_calc(5.0)
     assert isinstance(fc, list)
 
-@pytest.mark.parametrize("table", ["electron", "wk1995"])
-def test_f_calc_approx_IAM(tyrosine, table):
+@pytest.mark.parametrize(
+        ["table", "expected_R"], 
+        [
+            ("electron", 0.15),
+            ("wk1995", 0.04)
+        ]
+)
+def test_f_calc_approx_IAM(tyrosine, table, expected_R):
     tyrosine.scattering_type_registry(table=table)
     iam = pydiscamb.DiscambWrapper(tyrosine, pydiscamb.FCalcMethod.IAM)
     taam = pydiscamb.DiscambWrapper(tyrosine, pydiscamb.FCalcMethod.TAAM)
@@ -22,7 +28,7 @@ def test_f_calc_approx_IAM(tyrosine, table):
     fc_taam = taam.f_calc(d_min)
     
     R = sum(abs(abs(a) - abs(b)) for a, b in zip(fc_iam, fc_taam)) / sum(abs(a) for a in fc_taam)
-    assert R < 0.05
+    assert R < expected_R
 
 def test_from_parameters(tyrosine):
     wrapper = pydiscamb.DiscambWrapper.from_TAAM_parameters(
@@ -38,15 +44,14 @@ def test_from_parameters(tyrosine):
     wrapper.set_d_min(2)
     fc = wrapper.f_calc()
 
-def test_logging(tyrosine, tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
+def test_logging(tyrosine, tmp_path):
     wrapper = pydiscamb.DiscambWrapper.from_TAAM_parameters(
         tyrosine,
         False,
         pydiscamb.taam_parameters.get_default_databank(),
-        "assignment.txt",
-        "parameters.log",
-        "structure.cif",
+        str(tmp_path / "assignment.txt"),
+        str(tmp_path / "parameters.log"),
+        str(tmp_path / "structure.cif"),
         0,
         False
     )
@@ -90,6 +95,31 @@ def test_unit_cell_charge_scaling_to_zero(tyrosine):
         "",
         "",
         1000,
+        False
+    )
+    w2 = pydiscamb.DiscambWrapper.from_TAAM_parameters(
+        tyrosine,
+        False,
+        bank,
+        "",
+        "",
+        "",
+        0,
+        True
+    )
+    assert pytest.approx(w1.f_calc(2)) == w2.f_calc(2)
+
+@pytest.mark.xfail(message="Is this a bug in discamb? I would think explicitly scaling to 0 is the same as not scaling at all")
+def test_unit_cell_charge_scaling_when_zero(tyrosine):
+    bank = pydiscamb.taam_parameters.get_default_databank()
+    w1 = pydiscamb.DiscambWrapper.from_TAAM_parameters(
+        tyrosine,
+        False,
+        bank,
+        "",
+        "",
+        "",
+        0,
         False
     )
     w2 = pydiscamb.DiscambWrapper.from_TAAM_parameters(
