@@ -5,7 +5,7 @@
 
 #include <utility>
 
-#include "crystal_conversion.hpp"
+#include "read_structure.hpp"
 
 using namespace std;
 using namespace discamb;

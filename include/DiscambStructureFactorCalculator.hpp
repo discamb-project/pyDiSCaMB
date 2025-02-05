@@ -37,9 +37,6 @@ class DiscambStructureFactorCalculator {
         
         std::vector<discamb::Vector3i> hkl;
 
-        discamb::Crystal &get_crystal(){return mCrystal;}
-        std::vector<std::complex<double>> &get_anomalous(){return mAnomalous;}
-
     private:
         discamb::SfCalculator *mCalculator; // Pointer since abstract class
         discamb::Crystal mCrystal;

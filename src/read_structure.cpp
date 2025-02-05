@@ -1,4 +1,4 @@
-#include "crystal_conversion.hpp"
+#include "read_structure.hpp"
 
 #undef NDEBUG
 #include <cassert>

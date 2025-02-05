@@ -83,14 +83,10 @@ def test_update_structure_recalculate_fcalc(random_structure):
 def test_anomalous_scattering(p: bool, dp: bool, random_structure):
     from pydiscamb import DiscambWrapper
 
-    # if p: random_structure.shake_fps()
-    # if dp: random_structure.shake_fdps()
-
     wrapper = DiscambWrapper(random_structure)
     sf_before = wrapper.f_calc(5)
-    return
 
-    # sf_before = random_structure.structure_factors(d_min=5).f_calc().data()
+    sf_before = random_structure.structure_factors(d_min=5).f_calc().data()
     rb = [sf.real for sf in sf_before]
     ib = [sf.imag for sf in sf_before]
     b = [abs(sf) for sf in sf_before]
@@ -100,7 +96,7 @@ def test_anomalous_scattering(p: bool, dp: bool, random_structure):
     
     wrapper = DiscambWrapper(random_structure)
     sf_after = wrapper.f_calc(5)
-    # sf_after = random_structure.structure_factors(d_min=5).f_calc().data()
+    sf_after = random_structure.structure_factors(d_min=5).f_calc().data()
     ra = [sf.real for sf in sf_after]
     ia = [sf.imag for sf in sf_after]
     a = [abs(sf) for sf in sf_after]
