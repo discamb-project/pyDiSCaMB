@@ -23,7 +23,7 @@ class DiscambWrapper {
     public:
         DiscambWrapper(py::object structure, FCalcMethod method = FCalcMethod::IAM);
 
-        DiscambWrapper from_TAAM_parameters(
+        static DiscambWrapper from_TAAM_parameters(
             py::object structure,
             bool convert_to_electron_scattering,
             std::string bank_filepath,

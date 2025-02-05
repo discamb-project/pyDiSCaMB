@@ -134,7 +134,7 @@ PYBIND11_MODULE(_pydiscamb, m) {
             R"pbdoc(Set minimum d-spacing for calculating f_calc)pbdoc",
             py::arg("d_min")
         )
-        .def(
+        .def_static(
             "from_TAAM_parameters",
             &DiscambWrapper::from_TAAM_parameters,
             R"pbdoc(

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "discamb/CrystalStructure/Crystal.h"
+#include "discamb/CrystalStructure/StructuralParametersConverter.h"
 #include "discamb/MathUtilities/Vector3.h"
 #include "discamb/Scattering/SfCalculator.h"
 
@@ -41,5 +42,6 @@ class DiscambStructureFactorCalculator {
         discamb::SfCalculator *mCalculator; // Pointer since abstract class
         discamb::Crystal mCrystal;
         std::vector<std::complex<double>> mAnomalous;
+        discamb::StructuralParametersConverter mConverter;
         void update_calculator();
 };

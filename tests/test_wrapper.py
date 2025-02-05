@@ -50,8 +50,7 @@ def test_fcalc_with_no_indices(random_structure):
 
     w = DiscambWrapper(random_structure)
     sf = w.f_calc()
-    assert len(sf) == 1
-    assert isinstance(sf[0], complex)
+    assert len(sf) == 0
 
 def test_update_structure(random_structure):
     from pydiscamb import DiscambWrapper

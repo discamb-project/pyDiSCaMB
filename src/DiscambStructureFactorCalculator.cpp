@@ -1,6 +1,8 @@
 #include "DiscambStructureFactorCalculator.hpp"
 #include "atom_assignment.hpp"
 
+#include "discamb/CrystalStructure/StructuralParametersConverter.h"
+
 #undef NDEBUG
 #include <cassert>
 
@@ -28,7 +30,8 @@ DiscambStructureFactorCalculator::DiscambStructureFactorCalculator(
 ) : 
     mCalculator(calculator), 
     mCrystal(crystal), 
-    mAnomalous(anomalous)
+    mAnomalous(anomalous),
+    mConverter(mCrystal.unitCell)
 {
     assert(mCrystal.atoms.size() > 0);
     assert(mAnomalous.size() > 0);
@@ -77,28 +80,6 @@ vector<TargetFunctionAtomicParamDerivatives> DiscambStructureFactorCalculator::d
     out.resize(mCrystal.atoms.size());
     vector<bool> count_atom_contribution( mCrystal.atoms.size(), true );
 
-    /* TODO
-
-    // Ensure correct convention
-    structural_parameters_convention::AdpConvention ac;
-    structural_parameters_convention::XyzCoordinateSystem xyzc;
-    mCalculator->getParametersConvention(xyzc, ac);
-
-    mCalculator->setParametersConvention(
-        structural_parameters_convention::XyzCoordinateSystem::cartesian,
-        structural_parameters_convention::AdpConvention::U_cart
-    ),
-
-    mCalculator->calculateStructureFactorsAndDerivatives(
-        hkl,
-        sf,
-        out,
-        d_target_d_f_calc,
-        count_atom_contribution
-    );
-    mCalculator->setParametersConvention(xyzc, ac);
-    return out;
-    */
     mCalculator->calculateStructureFactorsAndDerivatives(
         mCrystal.atoms,
         hkl,
@@ -107,6 +88,34 @@ vector<TargetFunctionAtomicParamDerivatives> DiscambStructureFactorCalculator::d
         d_target_d_f_calc,
         count_atom_contribution
     );
+
+    // Ensure correct convention (U_cart and Cartesian)
+    structural_parameters_convention::AdpConvention ac = mCrystal.adpConvention;
+    structural_parameters_convention::XyzCoordinateSystem xyzc = mCrystal.xyzCoordinateSystem;
+
+    int idx, nAtoms = out.size();
+    vector<complex<double> > adpIn(6), adpOut(6);
+    Vector3<complex<double> > xyzIn, xyzOut;
+    int i;
+    // ADPs
+    for (idx = 0; idx < nAtoms; idx++){
+        if (out[idx].adp_derivatives.size() == 6){
+            for (i = 0; i < 6; i++)
+                adpIn[i] = out[idx].adp_derivatives[i];
+            mConverter.convertDerivativesADP(adpIn, adpOut, ac, structural_parameters_convention::AdpConvention::U_cart);
+            for (i = 0; i<6; i++)
+                out[idx].adp_derivatives[i] = adpOut[i].real();
+        }
+    }
+    // Coordinates
+    for (idx = 0; idx<nAtoms; idx++){
+        for (i = 0; i < 3; i++)
+            xyzIn[i] = out[idx].atomic_position_derivatives[i];
+        mConverter.convertDerivativesXyz(xyzIn, xyzOut, xyzc,  structural_parameters_convention::XyzCoordinateSystem::cartesian);
+        for (i = 0; i < 3; i++)
+            out[idx].atomic_position_derivatives[i] = xyzOut[i].real();
+    }
+    
     return out;
 }
 

@@ -59,8 +59,8 @@ DiscambWrapper DiscambWrapper::from_TAAM_parameters(
     bool perform_parameter_scaling_from_unit_cell_charge
 ){
     DiscambWrapper out = DiscambWrapper(structure, FCalcMethod::IAM);
-    Crystal crystal = crystal_from_xray_structure(mStructure);
-    vector<complex<double>> anomalous = anomalous_from_xray_structure(mStructure);
+    Crystal crystal = crystal_from_xray_structure(structure);
+    vector<complex<double>> anomalous = anomalous_from_xray_structure(structure);
     nlohmann::json params {
         {"model", "matts"},
         {"electron scattering", convert_to_electron_scattering},
