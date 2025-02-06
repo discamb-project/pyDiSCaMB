@@ -1,4 +1,4 @@
-from ._pydiscamb import (
+from ._wrapper import (
     __doc__,
     get_discamb_version,
     calculate_structure_factors_IAM,
@@ -6,6 +6,7 @@ from ._pydiscamb import (
     DiscambWrapper,
     FCalcMethod,
     get_table,
+    wrapper_tests,
 )
 from .taam_parameters import get_TAAM_databanks, get_TAAM_root
 

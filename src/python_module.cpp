@@ -12,6 +12,7 @@
 
 #include "DiscambWrapper.hpp"
 #include "scattering_table.hpp"
+#include "tests.hpp"
 #include "assert.hpp"
 
 
@@ -21,7 +22,7 @@ using namespace std;
 using namespace discamb;
 
 
-PYBIND11_MODULE(_pydiscamb, m) {
+PYBIND11_MODULE(_wrapper, m) {
     m.doc() = R"pbdoc(
         DiSCaMB wrapper using pybind11
         -----------------------
@@ -184,5 +185,18 @@ PYBIND11_MODULE(_pydiscamb, m) {
         &get_table,
         R"pbdoc(Get a dict of all scatterers in a given table)pbdoc",
         py::arg("table")
+    );
+
+    auto m_tests = m.def_submodule("wrapper_tests", "Tests for the wrapper, written in C++");
+    m_tests.def(
+        "f_calc_custom_gaussian_parameters", 
+        &f_calc_custom_gaussian_parameters,
+        R"pbdoc(Calculate structure factors for a given structure and reflections, using explicitly provided gaussian scattering parameters)pbdoc",
+        py::arg("structure"),
+        py::arg("hkl"),
+        py::arg("atom_labels"),
+        py::arg("a"),
+        py::arg("b"),
+        py::arg("c")
     );
 }
