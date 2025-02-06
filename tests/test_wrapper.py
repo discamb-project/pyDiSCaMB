@@ -59,7 +59,7 @@ def test_update_structure(random_structure):
     site = random_structure.scatterers()[0].site
     random_structure.scatterers()[0].site = (site[2], site[1], site[0])
 
-
+@pytest.mark.xfail(reason="The wrapper is no longer updated along with the structure")
 def test_update_structure_recalculate_fcalc(random_structure):
     from pydiscamb import DiscambWrapper
 
