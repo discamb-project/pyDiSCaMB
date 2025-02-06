@@ -47,7 +47,7 @@ endif()
 # python module
 python_add_library(_pydiscamb MODULE 
   src/python_module.cpp 
-  src/python_wrapper.cpp
+  src/DiscambWrapper.cpp
   src/DiscambStructureFactorCalculator.cpp 
   src/scattering_table.cpp
   src/atom_assignment.cpp

@@ -1,7 +1,6 @@
 #include "read_structure.hpp"
 
-#undef NDEBUG
-#include <cassert>
+#include "assert.hpp"
 
 using namespace std;
 using namespace discamb;

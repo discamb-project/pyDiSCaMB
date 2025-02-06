@@ -1,4 +1,4 @@
-#include "python_wrapper.hpp"
+#include "DiscambWrapper.hpp"
 #include "scattering_table.hpp"
 
 #include "discamb/MathUtilities/Vector3.h"

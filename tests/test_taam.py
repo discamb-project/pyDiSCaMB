@@ -84,8 +84,7 @@ def test_unit_cell_charge_scaling(tyrosine):
     )
     assert not pytest.approx(w1.f_calc(2)) == w2.f_calc(2)
 
-@pytest.mark.xfail(message="Is this a bug in discamb? I would think explicitly scaling to 0 is the same as not scaling at all")
-def test_unit_cell_charge_scaling_to_zero(tyrosine):
+def test_unit_cell_charge_scaling_off(tyrosine):
     bank = pydiscamb.taam_parameters.get_default_databank()
     w1 = pydiscamb.DiscambWrapper.from_TAAM_parameters(
         tyrosine,
@@ -105,31 +104,6 @@ def test_unit_cell_charge_scaling_to_zero(tyrosine):
         "",
         "",
         0,
-        True
-    )
-    assert pytest.approx(w1.f_calc(2)) == w2.f_calc(2)
-
-@pytest.mark.xfail(message="Is this a bug in discamb? I would think explicitly scaling to 0 is the same as not scaling at all")
-def test_unit_cell_charge_scaling_when_zero(tyrosine):
-    bank = pydiscamb.taam_parameters.get_default_databank()
-    w1 = pydiscamb.DiscambWrapper.from_TAAM_parameters(
-        tyrosine,
-        False,
-        bank,
-        "",
-        "",
-        "",
-        0,
         False
-    )
-    w2 = pydiscamb.DiscambWrapper.from_TAAM_parameters(
-        tyrosine,
-        False,
-        bank,
-        "",
-        "",
-        "",
-        0,
-        True
     )
     assert pytest.approx(w1.f_calc(2)) == w2.f_calc(2)

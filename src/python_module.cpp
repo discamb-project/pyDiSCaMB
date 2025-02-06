@@ -1,3 +1,4 @@
+#define PYBIND11_DETAILED_ERROR_MESSAGES
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "pybind11/complex.h"
@@ -9,8 +10,9 @@
 
 #include "discamb/BasicUtilities/discamb_version.h"
 
-#include "python_wrapper.hpp"
+#include "DiscambWrapper.hpp"
 #include "scattering_table.hpp"
+#include "assert.hpp"
 
 
 namespace py = pybind11;
@@ -30,6 +32,8 @@ PYBIND11_MODULE(_pydiscamb, m) {
            :toctree: _generate
 
     )pbdoc";
+
+    py::register_exception<AssertionError>(m, "DiscambAssertionError", PyExc_AssertionError);
 
     m.def(
         "get_discamb_version", 

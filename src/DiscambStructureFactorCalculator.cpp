@@ -3,8 +3,7 @@
 
 #include "discamb/CrystalStructure/StructuralParametersConverter.h"
 
-#undef NDEBUG
-#include <cassert>
+#include "assert.hpp"
 
 using namespace discamb;
 using namespace std;
