@@ -1,3 +1,4 @@
+#define PYBIND11_DETAILED_ERROR_MESSAGES
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "pybind11/complex.h"
@@ -10,8 +11,9 @@
 #include "discamb/BasicUtilities/discamb_version.h"
 
 #include "DiscambWrapper.hpp"
-#include "DiscambWrapperTests.hpp"
 #include "scattering_table.hpp"
+#include "tests.hpp"
+#include "assert.hpp"
 
 
 namespace py = pybind11;
@@ -20,21 +22,7 @@ using namespace std;
 using namespace discamb;
 
 
-
-vector<complex<double>> calculate_structure_factors_TAAM(py::object &structure, double d){
-    DiscambWrapper w {structure, FCalcMethod::TAAM};
-    vector< complex<double> > structureFactors = w.f_calc(d);
-    return structureFactors;
-}
-
-vector<complex<double>> calculate_structure_factors_IAM(py::object &structure, double d){
-    DiscambWrapper w {structure, FCalcMethod::IAM};
-    vector< complex<double> > structureFactors = w.f_calc(d);
-    return structureFactors;
-}
-
-
-PYBIND11_MODULE(_pydiscamb, m) {
+PYBIND11_MODULE(_wrapper, m) {
     m.doc() = R"pbdoc(
         DiSCaMB wrapper using pybind11
         -----------------------
@@ -45,6 +33,8 @@ PYBIND11_MODULE(_pydiscamb, m) {
            :toctree: _generate
 
     )pbdoc";
+
+    py::register_exception<AssertionError>(m, "DiscambAssertionError", PyExc_AssertionError);
 
     m.def(
         "get_discamb_version", 
@@ -149,35 +139,38 @@ PYBIND11_MODULE(_pydiscamb, m) {
             R"pbdoc(Set minimum d-spacing for calculating f_calc)pbdoc",
             py::arg("d_min")
         )
-        .def(
-            "use_TAAM_databank",
-            &DiscambWrapper::use_TAAM_databank,
+        .def_static(
+            "from_TAAM_parameters",
+            &DiscambWrapper::from_TAAM_parameters,
             R"pbdoc(
-            Set a databank to use for TAAM. 
-            This overrides any previous scattering tables, both IAM and TAAM.
+            Initialize a wrapper object with specified TAAM parameters. 
 
             Parameters
             ----------
-            databank_filepath : str
-                Full path to databank file.
-            log_assignment : bool
-                Whether to write a log file with atom assignment. Defaults to False
+            structure
+                xray-structure to use
+            convert_to_electron_scattering
+                Whether to convert bank entries to electron using Mott-Bethe
+            assignment_log_filepath
+                Path to output log file for atom assignment
+            parameter_log_filepath
+                Path to output log file for scattering parameters
+            multipolar_cif_output_filepath
+                Path to output cif file with multipolar parameters
+            unit_cell_charge
+                Total charge of the unit cell
+            perform_parameter_scaling_from_unit_cell_charge
+                Whether to scale parameters according to unit cell charge
             )pbdoc",
-            py::arg("databank_filepath"),
-            py::arg("log_assignment") = false
+            py::arg("structure"),
+            py::arg("convert_to_electron_scattering"),
+            py::arg("bank_filepath"),
+            py::arg("assignment_log_filepath"),
+            py::arg("parameter_log_filepath"),
+            py::arg("multipolar_cif_output_filepath"),
+            py::arg("unit_cell_charge"),
+            py::arg("perform_parameter_scaling_from_unit_cell_charge")
         )
-    ;
-
-    py::class_<DiscambWrapperTests, DiscambWrapper>(m, 
-        "DiscambWrapperTests", 
-        R"pbdoc(Class for testing the wrapper)pbdoc"
-        )
-        .def(py::init<py::object, FCalcMethod>(), py::arg("structure"), py::arg("method") = FCalcMethod::IAM)
-        .def("test_get_crystal", &DiscambWrapperTests::test_get_crystal)
-        .def("test_update_atoms", &DiscambWrapperTests::test_update_atoms)
-        .def("test_f_calc", &DiscambWrapperTests::test_f_calc)
-        .def("get_f_calc_runtime", &DiscambWrapperTests::get_f_calc_runtime)
-        .def("get_f_calc_runtime_with_atom_updates", &DiscambWrapperTests::get_f_calc_runtime_with_atom_updates)
     ;
 
     py::class_<GaussianScatteringParameters>(m, "GaussianScatteringParameters")
@@ -192,5 +185,18 @@ PYBIND11_MODULE(_pydiscamb, m) {
         &get_table,
         R"pbdoc(Get a dict of all scatterers in a given table)pbdoc",
         py::arg("table")
+    );
+
+    auto m_tests = m.def_submodule("wrapper_tests", "Tests for the wrapper, written in C++");
+    m_tests.def(
+        "f_calc_custom_gaussian_parameters", 
+        &f_calc_custom_gaussian_parameters,
+        R"pbdoc(Calculate structure factors for a given structure and reflections, using explicitly provided gaussian scattering parameters)pbdoc",
+        py::arg("structure"),
+        py::arg("hkl"),
+        py::arg("atom_labels"),
+        py::arg("a"),
+        py::arg("b"),
+        py::arg("c")
     );
 }

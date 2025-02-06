@@ -45,30 +45,32 @@ else()
 endif()
 
 # python module
-python_add_library(_pydiscamb MODULE 
+python_add_library(_wrapper MODULE 
   src/python_module.cpp 
-  src/DiscambWrapper.cpp 
-  src/DiscambWrapperTests.cpp
+  src/DiscambWrapper.cpp
+  src/DiscambStructureFactorCalculator.cpp 
   src/scattering_table.cpp
   src/atom_assignment.cpp
+  src/read_structure.cpp
+  src/tests.cpp
 )
-target_link_libraries(_pydiscamb PRIVATE pybind11::headers)
-target_link_libraries(_pydiscamb PRIVATE OpenMP::OpenMP_CXX)
-target_link_libraries(_pydiscamb PUBLIC discamb)
+target_link_libraries(_wrapper PRIVATE pybind11::headers)
+target_link_libraries(_wrapper PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(_wrapper PUBLIC discamb)
 # For some reason, the include directories are not propagated when linking
 get_target_property(DISCAMB_INCLUDE_DIRECTORIES discamb INCLUDE_DIRECTORIES)
-target_include_directories(_pydiscamb PUBLIC ${DISCAMB_INCLUDE_DIRECTORIES})
-target_include_directories(_pydiscamb PUBLIC include)
-install(TARGETS _pydiscamb DESTINATION pydiscamb)
+target_include_directories(_wrapper PUBLIC ${DISCAMB_INCLUDE_DIRECTORIES})
+target_include_directories(_wrapper PUBLIC include)
+install(TARGETS _wrapper DESTINATION pydiscamb)
 
 # Generate stub
 if (NOT MSVC) # Does not work properly on windows. Might be due to windows adding "Release" to the folder structure.
-add_custom_command(TARGET _pydiscamb POST_BUILD
-COMMAND stubgen -m _pydiscamb --include-docstrings -o ${CMAKE_BINARY_DIR}/stubs
+add_custom_command(TARGET _wrapper POST_BUILD
+COMMAND stubgen -m _wrapper --include-docstrings -o ${CMAKE_BINARY_DIR}/stubs
 BYPRODUCTS ${CMAKE_BINARY_DIR}/stubs
 COMMENT "Use stubgen to create .pyi for statement completion"
 )
-install(FILES ${CMAKE_BINARY_DIR}/stubs/_pydiscamb.pyi DESTINATION pydiscamb)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/stubs/ DESTINATION pydiscamb)
 endif()
 
 # TAAM databank

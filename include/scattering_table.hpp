@@ -12,3 +12,5 @@ struct GaussianScatteringParameters {
 };
 
 std::map<std::string, GaussianScatteringParameters> get_table(std::string table);
+
+std::string table_alias(std::string table);

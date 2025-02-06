@@ -2,14 +2,11 @@ import pytest
 
 from pydiscamb import DiscambWrapper, FCalcMethod
 
+
 @pytest.mark.parametrize("method", [FCalcMethod.IAM, FCalcMethod.TAAM])
 def test_f_calc(tyrosine, method):
     w = DiscambWrapper(tyrosine, method=method)
-    indices = [
-        (0, 1, 2),
-        (2, 3, 4),
-        (10, 11, 12)
-    ]
+    indices = [(0, 1, 2), (2, 3, 4), (10, 11, 12)]
     w.set_indices(indices)
 
     fcalc = w.f_calc()
@@ -17,28 +14,21 @@ def test_f_calc(tyrosine, method):
 
     assert pytest.approx(fcalc) == [g.structure_factor for g in grad]
 
+
 @pytest.mark.parametrize("method", [FCalcMethod.IAM, FCalcMethod.TAAM])
 def test_indices(tyrosine, method):
     w = DiscambWrapper(tyrosine, method=method)
-    indices = [
-        (0, 1, 2),
-        (2, 3, 4),
-        (10, 11, 12)
-    ]
+    indices = [(0, 1, 2), (2, 3, 4), (10, 11, 12)]
     w.set_indices(indices)
     grad = w.d_f_calc_d_params()
 
-
     assert indices == [tuple(g.hkl) for g in grad]
+
 
 @pytest.mark.parametrize("method", [FCalcMethod.IAM, FCalcMethod.TAAM])
 def test_output_sizes(tyrosine, method):
     w = DiscambWrapper(tyrosine, method=method)
-    indices = [
-        (0, 1, 2),
-        (2, 3, 4),
-        (10, 11, 12)
-    ]
+    indices = [(0, 1, 2), (2, 3, 4), (10, 11, 12)]
     w.set_indices(indices)
     grad = w.d_f_calc_d_params()
 
@@ -50,6 +40,7 @@ def test_output_sizes(tyrosine, method):
     assert all(len(g.adp_derivatives) == n_scatterers * n_adps for g in grad)
     assert all(len(g.occupancy_derivatives) == n_scatterers for g in grad)
 
+
 @pytest.mark.parametrize(
     "hkl",
     [
@@ -57,7 +48,7 @@ def test_output_sizes(tyrosine, method):
         (1, 2, 3),
         (2, -2, 0),
         (10, 20, 30),
-    ]
+    ],
 )
 @pytest.mark.parametrize("method", [FCalcMethod.IAM, FCalcMethod.TAAM])
 def test_single_hkl(tyrosine, hkl, method):
@@ -72,6 +63,7 @@ def test_single_hkl(tyrosine, hkl, method):
     assert grad_int.site_derivatives == grad_tuple.site_derivatives
     assert grad_int.occupancy_derivatives == grad_tuple.occupancy_derivatives
 
+
 @pytest.mark.parametrize(
     "hkl",
     [
@@ -79,7 +71,7 @@ def test_single_hkl(tyrosine, hkl, method):
         (1, 2, 3),
         (2, -2, 0),
         (10, 20, 30),
-    ]
+    ],
 )
 def test_iam_vs_taam(tyrosine, hkl):
     iam = DiscambWrapper(tyrosine, method=FCalcMethod.IAM).d_f_calc_hkl_d_params(hkl)
@@ -87,13 +79,21 @@ def test_iam_vs_taam(tyrosine, hkl):
 
     assert iam.hkl == taam.hkl
     assert pytest.approx(iam.structure_factor) != taam.structure_factor
-    assert pytest.approx([i[0] for i in iam.adp_derivatives]) != [i[0] for i in taam.adp_derivatives]
-    
+    assert pytest.approx([i[0] for i in iam.adp_derivatives]) != [
+        i[0] for i in taam.adp_derivatives
+    ]
+
     h, k, l = hkl
     if h:
-        assert pytest.approx([i[0] for i in iam.site_derivatives]) != [i[0] for i in taam.site_derivatives]
+        assert pytest.approx([i[0] for i in iam.site_derivatives]) != [
+            i[0] for i in taam.site_derivatives
+        ]
     if k:
-        assert pytest.approx([i[1] for i in iam.site_derivatives]) != [i[1] for i in taam.site_derivatives]
+        assert pytest.approx([i[1] for i in iam.site_derivatives]) != [
+            i[1] for i in taam.site_derivatives
+        ]
     if l:
-        assert pytest.approx([i[2] for i in iam.site_derivatives]) != [i[2] for i in taam.site_derivatives]
+        assert pytest.approx([i[2] for i in iam.site_derivatives]) != [
+            i[2] for i in taam.site_derivatives
+        ]
     assert pytest.approx(iam.occupancy_derivatives) != taam.occupancy_derivatives
