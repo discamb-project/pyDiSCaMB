@@ -1,5 +1,4 @@
 #include "DiscambWrapper.hpp"
-#include "scattering_table.hpp"
 
 #include "discamb/MathUtilities/Vector3.h"
 
@@ -21,14 +20,14 @@ SfCalculator *get_calculator(py::object structure, FCalcMethod method){
         calculator_params = {
             {"model", "iam"},
             {"electron scattering", false},
-            {"table", table_alias(structure.attr("get_scattering_table")().cast<string>())},
+            {"table", table_from_xray_structure(structure)},
         };
         break;
     }
     case FCalcMethod::TAAM: {
         calculator_params = {
             {"model", "matts"},
-            {"electron scattering", table_alias(structure.attr("get_scattering_table")().cast<string>()).find("electron") != string::npos},
+            {"electron scattering", table_from_xray_structure(structure).find("electron") != string::npos},
             {"bank path", py::module::import("pydiscamb.taam_parameters").attr("get_default_databank")().cast<string>()},
         };
         break;

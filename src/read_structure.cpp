@@ -1,4 +1,5 @@
 #include "read_structure.hpp"
+#include "scattering_table.hpp"
 
 #include "assert.hpp"
 
@@ -51,6 +52,15 @@ vector<complex<double>> anomalous_from_xray_structure(const py::object structure
     update_anomalous_from_xray_structure(out, structure);
     return out;
 }
+
+string table_from_xray_structure(const py::object structure){
+    auto py_table_string = structure.attr("get_scattering_table")();
+    if (py::isinstance<py::none>(py_table_string)){
+        return table_alias("xray");
+    }
+    return table_alias(py_table_string.cast<string>());
+}
+
 
 void update_crystal_from_xray_structure(discamb::Crystal &crystal, const py::object structure){
     assert(crystal.atoms.size() == structure.attr("scatterers")().attr("size")().cast<int>());
