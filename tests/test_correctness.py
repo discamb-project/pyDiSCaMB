@@ -55,7 +55,9 @@ def get_random_crystal(
     return xrs
 
 
-def get_IAM_correctness_score(xrs: random_structure.xray_structure, d_min: float = 2) -> float:
+def get_IAM_correctness_score(
+    xrs: random_structure.xray_structure, d_min: float = 2
+) -> float:
     fcalc_cctbx = xrs.structure_factors(algorithm="direct", d_min=d_min).f_calc().data()
     fcalc_discamb = pydiscamb.calculate_structure_factors_IAM(xrs, d_min)
 
@@ -95,6 +97,7 @@ def test_IAM_correctness_random_crystal(
     # Use 0.05% as threshold
     assert score < 0.0005
 
+
 @pytest.mark.slow
 def test_lysozyme_high_res(lysozyme):
     score = get_IAM_correctness_score(lysozyme, d_min=0.5)
@@ -102,7 +105,6 @@ def test_lysozyme_high_res(lysozyme):
 
 
 class TestCustomTable:
-
     @pytest.fixture
     def elements(self):
         return ["C", "Fe"]
@@ -127,14 +129,17 @@ class TestCustomTable:
             0.0,
             0.0,
         ]
-    
+
     @pytest.fixture
     def xrs(self, elements, a, b, c):
         _xrs = random_structure.xray_structure(
             space_group_info=space_group_info(19),
             elements=elements * 3,
         )
-        scattering_dictionary = {el: xray_scattering.gaussian(a, b, c) for el, a, b, c in zip(elements, a, b, c)}
+        scattering_dictionary = {
+            el: xray_scattering.gaussian(a, b, c)
+            for el, a, b, c in zip(elements, a, b, c)
+        }
 
         _xrs.scattering_type_registry(custom_dict=scattering_dictionary)
         return _xrs
@@ -149,14 +154,14 @@ class TestCustomTable:
         )
         score = compare_structure_factors(sf_1.data(), flex.complex_double(sf_2))
         assert score < 1e-4
-    
+
     def test_missing_element(self, xrs, a, b, c):
         elements = ["does not exist"] * len(a)
         with pytest.raises(AssertionError):
             pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, [[0, 0, 0]], elements, a, b, c
             )
-    
+
     def test_wrong_length(self, xrs, elements, a, b, c):
         i = [[0, 0, 0]]
         # Too few
@@ -225,7 +230,8 @@ class TestCustomTable:
             pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, [(0.2, 0.3, 0.0)], elements, a, b, c
             )
-        
+
+
 if __name__ == "__main__":
     space_group: int = 19
     with_adps: bool = False
