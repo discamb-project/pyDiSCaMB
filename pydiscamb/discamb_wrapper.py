@@ -19,21 +19,15 @@ def get_default_calculator_params(
 ) -> Dict[str, Any]:
     table = xrs.get_scattering_table()
     out = {
+        "model": "iam",
         "bank_path": get_default_databank(),
         "table": table_alias("xray" if table is None else table),
+        "electron_scattering": table == "electron",
     }
     if method == FCalcMethod.IAM:
-        out.update({
-            "model": "iam",
-            "electron_scattering": False,
-        })
+        out.update({"electron_scattering": False})
     elif method == FCalcMethod.TAAM:
-        out.update({
-            "model": "taam",
-            "electron_scattering": table == "electron",
-        })
-    else:
-        out.update({"model": "iam"})
+        out.update({"model": "taam"})
     return out
 
 
@@ -42,8 +36,10 @@ class DiscambWrapper(PythonInterface):
         calculator_params = get_default_calculator_params(xrs, method)
         calculator_params.update(kwargs)
         # Discamb likes spaces instead of underscores
-        calculator_params = {key.replace("_", " "): val for key, val in calculator_params.items()}
-            
+        calculator_params = {
+            key.replace("_", " "): val for key, val in calculator_params.items()
+        }
+
         super().__init__(xrs, calculator_params)
         self._scatterer_flags = xrs.scatterer_flags()
 
