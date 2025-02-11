@@ -8,6 +8,7 @@
 #include "discamb/Scattering/SfCalculator.h"
 
 #include "json.hpp"
+#include "pybind11_json/pybind11_json.hpp"
 
 #include <vector>
 #include <complex>
@@ -16,17 +17,10 @@
 
 namespace py = pybind11;
 
-enum FCalcMethod {
-    IAM,
-    TAAM
-};
-
 
 class PythonInterface : public DiscambStructureFactorCalculator{
     public:
-        PythonInterface(py::object structure);
-        PythonInterface(py::object structure, FCalcMethod method);
-        PythonInterface(py::object structure, py::dict kwargs);
+        PythonInterface(py::object structure, py::dict kwargs) : PythonInterface(structure, kwargs.cast<nlohmann::json>()) {};
         PythonInterface(py::object structure, nlohmann::json calculator_params);
 
         void set_indices(py::object indices);
@@ -35,8 +29,3 @@ class PythonInterface : public DiscambStructureFactorCalculator{
     private:
         py::object mStructure;
 };
-
-
-std::vector<std::complex<double>> calculate_structure_factors_TAAM(py::object structure, const double d);
-
-std::vector<std::complex<double>> calculate_structure_factors_IAM(py::object structure, const double d);

@@ -42,29 +42,6 @@ PYBIND11_MODULE(_cpp_module, m) {
         R"pbdoc(Get the version string for DiSCaMB)pbdoc"
     );
 
-    m.def(
-        "calculate_structure_factors_TAAM", 
-        &calculate_structure_factors_TAAM, 
-        R"pbdoc(Calculate structure factors for a given structure up to a given d-spacing, using the Transferable Aspherical Atom Model)pbdoc",
-        py::arg("structure"),
-        py::arg("d_min")
-    );
-    m.def(
-        "calculate_structure_factors_IAM", 
-        &calculate_structure_factors_IAM, 
-        R"pbdoc(Calculate structure factors for a given structure up to a given d-spacing, using the Independent Atom Model)pbdoc",
-        py::arg("structure"),
-        py::arg("d_min")
-    );
-
-    py::enum_<FCalcMethod>(m, 
-            "FCalcMethod", 
-            R"pbdoc(Enum for specifying the model for atomic form factor calculations)pbdoc"
-        )
-        .value("IAM", FCalcMethod::IAM, R"pbdoc(Independent Atom Model)pbdoc")
-        .value("TAAM", FCalcMethod::TAAM, R"pbdoc(Transferable Aspherical Atom Model)pbdoc")
-        .export_values();
-
     py::class_<FCalcDerivatives>(m, "FCalcDerivatives")
         .def_readwrite("hkl", &FCalcDerivatives::hkl)
         .def_readwrite("structure_factor", &FCalcDerivatives::structure_factor)
@@ -89,7 +66,6 @@ PYBIND11_MODULE(_cpp_module, m) {
             "PythonInterface", 
             R"pbdoc(Calculate structure factors using DiSCaMB)pbdoc"
         )
-        .def(py::init<py::object, FCalcMethod>(), py::arg("structure"), py::arg("method"))
         .def(py::init<py::object, py::dict>(), py::arg("structure"), py::arg("kwargs"))
         .def(
             "f_calc", 

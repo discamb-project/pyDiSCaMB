@@ -1,39 +1,51 @@
-from typing import overload, Tuple
+from typing import overload, Tuple, Dict, Any
+from enum import Enum
 
 from cctbx.xray.structure import structure
 from cctbx.array_family import flex
 from cctbx import miller
 
-from pydiscamb._cpp_module import PythonInterface, FCalcDerivatives, FCalcMethod
+from pydiscamb._cpp_module import PythonInterface, FCalcDerivatives, table_alias
 from pydiscamb.taam_parameters import get_default_databank
-from pydiscamb import table_alias
+
+
+class FCalcMethod(Enum):
+    IAM = 0
+    TAAM = 1
+
+
+def get_default_calculator_params(
+    xrs: structure, method: FCalcMethod
+) -> Dict[str, Any]:
+    table = xrs.get_scattering_table()
+    out = {
+        "bank_path": get_default_databank(),
+        "table": table_alias("xray" if table is None else table),
+    }
+    if method == FCalcMethod.IAM:
+        out.update({
+            "model": "iam",
+            "electron_scattering": False,
+        })
+    elif method == FCalcMethod.TAAM:
+        out.update({
+            "model": "taam",
+            "electron_scattering": table == "electron",
+        })
+    else:
+        out.update({"model": "iam"})
+    return out
 
 
 class DiscambWrapper(PythonInterface):
-    def __init__(self, structure: structure, method=FCalcMethod.IAM, **kwargs):
-        if kwargs:
-            if kwargs.get("model") is None:
-                kwargs["model"] = {
-                    FCalcMethod.IAM: "iam",
-                    FCalcMethod.TAAM: "taam",
-                }.get(method)
-            if kwargs.get("electron_scattering") is None:
-                kwargs["electron_scattering"] = (
-                    structure.get_scattering_table() is not None
-                    and "electron" in structure.get_scattering_table()
-                    and kwargs["model"] != "iam"
-                )
-            if kwargs.get("table") is None:
-                table = structure.get_scattering_table()
-                kwargs["table"] = table if table is None else table_alias(table)
-            if kwargs.get("bank_path") is None:
-                kwargs["bank_path"] = get_default_databank()
-            # Discamb likes spaces instead of underscores
-            kwargs = {key.replace("_", " "): val for key, val in kwargs.items()}
-            super().__init__(structure, kwargs)
-        else:
-            super().__init__(structure, method)
-        self._scatterer_flags = structure.scatterer_flags()
+    def __init__(self, xrs: structure, method=FCalcMethod.IAM, **kwargs):
+        calculator_params = get_default_calculator_params(xrs, method)
+        calculator_params.update(kwargs)
+        # Discamb likes spaces instead of underscores
+        calculator_params = {key.replace("_", " "): val for key, val in calculator_params.items()}
+            
+        super().__init__(xrs, calculator_params)
+        self._scatterer_flags = xrs.scatterer_flags()
 
     @overload
     def f_calc(self, miller_array: None) -> flex.complex_double:
@@ -98,3 +110,19 @@ class DiscambWrapper(PythonInterface):
             return flex.double([g.adp_derivatives[0] for g in res])
 
         raise ValueError("Gradient flags not supported")
+
+
+def _calculate_structure_factors(
+    xrs: structure, d_min: float, method: FCalcMethod
+) -> list[complex]:
+    w = DiscambWrapper(xrs, method)
+    w.set_d_min(d_min)
+    return w.f_calc()
+
+
+def calculate_structure_factors_IAM(xrs: structure, d_min: float) -> list[complex]:
+    return _calculate_structure_factors(xrs, d_min, FCalcMethod.IAM)
+
+
+def calculate_structure_factors_TAAM(xrs: structure, d_min: float) -> list[complex]:
+    return _calculate_structure_factors(xrs, d_min, FCalcMethod.TAAM)
