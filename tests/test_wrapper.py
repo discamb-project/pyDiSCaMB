@@ -1,3 +1,6 @@
+from cctbx.array_family import flex
+from cctbx import miller, xray
+from mmtbx import f_model
 import pytest
 
 
@@ -106,3 +109,58 @@ def test_anomalous_scattering(p: bool, dp: bool, random_structure):
     assert not pytest.approx(rb) == ra
     assert not pytest.approx(ib) == ia
     assert not pytest.approx(b) == a
+
+
+def test_f_calc_type(tyrosine):
+    from pydiscamb import DiscambWrapper
+
+    fc_c = tyrosine.structure_factors(d_min=2).f_calc()
+
+    w = DiscambWrapper(tyrosine)
+    w.set_indices(fc_c.indices())
+    assert isinstance(w.f_calc(), flex.complex_double)
+
+    w = DiscambWrapper(tyrosine)
+    assert isinstance(w.f_calc(fc_c), miller.array)
+
+
+def test_d_target_d_f_calc_type(tyrosine):
+    from pydiscamb import DiscambWrapper
+
+    f_obs = abs(tyrosine.structure_factors(d_min=2).f_calc())
+    model = f_model.manager(f_obs=f_obs, xray_structure=tyrosine)
+    target = model.target_functor()(compute_gradients=True)
+    d_target_d_f_calc = target.d_target_d_f_calc_work()
+    xray.set_scatterer_grad_flags(
+        scatterers=tyrosine.scatterers(),
+        site=True,
+    )
+
+    w = DiscambWrapper(tyrosine)
+    assert isinstance(w.d_target_d_params(d_target_d_f_calc), flex.double)
+
+
+def test_d_target_d_f_calc_raise_when_no_flags(tyrosine):
+    from pydiscamb import DiscambWrapper
+
+    f_obs = abs(tyrosine.structure_factors(d_min=2).f_calc())
+    model = f_model.manager(f_obs=f_obs, xray_structure=tyrosine)
+    target = model.target_functor()(compute_gradients=True)
+    d_target_d_f_calc = target.d_target_d_f_calc_work()
+
+    w = DiscambWrapper(tyrosine)
+    with pytest.raises(ValueError, match="Gradient flags not supported"):
+        w.d_target_d_params(d_target_d_f_calc)
+
+
+@pytest.mark.parametrize("taam", [True, False])
+def test_default_init_with_kwargs(tyrosine, taam):
+    from pydiscamb import DiscambWrapper, FCalcMethod
+
+    m = FCalcMethod.TAAM if taam else FCalcMethod.IAM
+    w1 = DiscambWrapper(tyrosine, m)
+    w2 = DiscambWrapper(tyrosine, m, random_unused_kwarg=42)
+
+    fc1 = w1.f_calc(2.0)
+    fc2 = w2.f_calc(2.0)
+    assert pytest.approx(list(fc1)) == list(fc2)

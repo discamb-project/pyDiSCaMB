@@ -10,7 +10,7 @@ def test_init(tyrosine):
 def test_f_calc(tyrosine):
     w = pydiscamb.DiscambWrapper(tyrosine, pydiscamb.FCalcMethod.TAAM)
     fc = w.f_calc(5.0)
-    assert isinstance(fc, list)
+    assert isinstance(fc[0], complex)
 
 
 @pytest.mark.parametrize(
@@ -33,30 +33,25 @@ def test_f_calc_approx_IAM(tyrosine, table, expected_R):
 
 
 def test_from_parameters(tyrosine):
-    wrapper = pydiscamb.DiscambWrapper.from_TAAM_parameters(
+    wrapper = pydiscamb.DiscambWrapper(
         tyrosine,
-        False,
-        pydiscamb.taam_parameters.get_default_databank(),
-        "",  # No logging
-        "",  # No logging
-        "",  # No logging
-        1000,
-        True,
+        model="taam",
+        unit_cell_charge=1000,
+        scale=True,
     )
     wrapper.set_d_min(2)
     fc = wrapper.f_calc()
 
 
 def test_logging(tyrosine, tmp_path):
-    wrapper = pydiscamb.DiscambWrapper.from_TAAM_parameters(
+    wrapper = pydiscamb.DiscambWrapper(
         tyrosine,
-        False,
-        pydiscamb.taam_parameters.get_default_databank(),
-        str(tmp_path / "assignment.txt"),
-        str(tmp_path / "parameters.log"),
-        str(tmp_path / "structure.cif"),
-        0,
-        False,
+        model="matts",
+        assignment_info=str(tmp_path / "assignment.txt"),
+        parameters_info=str(tmp_path / "parameters.log"),
+        multipole_cif=str(tmp_path / "structure.cif"),
+        unit_cell_charge=0,
+        scale=False,
     )
     assert (tmp_path / "assignment.txt").exists()
     assert (tmp_path / "parameters.log").exists()
@@ -64,22 +59,53 @@ def test_logging(tyrosine, tmp_path):
 
 
 def test_unit_cell_charge_scaling(tyrosine):
-    bank = pydiscamb.taam_parameters.get_default_databank()
-    w1 = pydiscamb.DiscambWrapper.from_TAAM_parameters(
-        tyrosine, False, bank, "", "", "", -1000, True
+    w1 = pydiscamb.DiscambWrapper(
+        tyrosine,
+        model="matts",
+        unit_cell_charge=-1000,
+        scale=True,
     )
-    w2 = pydiscamb.DiscambWrapper.from_TAAM_parameters(
-        tyrosine, False, bank, "", "", "", 1000, True
+    w2 = pydiscamb.DiscambWrapper(
+        tyrosine,
+        model="matts",
+        unit_cell_charge=1000,
+        scale=True,
     )
     assert not pytest.approx(w1.f_calc(2)) == w2.f_calc(2)
 
 
 def test_unit_cell_charge_scaling_off(tyrosine):
-    bank = pydiscamb.taam_parameters.get_default_databank()
-    w1 = pydiscamb.DiscambWrapper.from_TAAM_parameters(
-        tyrosine, False, bank, "", "", "", 1000, False
+    w1 = pydiscamb.DiscambWrapper(
+        tyrosine,
+        model="matts",
+        unit_cell_charge=1000,
+        scale=False,
     )
-    w2 = pydiscamb.DiscambWrapper.from_TAAM_parameters(
-        tyrosine, False, bank, "", "", "", 0, False
+    w2 = pydiscamb.DiscambWrapper(
+        tyrosine,
+        model="matts",
+        unit_cell_charge=0,
+        scale=False,
     )
     assert pytest.approx(w1.f_calc(2)) == w2.f_calc(2)
+
+
+def test_invalid_bank(tyrosine):
+    with pytest.raises(
+        RuntimeError,
+        match="Problem with accessing/openning file 'non-existent bank file' for reading UBDB type bank",
+    ):
+        w = pydiscamb.DiscambWrapper(
+            tyrosine,
+            model="matts",
+            bank_path="non-existent bank file",
+        )
+
+
+def test_switching_banks(tyrosine):
+    for bank in pydiscamb.get_TAAM_databanks():
+        w = pydiscamb.DiscambWrapper(
+            tyrosine,
+            model="matts",
+            bank_path=bank,
+        )
