@@ -4,3 +4,6 @@
 [submodule "data/MATTS"]
 	path = data/MATTS
 	url = git@github.com:discamb-project/MATTS.git
+[submodule "lib/pybind11_json"]
+	path = lib/pybind11_json
+	url = git@github.com:pybind/pybind11_json.git

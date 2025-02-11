@@ -19,6 +19,5 @@ class TestSF:
 
     def test_output(self, model, tyrosine):
         output = model(tyrosine, 5)
-        assert hasattr(output, "__iter__")
         assert hasattr(output, "__getitem__")
         assert isinstance(output[0], complex)

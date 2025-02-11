@@ -5,6 +5,8 @@
 #include "discamb/MathUtilities/Vector3.h"
 #include "discamb/Scattering/SfCalculator.h"
 
+#include "json.hpp"
+
 #include <string>
 #include <vector>
 #include <complex>
@@ -22,9 +24,8 @@ struct FCalcDerivatives : discamb::SfDerivativesAtHkl {
 
 class DiscambStructureFactorCalculator {
     public:
-        DiscambStructureFactorCalculator() = default;
         DiscambStructureFactorCalculator(
-            discamb::SfCalculator *calculator, 
+            nlohmann::json calculator_parameters, 
             discamb::Crystal crystal, 
             std::vector<std::complex<double>> anomalous
         );
@@ -39,7 +40,7 @@ class DiscambStructureFactorCalculator {
         std::vector<discamb::Vector3i> hkl;
 
     private:
-        discamb::SfCalculator *mCalculator; // Pointer since abstract class
+        discamb::SfCalculator *mCalculator;
         discamb::Crystal mCrystal;
         std::vector<std::complex<double>> mAnomalous;
         discamb::StructuralParametersConverter mConverter;

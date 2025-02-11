@@ -23,11 +23,11 @@ vector<vector<complex<double>>> FCalcDerivatives::siteDerivatives() const{
 
 
 DiscambStructureFactorCalculator::DiscambStructureFactorCalculator(
-    SfCalculator *calculator, 
+    nlohmann::json calculator_parameters, 
     Crystal crystal, 
     vector<complex<double>> anomalous
 ) : 
-    mCalculator(calculator), 
+    mCalculator(SfCalculator::create(crystal, calculator_parameters)), 
     mCrystal(crystal), 
     mAnomalous(anomalous),
     mConverter(mCrystal.unitCell)
