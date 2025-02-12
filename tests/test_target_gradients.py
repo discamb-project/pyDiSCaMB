@@ -145,11 +145,10 @@ class TestTargetGradients:
     def test_correctness_all_flags(self, lysozyme):
         lysozyme.scatterers().convert_to_anisotropic(lysozyme.unit_cell())
         f_obs = abs(lysozyme.structure_factors(d_min=1).f_calc())
-        
+
         lysozyme.shake_sites_in_place(rms_difference=0.1)
         lysozyme.shake_adp()
         lysozyme.shake_occupancies()
-
 
         iselection = flex.bool(lysozyme.scatterers().size(), True).iselection()
         lysozyme.scatterers().flags_set_grads(state=False)
@@ -177,13 +176,16 @@ class TestTargetGradients:
         xrs = lysozyme
 
         import random
+
         random.seed(0)
-        selection = flex.bool([random.randint(0, 1) for _ in range(xrs.scatterers().size())])
+        selection = flex.bool(
+            [random.randint(0, 1) for _ in range(xrs.scatterers().size())]
+        )
         iselection = selection.iselection()
 
         xrs.convert_to_anisotropic(selection)
         f_obs = abs(xrs.structure_factors(d_min=2).f_calc())
-        
+
         xrs.shake_sites_in_place(rms_difference=0.1)
         xrs.shake_adp()
         xrs.shake_occupancies()
@@ -192,9 +194,13 @@ class TestTargetGradients:
         xrs.scatterers().flags_set_grad_u_aniso(iselection)
         iselection = flex.bool([not i for i in list(selection)]).iselection()
         xrs.scatterers().flags_set_grad_u_iso(iselection)
-        iselection = flex.bool([random.randint(0, 1) for _ in range(xrs.scatterers().size())]).iselection()
+        iselection = flex.bool(
+            [random.randint(0, 1) for _ in range(xrs.scatterers().size())]
+        ).iselection()
         xrs.scatterers().flags_set_grad_site(iselection)
-        iselection = flex.bool([random.randint(0, 1) for _ in range(xrs.scatterers().size())]).iselection()
+        iselection = flex.bool(
+            [random.randint(0, 1) for _ in range(xrs.scatterers().size())]
+        ).iselection()
         xrs.scatterers().flags_set_grad_occupancy(iselection)
 
         model = mmtbx.f_model.manager(f_obs=f_obs, xray_structure=xrs)
