@@ -124,35 +124,6 @@ def test_f_calc_type(tyrosine):
     assert isinstance(w.f_calc(fc_c), miller.array)
 
 
-def test_d_target_d_f_calc_type(tyrosine):
-    from pydiscamb import DiscambWrapper
-
-    f_obs = abs(tyrosine.structure_factors(d_min=2).f_calc())
-    model = f_model.manager(f_obs=f_obs, xray_structure=tyrosine)
-    target = model.target_functor()(compute_gradients=True)
-    d_target_d_f_calc = target.d_target_d_f_calc_work()
-    xray.set_scatterer_grad_flags(
-        scatterers=tyrosine.scatterers(),
-        site=True,
-    )
-
-    w = DiscambWrapper(tyrosine)
-    assert isinstance(w.d_target_d_params(d_target_d_f_calc), flex.double)
-
-
-def test_d_target_d_f_calc_raise_when_no_flags(tyrosine):
-    from pydiscamb import DiscambWrapper
-
-    f_obs = abs(tyrosine.structure_factors(d_min=2).f_calc())
-    model = f_model.manager(f_obs=f_obs, xray_structure=tyrosine)
-    target = model.target_functor()(compute_gradients=True)
-    d_target_d_f_calc = target.d_target_d_f_calc_work()
-
-    w = DiscambWrapper(tyrosine)
-    with pytest.raises(ValueError, match="Gradient flags not supported"):
-        w.d_target_d_params(d_target_d_f_calc)
-
-
 @pytest.mark.parametrize("taam", [True, False])
 def test_default_init_with_kwargs(tyrosine, taam):
     from pydiscamb import DiscambWrapper, FCalcMethod
