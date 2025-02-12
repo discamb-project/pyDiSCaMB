@@ -104,13 +104,23 @@ PYBIND11_MODULE(_cpp_module, m) {
             R"pbdoc(Set minimum d-spacing for calculating f_calc)pbdoc",
             py::arg("d_min")
         )
+        .def_property_readonly(
+            "hkl",
+            [](const PythonInterface &i)
+            {
+                vector<py::tuple> out;
+                for (auto el : i.hkl) out.push_back(py::make_tuple(el.x, el.y, el.z));
+                return out;
+            },
+            R"pbdoc(indices)pbdoc"
+        )
     ;
 
     py::class_<GaussianScatteringParameters>(m, "GaussianScatteringParameters")
         .def_readwrite("a", &GaussianScatteringParameters::a)
         .def_readwrite("b", &GaussianScatteringParameters::b)
         .def_readwrite("c", &GaussianScatteringParameters::c)
-        .def("_repr__", &GaussianScatteringParameters::repr)
+        .def("__repr__", &GaussianScatteringParameters::repr)
     ;
 
     m.def(

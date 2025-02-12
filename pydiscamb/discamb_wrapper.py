@@ -1,4 +1,4 @@
-from typing import overload, Tuple, Dict, Any
+from typing import overload, Tuple, Dict, Any, List
 from enum import Enum
 
 from cctbx.xray.structure import structure
@@ -32,7 +32,30 @@ def get_default_calculator_params(
 
 
 class DiscambWrapper(PythonInterface):
+
     def __init__(self, xrs: structure, method=FCalcMethod.IAM, **kwargs):
+        """
+        Initialize a wrapper object for structure factor calculations using DiSCaMB.
+        Pass an xray structure and either a FCalcMethod, 
+        or kwargs which are passed to  C++: :code:`discamb::SfCalculator::create`,
+        found in discamb/Scattering/SfCalculator.h
+
+        Notes
+        -----
+        The :code:`method` parameter is used for lookup of sensible default
+        values to be sent to :code:`discamb::SfCalculator::create`.
+        Any kwargs present will override the defaults.
+        The defaults are e.g. inferring the scattering table from `xrs`,
+        and using the default TAAM databank.
+        See :code:`get_default_calculator_params` for details.
+
+        Parameters
+        ----------
+        xrs : structure
+            Object defining the symmetry, atom positions, ADPs, occupancy ect.
+        method : FCalcMethod, optional
+            Which structure factor model to use, by default FCalcMethod.IAM
+        """
         calculator_params = get_default_calculator_params(xrs, method)
         calculator_params.update(kwargs)
         # Discamb likes spaces instead of underscores
@@ -43,6 +66,7 @@ class DiscambWrapper(PythonInterface):
         super().__init__(xrs, calculator_params)
         self._scatterer_flags = xrs.scatterer_flags()
 
+    ## Annotations
     @overload
     def f_calc(self, miller_array: None) -> flex.complex_double:
         ...
@@ -55,6 +79,23 @@ class DiscambWrapper(PythonInterface):
     def f_calc(self, miller_array: miller.set) -> miller.array:
         ...
 
+    @overload
+    def d_f_calc_hkl_d_params(self, hkl: Tuple[int, int, int]) -> FCalcDerivatives:
+        ...
+
+    @overload
+    def d_f_calc_hkl_d_params(self, h: int, k: int, l: int) -> FCalcDerivatives:
+        ...
+
+    @overload
+    def d_target_d_params(self, d_target_d_f_calc: miller.array) -> flex.double:
+        ...
+
+    @overload
+    def d_target_d_params(self, d_target_d_f_calc: list) -> List[FCalcDerivatives]:
+        ...
+
+    ## Implementations
     def f_calc(self, miller_set=None):
         if miller_set is None:
             return flex.complex_double(super().f_calc())
@@ -68,28 +109,12 @@ class DiscambWrapper(PythonInterface):
         res = self.f_calc()
         return miller_set.array(data=res)
 
-    @overload
-    def d_f_calc_hkl_d_params(self, hkl: Tuple[int, int, int]) -> FCalcDerivatives:
-        ...
-
-    @overload
-    def d_f_calc_hkl_d_params(self, h: int, k: int, l: int) -> FCalcDerivatives:
-        ...
-
     def d_f_calc_hkl_d_params(self, h, k=None, l=None):
         if isinstance(h, tuple):
             assert len(h) == 3
             h, k, l = h
             return self.d_f_calc_hkl_d_params(h, k, l)
         return super().d_f_calc_hkl_d_params(h, k, l)
-
-    @overload
-    def d_target_d_params(self, d_target_d_f_calc: miller.array) -> flex.double:
-        ...
-
-    @overload
-    def d_target_d_params(self, d_target_d_f_calc: list) -> list[FCalcDerivatives]:
-        ...
 
     def d_target_d_params(self, d_target_d_f_calc):
         if isinstance(d_target_d_f_calc, list):
@@ -110,15 +135,15 @@ class DiscambWrapper(PythonInterface):
 
 def _calculate_structure_factors(
     xrs: structure, d_min: float, method: FCalcMethod
-) -> list[complex]:
+) -> List[complex]:
     w = DiscambWrapper(xrs, method)
     w.set_d_min(d_min)
     return w.f_calc()
 
 
-def calculate_structure_factors_IAM(xrs: structure, d_min: float) -> list[complex]:
+def calculate_structure_factors_IAM(xrs: structure, d_min: float) -> List[complex]:
     return _calculate_structure_factors(xrs, d_min, FCalcMethod.IAM)
 
 
-def calculate_structure_factors_TAAM(xrs: structure, d_min: float) -> list[complex]:
+def calculate_structure_factors_TAAM(xrs: structure, d_min: float) -> List[complex]:
     return _calculate_structure_factors(xrs, d_min, FCalcMethod.TAAM)
