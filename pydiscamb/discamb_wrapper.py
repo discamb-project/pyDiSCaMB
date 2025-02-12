@@ -5,7 +5,12 @@ from cctbx.xray.structure import structure
 from cctbx.array_family import flex
 from cctbx import miller
 
-from pydiscamb._cpp_module import PythonInterface, FCalcDerivatives, table_alias
+from pydiscamb._cpp_module import (
+    PythonInterface,
+    FCalcDerivatives,
+    TargetDerivatives,
+    table_alias,
+)
 from pydiscamb.taam_parameters import get_default_databank
 
 
@@ -32,11 +37,10 @@ def get_default_calculator_params(
 
 
 class DiscambWrapper(PythonInterface):
-
     def __init__(self, xrs: structure, method=FCalcMethod.IAM, **kwargs):
         """
         Initialize a wrapper object for structure factor calculations using DiSCaMB.
-        Pass an xray structure and either a FCalcMethod, 
+        Pass an xray structure and either a FCalcMethod,
         or kwargs which are passed to  C++: :code:`discamb::SfCalculator::create`,
         found in discamb/Scattering/SfCalculator.h
 
@@ -92,7 +96,7 @@ class DiscambWrapper(PythonInterface):
         ...
 
     @overload
-    def d_target_d_params(self, d_target_d_f_calc: list) -> List[FCalcDerivatives]:
+    def d_target_d_params(self, d_target_d_f_calc: list) -> List[TargetDerivatives]:
         ...
 
     ## Implementations
@@ -123,14 +127,44 @@ class DiscambWrapper(PythonInterface):
         self.set_indices(d_target_d_f_calc.indices())
         res = self.d_target_d_params(list(d_target_d_f_calc.data()))
 
-        # Select desired gradients
-        s = self._scatterer_flags[0]
-        if s.grad_site():
-            return flex.vec3_double([g.site_derivatives for g in res]).as_double()
-        if s.grad_u_iso():
-            return flex.double([g.adp_derivatives[0] for g in res])
-
-        raise ValueError("Gradient flags not supported")
+        # Pack selected gradients
+        size = 0
+        for s in self._scatterer_flags:
+            size += 3 * s.grad_site()
+            size += 1 * s.grad_u_iso()
+            size += 6 * s.grad_u_aniso()
+            size += 1 * s.grad_occupancy()
+        out = flex.double(size)
+        o_ind = 0
+        for s_ind, s in enumerate(self._scatterer_flags):
+            if s.grad_site():
+                out[o_ind] = res[s_ind].site_derivatives[0]
+                o_ind += 1
+                out[o_ind] = res[s_ind].site_derivatives[1]
+                o_ind += 1
+                out[o_ind] = res[s_ind].site_derivatives[2]
+                o_ind += 1
+            if s.grad_u_iso():
+                out[o_ind] = res[s_ind].adp_derivatives[0]
+                o_ind += 1
+            if s.grad_u_aniso():
+                out[o_ind] = res[s_ind].adp_derivatives[0]
+                o_ind += 1
+                out[o_ind] = res[s_ind].adp_derivatives[1]
+                o_ind += 1
+                out[o_ind] = res[s_ind].adp_derivatives[2]
+                o_ind += 1
+                out[o_ind] = res[s_ind].adp_derivatives[3]
+                o_ind += 1
+                out[o_ind] = res[s_ind].adp_derivatives[4]
+                o_ind += 1
+                out[o_ind] = res[s_ind].adp_derivatives[5]
+                o_ind += 1
+            if s.grad_occupancy():
+                out[o_ind] = res[s_ind].occupancy_derivatives
+                o_ind += 1
+        assert o_ind == size
+        return out
 
 
 def _calculate_structure_factors(
