@@ -142,7 +142,7 @@ class TestTargetGradients:
         assert res.size() == 0
 
     @pytest.mark.slow
-    def test_multiple_flags(self, lysozyme):
+    def test_correctness_all_flags(self, lysozyme):
         lysozyme.scatterers().convert_to_anisotropic(lysozyme.unit_cell())
         f_obs = abs(lysozyme.structure_factors(d_min=1).f_calc())
         
@@ -170,4 +170,42 @@ class TestTargetGradients:
 
         # Compare with cctbx
         exp = target.gradients_wrt_atomic_parameters().packed()
+        assert pytest.approx(list(res), abs=1e-6, rel=1e-5) == list(exp)
+
+    @pytest.mark.slow
+    def test_multiple_assorted_flags(self, lysozyme):
+        xrs = lysozyme
+
+        import random
+        random.seed(0)
+        selection = flex.bool([random.randint(0, 1) for _ in range(xrs.scatterers().size())])
+        iselection = selection.iselection()
+
+        xrs.convert_to_anisotropic(selection)
+        f_obs = abs(xrs.structure_factors(d_min=2).f_calc())
+        
+        xrs.shake_sites_in_place(rms_difference=0.1)
+        xrs.shake_adp()
+        xrs.shake_occupancies()
+
+        xrs.scatterers().flags_set_grads(state=False)
+        xrs.scatterers().flags_set_grad_u_aniso(iselection)
+        iselection = flex.bool([not i for i in list(selection)]).iselection()
+        xrs.scatterers().flags_set_grad_u_iso(iselection)
+        iselection = flex.bool([random.randint(0, 1) for _ in range(xrs.scatterers().size())]).iselection()
+        xrs.scatterers().flags_set_grad_site(iselection)
+        iselection = flex.bool([random.randint(0, 1) for _ in range(xrs.scatterers().size())]).iselection()
+        xrs.scatterers().flags_set_grad_occupancy(iselection)
+
+        model = mmtbx.f_model.manager(f_obs=f_obs, xray_structure=xrs)
+        model.sfg_params.algorithm = "direct"
+        target = model.target_functor()(compute_gradients=True)
+        d_target_d_f_calc = target.d_target_d_f_calc_work()
+
+        w = DiscambWrapper(xrs)
+        res = w.d_target_d_params(d_target_d_f_calc)
+
+        exp = target.gradients_wrt_atomic_parameters().packed()
+
+        assert exp.size() == res.size()
         assert pytest.approx(list(res), abs=1e-6, rel=1e-5) == list(exp)
