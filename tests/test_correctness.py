@@ -110,7 +110,7 @@ def test_lysozyme_high_res(lysozyme):
             pydiscamb.FCalcMethod.TAAM,
         ]
 )
-def test_indices_order(method, random_structure):
+def test_indices_order(method, tyrosine):
     from random import randint, shuffle
     # 1000 random indices
     inds_1 = [
@@ -126,18 +126,18 @@ def test_indices_order(method, random_structure):
     inds_2 = [inds_1[i] for i in shuffle_inds]
     
     # Calculate fcalc with both sets of indices
-    w1 = pydiscamb.DiscambWrapper(random_structure, method)
+    w1 = pydiscamb.DiscambWrapper(tyrosine, method)
     w1.set_indices(inds_1)
     fc1 = w1.f_calc()
 
-    w2 = pydiscamb.DiscambWrapper(random_structure, method)
+    w2 = pydiscamb.DiscambWrapper(tyrosine, method)
     w2.set_indices(inds_2)
     fc2 = w2.f_calc()
 
     # Compare 
-    for i, j in enumerate(shuffle_inds):
-        assert inds_1[i] == inds_2[j]
-        assert fc1[i] == fc2[j]
+    for i, idx in enumerate(shuffle_inds):
+        assert inds_1[idx] == inds_2[i]
+        assert fc1[idx] == fc2[i]
 
 
 class TestCustomTable:
