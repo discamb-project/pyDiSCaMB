@@ -103,6 +103,42 @@ def test_lysozyme_high_res(lysozyme):
     score = get_IAM_correctness_score(lysozyme, d_min=0.5)
     assert score < 0.0002
 
+@pytest.mark.parametrize(
+        "method",
+        [
+            pydiscamb.FCalcMethod.IAM,
+            pydiscamb.FCalcMethod.TAAM,
+        ]
+)
+def test_indices_order(method, tyrosine):
+    from random import randint, shuffle
+    # 1000 random indices
+    inds_1 = [
+        (
+            randint(-20, 20),
+            randint(-20, 20),
+            randint(-20, 20),
+        ) for _ in range(1000)
+    ]
+    # Shuffle these indices, and keep the way it was shuffled
+    shuffle_inds = list(range(len(inds_1)))
+    shuffle(shuffle_inds)
+    inds_2 = [inds_1[i] for i in shuffle_inds]
+    
+    # Calculate fcalc with both sets of indices
+    w1 = pydiscamb.DiscambWrapper(tyrosine, method)
+    w1.set_indices(inds_1)
+    fc1 = w1.f_calc()
+
+    w2 = pydiscamb.DiscambWrapper(tyrosine, method)
+    w2.set_indices(inds_2)
+    fc2 = w2.f_calc()
+
+    # Compare 
+    for i, idx in enumerate(shuffle_inds):
+        assert inds_1[idx] == inds_2[i]
+        assert fc1[idx] == fc2[i]
+
 
 class TestCustomTable:
     @pytest.fixture
