@@ -1,4 +1,5 @@
 import pytest
+from cctbx.eltbx.chemical_elements import proper_caps_list
 
 import pydiscamb
 
@@ -11,6 +12,51 @@ def test_f_calc(tyrosine):
     w = pydiscamb.DiscambWrapper(tyrosine, pydiscamb.FCalcMethod.TAAM)
     fc = w.f_calc(5.0)
     assert isinstance(fc[0], complex)
+
+
+def _get_single_element_structure(element: str):
+    from cctbx.development import random_structure as cctbx_random_structure
+    from cctbx.sgtbx import space_group_info
+
+    group = space_group_info(19)
+    xrs = cctbx_random_structure.xray_structure(
+        space_group_info=group,
+        elements=[element],
+        general_positions_only=False,
+        use_u_iso=True,
+        random_u_iso=False,
+        random_occupancy=False,
+    )
+    xrs.scattering_type_registry(table="wk1995")
+    return xrs
+
+
+@pytest.mark.parametrize(
+    "el",
+    proper_caps_list()[:36],
+)
+def test_assignment_heavy_elements(el: str):
+    xrs = _get_single_element_structure(el)
+
+    w1 = pydiscamb.DiscambWrapper(xrs, pydiscamb.FCalcMethod.IAM)
+    fc1 = w1.f_calc(2)
+    w2 = pydiscamb.DiscambWrapper(xrs, pydiscamb.FCalcMethod.TAAM)
+    fc2 = w2.f_calc(2)
+    assert pytest.approx(fc1, rel=0.01) == fc2
+
+
+@pytest.mark.parametrize(
+    "el",
+    proper_caps_list()[36:86],
+)
+def test_assignment_light_elements(el: str):
+    xrs = _get_single_element_structure(el)
+
+    w1 = pydiscamb.DiscambWrapper(xrs, pydiscamb.FCalcMethod.IAM)
+    fc1 = w1.f_calc(2)
+    w2 = pydiscamb.DiscambWrapper(xrs, pydiscamb.FCalcMethod.TAAM)
+    fc2 = w2.f_calc(2)
+    assert pytest.approx(fc1, rel=0.01) == fc2
 
 
 @pytest.mark.parametrize(
