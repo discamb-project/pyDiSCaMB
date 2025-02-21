@@ -58,6 +58,34 @@ def test_assignment_heavy_element(el: str):
     fc2 = w2.f_calc(2)
     assert pytest.approx(fc1, rel=0.01) == fc2
 
+def test_assignment_log_urecognized_structure(tmp_path):
+    logfile = tmp_path / "assignment.log"
+
+    from cctbx.development import random_structure as cctbx_random_structure
+    from cctbx.sgtbx import space_group_info
+
+    group = space_group_info(19)
+    xrs = cctbx_random_structure.xray_structure(
+        space_group_info=group,
+        elements=elements()[:86],
+        general_positions_only=False,
+        use_u_iso=True,
+        random_u_iso=False,
+        random_occupancy=False,
+    )
+    xrs.scattering_type_registry(table="wk1995")
+
+    w = pydiscamb.DiscambWrapper(xrs, pydiscamb.FCalcMethod.TAAM, assignment_info=str(logfile))
+
+    with logfile.open("r") as f:
+        assert f.readline() == "Atom type assigned to 0 of 86.\n"
+        assert f.readline() == "Atoms with unassigned atom types :\n"
+        for i in range(36, 86):
+            assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
+        assert f.readline() == "Atoms with spherical atom type :\n"
+        for i in range(36):
+            assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
+
 
 @pytest.mark.parametrize(
     ["table", "expected_R"], [("electron", 0.15), ("wk1995", 0.04)]
