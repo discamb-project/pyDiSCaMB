@@ -3,8 +3,6 @@ from cctbx.eltbx.chemical_elements import proper_caps_list as elements
 
 import pydiscamb
 
-import pydiscamb.taam_parameters
-
 
 def test_init(tyrosine):
     w = pydiscamb.DiscambWrapper(tyrosine, pydiscamb.FCalcMethod.TAAM)
@@ -130,6 +128,28 @@ def test_assignment_log_tyrosine(tyrosine, tmp_path):
         assert f.readline() == '   pdb=" HE2 TYR A   4 "    H104    Z pdb=" CE2 TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
         assert f.readline() == '   pdb=" HH  TYR A   4 "    H114    Z pdb=" OH  TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
         # fmt: on
+
+
+def test_assignment_symmetry_wrapping(tmp_path):
+    # Download a graphene cif
+    import iotbx.cif
+    import requests
+
+    data = requests.get(
+        "https://legacy.materialsproject.org/materials/mp-48/cif?type=symmetrized&download=true"
+    )
+    cif_str = data.content.decode("utf-8")
+
+    cif = iotbx.cif.reader(input_string=cif_str)
+    xrs = cif.build_crystal_structures()["C"]
+    xrs.scattering_type_registry(table="it1992")
+
+    logfile = tmp_path / "assignment.log"
+    w = pydiscamb.DiscambWrapper(
+        xrs, pydiscamb.FCalcMethod.TAAM, assignment_info=str(logfile)
+    )
+    with logfile.open("r") as f:
+        assert f.readline() == "Atom type assigned to 2 of 2.\n"
 
 
 @pytest.mark.parametrize(
