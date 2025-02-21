@@ -131,6 +131,8 @@ def test_assignment_log_tyrosine(tyrosine, tmp_path):
 
 
 def test_assignment_symmetry_wrapping(tmp_path):
+    if not pydiscamb.taam_parameters.is_MATTS_installed():
+        pytest.skip("Must have MATTS databank installed")
     # Download a graphene cif
     import iotbx.cif
     import requests
