@@ -135,3 +135,6 @@ def test_default_init_with_kwargs(tyrosine, taam):
     fc1 = w1.f_calc(2.0)
     fc2 = w2.f_calc(2.0)
     assert pytest.approx(list(fc1)) == list(fc2)
+
+    with pytest.raises(ValueError, match="`miller_set` must be of type `cctbx.miller.set"):
+        w1.f_calc("incorrect input")
