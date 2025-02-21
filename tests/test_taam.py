@@ -86,6 +86,39 @@ def test_assignment_log_urecognized_structure(tmp_path):
         for i in range(36):
             assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
 
+def test_assignment_log_tyrosine(tyrosine, tmp_path):
+    logfile = tmp_path / "assignment.log"
+
+    w = pydiscamb.DiscambWrapper(tyrosine, pydiscamb.FCalcMethod.TAAM, assignment_info=str(logfile))
+    
+    with logfile.open("r") as f:
+        assert f.readline() == "Atom type assigned to 24 of 24.\n"
+        assert f.readline() == "Atoms with assigned atom types and local coordinate systems:\n"
+        assert f.readline() == '   pdb=" N   TYR A   4 "   N401a    Z pdb=" CA  TYR A   4 " X pdb=" H2  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" CA  TYR A   4 "    C414    X pdb=" N   TYR A   4 " Y pdb=" C   TYR A   4 "\n'
+        assert f.readline() == '   pdb=" C   TYR A   4 "    C301    Z pdb=" CA  TYR A   4 " X pdb=" OXT TYR A   4 "\n'
+        assert f.readline() == '   pdb=" O   TYR A   4 "    O101    X pdb=" C   TYR A   4 " Y pdb=" OXT TYR A   4 "\n'
+        assert f.readline() == '   pdb=" CB  TYR A   4 "    C405    X pdb=" CG  TYR A   4 " Y pdb=" CA  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" CG  TYR A   4 "    C332    X average_position(pdb=" CG  TYR A   4 ",pdb=" CD1 TYR A   4 ",pdb=" CE1 TYR A   4 ",pdb=" CZ  TYR A   4 ",pdb=" CE2 TYR A   4 ",pdb=" CD2 TYR A   4 ") Y pdb=" CD2 TYR A   4 "\n'
+        assert f.readline() == '   pdb=" CD1 TYR A   4 "    C330    X average_position(pdb=" CG  TYR A   4 ",pdb=" CD1 TYR A   4 ",pdb=" CE1 TYR A   4 ",pdb=" CZ  TYR A   4 ",pdb=" CE2 TYR A   4 ",pdb=" CD2 TYR A   4 ") Y pdb=" CE1 TYR A   4 "\n'
+        assert f.readline() == '   pdb=" CD2 TYR A   4 "    C330    X average_position(pdb=" CG  TYR A   4 ",pdb=" CD1 TYR A   4 ",pdb=" CE1 TYR A   4 ",pdb=" CZ  TYR A   4 ",pdb=" CE2 TYR A   4 ",pdb=" CD2 TYR A   4 ") Y pdb=" CE2 TYR A   4 "\n'
+        assert f.readline() == '   pdb=" CE1 TYR A   4 "    C330    X average_position(pdb=" CG  TYR A   4 ",pdb=" CD1 TYR A   4 ",pdb=" CE1 TYR A   4 ",pdb=" CZ  TYR A   4 ",pdb=" CE2 TYR A   4 ",pdb=" CD2 TYR A   4 ") Y pdb=" CZ  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" CE2 TYR A   4 "    C330    X average_position(pdb=" CG  TYR A   4 ",pdb=" CD1 TYR A   4 ",pdb=" CE1 TYR A   4 ",pdb=" CZ  TYR A   4 ",pdb=" CE2 TYR A   4 ",pdb=" CD2 TYR A   4 ") Y pdb=" CZ  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" CZ  TYR A   4 "   C341a    X average_position(pdb=" CG  TYR A   4 ",pdb=" CD1 TYR A   4 ",pdb=" CE1 TYR A   4 ",pdb=" CZ  TYR A   4 ",pdb=" CE2 TYR A   4 ",pdb=" CD2 TYR A   4 ") Y pdb=" CE2 TYR A   4 "\n'
+        assert f.readline() == '   pdb=" OH  TYR A   4 "    O204    X pdb=" CZ  TYR A   4 " Y pdb=" HH  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" OXT TYR A   4 "    O101    X pdb=" C   TYR A   4 " Y pdb=" O   TYR A   4 "\n'
+        assert f.readline() == '   pdb=" H1  TYR A   4 "    H105    Z pdb=" N   TYR A   4 " X pdb=" CA  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" H2  TYR A   4 "    H105    Z pdb=" N   TYR A   4 " X pdb=" CA  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" H3  TYR A   4 "    H105    Z pdb=" N   TYR A   4 " X pdb=" CA  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" HA  TYR A   4 "    H103    Z pdb=" CA  TYR A   4 " X pdb=" N   TYR A   4 "\n'
+        assert f.readline() == '   pdb=" HB2 TYR A   4 "    H102    Z pdb=" CB  TYR A   4 " X pdb=" CG  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" HB3 TYR A   4 "    H102    Z pdb=" CB  TYR A   4 " X pdb=" CG  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" HD1 TYR A   4 "    H104    Z pdb=" CD1 TYR A   4 " X pdb=" CE1 TYR A   4 "\n'
+        assert f.readline() == '   pdb=" HD2 TYR A   4 "    H104    Z pdb=" CD2 TYR A   4 " X pdb=" CE2 TYR A   4 "\n'
+        assert f.readline() == '   pdb=" HE1 TYR A   4 "    H104    Z pdb=" CE1 TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" HE2 TYR A   4 "    H104    Z pdb=" CE2 TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
+        assert f.readline() == '   pdb=" HH  TYR A   4 "    H114    Z pdb=" OH  TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
+
 
 @pytest.mark.parametrize(
     ["table", "expected_R"], [("electron", 0.15), ("wk1995", 0.04)]
