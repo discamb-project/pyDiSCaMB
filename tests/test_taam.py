@@ -154,6 +154,82 @@ def test_assignment_symmetry_wrapping(tmp_path):
         assert f.readline() == "Atom type assigned to 2 of 2.\n"
 
 
+def test_assignment_break_when_changing_to_heavy_atom(tmp_path):
+    # Ethene in a big P1 box.
+    # All H should be H101, both C should be C401
+    from cctbx import crystal, xray
+    from cctbx.array_family import flex
+
+    crystal_symmetry = crystal.symmetry(
+        unit_cell=(10, 10, 10, 90, 90, 90), space_group_symbol="P1"
+    )
+    coords = [
+        (-0.7560, 0.0000, 0.0000),
+        (0.7560, 0.0000, 0.0000),
+        (-1.1404, 0.6586, 0.7845),
+        (-1.1404, 0.3501, -0.9626),
+        (-1.1405, -1.0087, 0.1781),
+        (1.1404, -0.3501, 0.9626),
+        (1.1405, 1.0087, -0.1781),
+        (1.1404, -0.6586, -0.7845),
+    ]
+    sites = [crystal_symmetry.unit_cell().fractionalize(coord) for coord in coords]
+
+    scatterers = flex.xray_scatterer(
+        [
+            xray.scatterer("C1", site=sites[0]),
+            xray.scatterer("C2", site=sites[1]),
+            xray.scatterer("H1", site=sites[2]),
+            xray.scatterer("H2", site=sites[3]),
+            xray.scatterer("H3", site=sites[4]),
+            xray.scatterer("H4", site=sites[5]),
+            xray.scatterer("H5", site=sites[6]),
+            xray.scatterer("H6", site=sites[7]),
+        ]
+    )
+
+    xrs = xray.structure(crystal_symmetry=crystal_symmetry, scatterers=scatterers)
+    xrs.scattering_type_registry(table="it1992")
+
+    logfile = tmp_path / "assignment.log"
+    w = pydiscamb.DiscambWrapper(
+        xrs, pydiscamb.FCalcMethod.TAAM, assignment_info=str(logfile)
+    )
+    with logfile.open("r") as f:
+        assert f.readline() == "Atom type assigned to 8 of 8.\n"
+        f.readline()
+        assert "C1   C401" in f.readline()
+        assert "C2   C401" in f.readline()
+        assert "H1   H101" in f.readline()
+        assert "H2   H101" in f.readline()
+        assert "H3   H101" in f.readline()
+        assert "H4   H101" in f.readline()
+        assert "H5   H101" in f.readline()
+        assert "H6   H101" in f.readline()
+
+    # Now: change one of the carbons to gold.
+    # The three hydrogens on the carbon should still be H101,
+    # but the other three hydrogens should be spherical
+    xrs.scatterers()[1].label = "Au1"
+    xrs.scatterers()[1].scattering_type = "Au"
+    w = pydiscamb.DiscambWrapper(
+        xrs, pydiscamb.FCalcMethod.TAAM, assignment_info=str(logfile)
+    )
+    with logfile.open("r") as f:
+        assert f.readline() == "Atom type assigned to 3 of 8.\n"
+        f.readline()
+        assert f.readline() == "   Au1\n"
+        f.readline()
+        assert f.readline() == "    C1\n"
+        assert f.readline() == "    H4\n"
+        assert f.readline() == "    H5\n"
+        assert f.readline() == "    H6\n"
+        f.readline()
+        assert f.readline() == "    H1        H101    Z C1 X Au1\n"
+        assert f.readline() == "    H2        H101    Z C1 X Au1\n"
+        assert f.readline() == "    H3        H101    Z C1 X Au1\n"
+
+
 @pytest.mark.parametrize(
     ["table", "expected_R"], [("electron", 0.15), ("wk1995", 0.04)]
 )
