@@ -3,6 +3,8 @@ from cctbx.eltbx.chemical_elements import proper_caps_list as elements
 
 import pydiscamb
 
+import pydiscamb.taam_parameters
+
 
 def test_init(tyrosine):
     w = pydiscamb.DiscambWrapper(tyrosine, pydiscamb.FCalcMethod.TAAM)
@@ -56,7 +58,8 @@ def test_assignment_heavy_element(el: str):
     fc1 = w1.f_calc(2)
     w2 = pydiscamb.DiscambWrapper(xrs, pydiscamb.FCalcMethod.TAAM)
     fc2 = w2.f_calc(2)
-    assert pytest.approx(fc1, rel=0.01) == fc2
+    assert pytest.approx(fc1) == fc2
+
 
 def test_assignment_log_urecognized_structure(tmp_path):
     logfile = tmp_path / "assignment.log"
@@ -75,7 +78,9 @@ def test_assignment_log_urecognized_structure(tmp_path):
     )
     xrs.scattering_type_registry(table="wk1995")
 
-    w = pydiscamb.DiscambWrapper(xrs, pydiscamb.FCalcMethod.TAAM, assignment_info=str(logfile))
+    w = pydiscamb.DiscambWrapper(
+        xrs, pydiscamb.FCalcMethod.TAAM, assignment_info=str(logfile)
+    )
 
     with logfile.open("r") as f:
         assert f.readline() == "Atom type assigned to 0 of 86.\n"
@@ -86,13 +91,19 @@ def test_assignment_log_urecognized_structure(tmp_path):
         for i in range(36):
             assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
 
+
 def test_assignment_log_tyrosine(tyrosine, tmp_path):
+    if not pydiscamb.taam_parameters.is_MATTS_installed():
+        pytest.skip("Must have MATTS databank installed")
     logfile = tmp_path / "assignment.log"
 
-    w = pydiscamb.DiscambWrapper(tyrosine, pydiscamb.FCalcMethod.TAAM, assignment_info=str(logfile))
-    
+    w = pydiscamb.DiscambWrapper(
+        tyrosine, pydiscamb.FCalcMethod.TAAM, assignment_info=str(logfile)
+    )
+
     with logfile.open("r") as f:
         assert f.readline() == "Atom type assigned to 24 of 24.\n"
+        # fmt: off
         assert f.readline() == "Atoms with assigned atom types and local coordinate systems:\n"
         assert f.readline() == '   pdb=" N   TYR A   4 "   N401a    Z pdb=" CA  TYR A   4 " X pdb=" H2  TYR A   4 "\n'
         assert f.readline() == '   pdb=" CA  TYR A   4 "    C414    X pdb=" N   TYR A   4 " Y pdb=" C   TYR A   4 "\n'
@@ -118,6 +129,7 @@ def test_assignment_log_tyrosine(tyrosine, tmp_path):
         assert f.readline() == '   pdb=" HE1 TYR A   4 "    H104    Z pdb=" CE1 TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
         assert f.readline() == '   pdb=" HE2 TYR A   4 "    H104    Z pdb=" CE2 TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
         assert f.readline() == '   pdb=" HH  TYR A   4 "    H114    Z pdb=" OH  TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
+        # fmt: on
 
 
 @pytest.mark.parametrize(

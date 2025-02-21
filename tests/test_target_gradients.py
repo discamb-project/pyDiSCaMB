@@ -178,7 +178,7 @@ class TestTargetGradients:
         import random
 
         random.seed(0)
-        
+
         f_obs = abs(xrs.structure_factors(d_min=2).f_calc())
 
         xrs.shake_sites_in_place(rms_difference=0.1)
@@ -187,11 +187,17 @@ class TestTargetGradients:
 
         xrs.scatterers().flags_set_grads(state=False)
         iselection = flex.bool(
-            [random.randint(0, 1) if s.flags.use_u_iso() else 0 for s in xrs.scatterers()]
+            [
+                random.randint(0, 1) if s.flags.use_u_iso() else 0
+                for s in xrs.scatterers()
+            ]
         ).iselection()
         xrs.scatterers().flags_set_grad_u_iso(iselection)
         iselection = flex.bool(
-            [random.randint(0, 1) if s.flags.use_u_aniso() else 0 for s in xrs.scatterers()]
+            [
+                random.randint(0, 1) if s.flags.use_u_aniso() else 0
+                for s in xrs.scatterers()
+            ]
         ).iselection()
         xrs.scatterers().flags_set_grad_u_aniso(iselection)
         iselection = flex.bool(

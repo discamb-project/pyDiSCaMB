@@ -73,6 +73,7 @@ def test_IAM_correctness_random_crystal(
     space_group: int,
 ):
     from itertools import product
+
     for args in product(
         ["random u_iso", "random u_aniso", None],
         ["random occupancy", None],
@@ -80,9 +81,7 @@ def test_IAM_correctness_random_crystal(
         ["single weak", "single strong", "many weak", "many strong", "mixed strength"],
         ["it1992", "wk1995", "electron"],
     ):
-        xrs = get_random_crystal(
-            space_group, *args
-        )
+        xrs = get_random_crystal(space_group, *args)
         score = get_IAM_correctness_score(xrs)
         # Use 0.05% as threshold
         assert score < 0.0005
