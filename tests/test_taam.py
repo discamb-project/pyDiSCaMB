@@ -1,5 +1,5 @@
 import pytest
-from cctbx.eltbx.chemical_elements import proper_caps_list
+from cctbx.eltbx.chemical_elements import proper_caps_list as elements
 
 import pydiscamb
 
@@ -33,9 +33,9 @@ def _get_single_element_structure(element: str):
 
 @pytest.mark.parametrize(
     "el",
-    proper_caps_list()[:36],
+    elements()[:36],
 )
-def test_assignment_heavy_elements(el: str):
+def test_assignment_light_element(el: str):
     xrs = _get_single_element_structure(el)
 
     w1 = pydiscamb.DiscambWrapper(xrs, pydiscamb.FCalcMethod.IAM)
@@ -47,9 +47,9 @@ def test_assignment_heavy_elements(el: str):
 
 @pytest.mark.parametrize(
     "el",
-    proper_caps_list()[36:86],
+    elements()[36:86],
 )
-def test_assignment_light_elements(el: str):
+def test_assignment_heavy_element(el: str):
     xrs = _get_single_element_structure(el)
 
     w1 = pydiscamb.DiscambWrapper(xrs, pydiscamb.FCalcMethod.IAM)
