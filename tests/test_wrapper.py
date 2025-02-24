@@ -1,32 +1,22 @@
 from cctbx.array_family import flex
-from cctbx import miller, xray
-from mmtbx import f_model
+from cctbx import miller
+import iotbx.pdb.mmcif
 import pytest
 
-
-def test_import():
-    import pydiscamb
-
-    assert isinstance(pydiscamb.get_discamb_version(), str)
+from pydiscamb import DiscambWrapper, FCalcMethod
 
 
 def test_init(random_structure):
-    from pydiscamb import DiscambWrapper
-
     w = DiscambWrapper(random_structure)
 
 
 def test_fcalc(random_structure):
-    from pydiscamb import DiscambWrapper
-
     w = DiscambWrapper(random_structure)
     sf = w.f_calc(4.0)
     assert isinstance(sf[0], complex)
 
 
 def test_fcalc_with_d_min(random_structure):
-    from pydiscamb import DiscambWrapper
-
     w = DiscambWrapper(random_structure)
     w.set_d_min(4.0)
     sf = w.f_calc()
@@ -34,8 +24,6 @@ def test_fcalc_with_d_min(random_structure):
 
 
 def test_fcalc_with_indices(random_structure):
-    from pydiscamb import DiscambWrapper
-
     inds = [(0, 1, 2), (0, 1, 2), (10, 20, 30)]
 
     w = DiscambWrapper(random_structure)
@@ -48,16 +36,12 @@ def test_fcalc_with_indices(random_structure):
 
 
 def test_fcalc_with_no_indices(random_structure):
-    from pydiscamb import DiscambWrapper
-
     w = DiscambWrapper(random_structure)
     sf = w.f_calc()
     assert len(sf) == 0
 
 
 def test_update_structure(random_structure):
-    from pydiscamb import DiscambWrapper
-
     wrapper = DiscambWrapper(random_structure)
     site = random_structure.scatterers()[0].site
     random_structure.scatterers()[0].site = (site[2], site[1], site[0])
@@ -65,8 +49,6 @@ def test_update_structure(random_structure):
 
 @pytest.mark.xfail(reason="The wrapper is no longer updated along with the structure")
 def test_update_structure_recalculate_fcalc(random_structure):
-    from pydiscamb import DiscambWrapper
-
     wrapper = DiscambWrapper(random_structure)
     sf_before = wrapper.f_calc(5)
     site = random_structure.scatterers()[0].site
@@ -84,8 +66,6 @@ def test_update_structure_recalculate_fcalc(random_structure):
     ],
 )
 def test_anomalous_scattering(p: bool, dp: bool, random_structure):
-    from pydiscamb import DiscambWrapper
-
     wrapper = DiscambWrapper(random_structure)
     sf_before = wrapper.f_calc(5)
 
@@ -112,8 +92,6 @@ def test_anomalous_scattering(p: bool, dp: bool, random_structure):
 
 
 def test_f_calc_type(tyrosine):
-    from pydiscamb import DiscambWrapper
-
     fc_c = tyrosine.structure_factors(d_min=2).f_calc()
 
     w = DiscambWrapper(tyrosine)
@@ -126,8 +104,6 @@ def test_f_calc_type(tyrosine):
 
 @pytest.mark.parametrize("taam", [True, False])
 def test_default_init_with_kwargs(tyrosine, taam):
-    from pydiscamb import DiscambWrapper, FCalcMethod
-
     m = FCalcMethod.TAAM if taam else FCalcMethod.IAM
     w1 = DiscambWrapper(tyrosine, m)
     w2 = DiscambWrapper(tyrosine, m, random_unused_kwarg=42)
@@ -140,3 +116,66 @@ def test_default_init_with_kwargs(tyrosine, taam):
         ValueError, match="`miller_set` must be of type `cctbx.miller.set"
     ):
         w1.f_calc("incorrect input")
+
+class TestFromFile:
+    def test_pdb(self, tmp_path, random_structure):
+        pdb_file = tmp_path / "test.pdb"
+        with pdb_file.open("w") as f:
+            f.write(random_structure.as_pdb_file())
+
+        DiscambWrapper.from_file(pdb_file)
+        DiscambWrapper.from_file(str(pdb_file))
+
+    def test_file_errors(self, tmp_path, random_structure):
+        # Write a file with actual structure content
+        pdb_file = tmp_path / "test.tmp"
+        with pdb_file.open("w") as f:
+            f.write(random_structure.as_pdb_file())
+
+        with pytest.raises(
+            ValueError, match="Supported files are .cif, .mmcif and .pdb. Got .tmp"
+        ):
+            DiscambWrapper.from_file(pdb_file)
+
+        with pytest.raises(FileNotFoundError):
+            DiscambWrapper.from_file(pdb_file.with_name("not_found"))
+
+    def test_cif(self, tmp_path, random_structure):
+        cif_file = tmp_path / "tmp.cif"
+        with cif_file.open("w") as f:
+            random_structure.as_cif_simple(out=f, format="corecif")
+
+        DiscambWrapper.from_file(cif_file)
+
+    def test_cif_multiple_structures(self, tmp_path, random_structure):
+        import iotbx.cif
+
+        cif = iotbx.cif.model.cif()
+        cif["A"] = random_structure.as_cif_block(format="corecif")
+        cif["B"] = random_structure.as_cif_block(format="corecif")
+        cif_file = tmp_path / "tmp.cif"
+        with cif_file.open("w") as f:
+            f.write(str(cif))
+
+        with pytest.raises(ValueError, match="Multiple structures found in file"):
+            DiscambWrapper.from_file(cif_file)
+
+
+class TestFromPdbCode:
+    def test_working(self):
+        DiscambWrapper.from_pdb_code("1HUF")
+
+    def test_wrong_length(self):
+        with pytest.raises(ValueError, match="pdb code must be 4 characters long"):
+            DiscambWrapper.from_pdb_code("12345")
+        with pytest.raises(ValueError, match="pdb code must be 4 characters long"):
+            DiscambWrapper.from_pdb_code("123")
+
+    def test_illegal_characters(self):
+        with pytest.raises(ValueError, match="pdb code must be alphanumeric"):
+            DiscambWrapper.from_pdb_code("123!")
+
+    def test_not_found(self):
+        # Warning: might fail if it exists in the future?
+        with pytest.raises(ValueError, match="pdb code not found on rcsb.org"):
+            DiscambWrapper.from_pdb_code("0000")
