@@ -152,16 +152,13 @@ class DiscambWrapper(PythonInterface):
 
         import requests
 
-        response = requests.get(
-            f"https://files.rcsb.org/view/{pdb_code}.pdb"
-        )
+        response = requests.get(f"https://files.rcsb.org/view/{pdb_code}.pdb")
         if response.status_code == 404:
             raise ValueError("pdb code not found on rcsb.org")
         elif response.status_code != 200:
             raise RuntimeError("Communication error with rcsb.org")
         pdb_str = response.content.decode("utf-8")
         return cls._from_pdb_str(pdb_str, method, **kwargs)
-
 
     @classmethod
     def _from_pdb_str(cls, pdb_str: str, method, **kwargs) -> "DiscambWrapper":

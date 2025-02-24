@@ -112,12 +112,13 @@ def test_default_init_with_kwargs(tyrosine, taam):
     fc2 = w2.f_calc(2.0)
     assert pytest.approx(list(fc1)) == list(fc2)
 
+
 class TestFromFile:
     def test_pdb(self, tmp_path, random_structure):
         pdb_file = tmp_path / "test.pdb"
         with pdb_file.open("w") as f:
             f.write(random_structure.as_pdb_file())
-        
+
         DiscambWrapper.from_file(pdb_file)
         DiscambWrapper.from_file(str(pdb_file))
 
@@ -126,10 +127,12 @@ class TestFromFile:
         pdb_file = tmp_path / "test.tmp"
         with pdb_file.open("w") as f:
             f.write(random_structure.as_pdb_file())
-        
-        with pytest.raises(ValueError, match="Supported files are .cif, .mmcif and .pdb. Got .tmp"):
+
+        with pytest.raises(
+            ValueError, match="Supported files are .cif, .mmcif and .pdb. Got .tmp"
+        ):
             DiscambWrapper.from_file(pdb_file)
-        
+
         with pytest.raises(FileNotFoundError):
             DiscambWrapper.from_file(pdb_file.with_name("not_found"))
 
@@ -137,35 +140,37 @@ class TestFromFile:
         cif_file = tmp_path / "tmp.cif"
         with cif_file.open("w") as f:
             random_structure.as_cif_simple(out=f, format="corecif")
-        
+
         DiscambWrapper.from_file(cif_file)
-    
+
     def test_cif_multiple_structures(self, tmp_path, random_structure):
         import iotbx.cif
+
         cif = iotbx.cif.model.cif()
         cif["A"] = random_structure.as_cif_block(format="corecif")
         cif["B"] = random_structure.as_cif_block(format="corecif")
         cif_file = tmp_path / "tmp.cif"
         with cif_file.open("w") as f:
             f.write(str(cif))
-        
+
         with pytest.raises(ValueError, match="Multiple structures found in file"):
             DiscambWrapper.from_file(cif_file)
+
 
 class TestFromPdbCode:
     def test_working(self):
         DiscambWrapper.from_pdb_code("1HUF")
-    
+
     def test_wrong_length(self):
         with pytest.raises(ValueError, match="pdb code must be 4 characters long"):
             DiscambWrapper.from_pdb_code("12345")
         with pytest.raises(ValueError, match="pdb code must be 4 characters long"):
             DiscambWrapper.from_pdb_code("123")
-        
+
     def test_illegal_characters(self):
         with pytest.raises(ValueError, match="pdb code must be alphanumeric"):
             DiscambWrapper.from_pdb_code("123!")
-    
+
     def test_not_found(self):
         # Warning: might fail if it exists in the future?
         with pytest.raises(ValueError, match="pdb code not found on rcsb.org"):
