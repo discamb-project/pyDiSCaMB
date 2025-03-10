@@ -33,13 +33,7 @@ Crystal crystal_from_xray_structure(const py::object structure){
     crystal.atoms.assign(num_atoms, AtomInCrystal());
 
     crystal.xyzCoordinateSystem = structural_parameters_convention::XyzCoordinateSystem::fractional;
-    // Assume all adps use the same convention
-    if (structure.attr("use_u_iso")().attr("__getitem__")(0).cast<bool>()){
-        crystal.adpConvention = structural_parameters_convention::AdpConvention::U_cif;
-    }
-    else{
-        crystal.adpConvention = structural_parameters_convention::AdpConvention::U_star;
-    }
+    crystal.adpConvention = structural_parameters_convention::AdpConvention::U_star;
 
     // Set atoms
     update_crystal_from_xray_structure(crystal, structure);
