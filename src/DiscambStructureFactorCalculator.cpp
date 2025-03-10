@@ -122,4 +122,5 @@ void DiscambStructureFactorCalculator::update_calculator(){
     // mCalculator->update(mCrystal.atoms); // Already handled since we pass atoms to calculations
     assert(mAnomalous.size() == mCrystal.atoms.size());
     mCalculator->setAnomalous(mAnomalous);
+    mConverter.set(mCrystal.unitCell);
 }

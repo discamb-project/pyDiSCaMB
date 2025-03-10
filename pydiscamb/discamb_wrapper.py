@@ -227,7 +227,7 @@ class DiscambWrapper(PythonInterface):
             size += 1 * s.grad_u_iso()
             size += 6 * s.grad_u_aniso()
             size += 1 * s.grad_occupancy()
-        out = flex.double(size)
+        out = flex.double(size, 0)
         o_ind = 0
         for s_ind, s in enumerate(self._scatterer_flags):
             if s.grad_site():
