@@ -1,6 +1,6 @@
 [project]
 name = "pydiscamb"
-version = "0.1.1"
+version = "0.1.2"
 description="A python wrapper for DiSCaMB"
 readme = "README.md"
 authors = [
@@ -40,4 +40,5 @@ testpaths = [
 addopts = "-raP"
 markers = [
   "slow",
+  "veryslow",
 ]
