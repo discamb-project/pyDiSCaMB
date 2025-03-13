@@ -25,6 +25,7 @@ class PythonInterface : public DiscambStructureFactorCalculator{
 
         void set_indices(py::object indices);
         void set_d_min(const double d_min);
+        void update_structure(py::object structure);
 
     private:
         py::object mStructure;

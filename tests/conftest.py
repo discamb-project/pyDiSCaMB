@@ -2,6 +2,13 @@ import pytest
 
 from cctbx.xray import structure
 
+# Hack to clear the cache between tests
+@pytest.fixture(autouse=True)
+def clear_cache():
+    from pydiscamb import DiscambWrapper
+
+    DiscambWrapper._DiscambWrapper__clear_cache()
+
 
 @pytest.fixture
 def random_structure() -> structure:

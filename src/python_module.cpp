@@ -104,6 +104,12 @@ PYBIND11_MODULE(_cpp_module, m) {
             R"pbdoc(Set minimum d-spacing for calculating f_calc)pbdoc",
             py::arg("d_min")
         )
+        .def(
+            "update_structure",
+            &PythonInterface::update_structure,
+            R"pbdoc(Update atoms read from the given structure)pbdoc",
+            py::arg("structure")
+        )
         .def_property_readonly(
             "hkl",
             [](const PythonInterface &i)
