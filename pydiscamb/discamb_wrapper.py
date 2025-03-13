@@ -105,11 +105,11 @@ class DiscambWrapper(PythonInterface):
         return out
 
     def update_structure(self, xrs: structure):
-        atomstr = _concat_scatterer_labels(xrs)
-        if atomstr != self._atomstr:
+        if self._atomstr != _concat_scatterer_labels(xrs):
             raise ValueError(
                 "Incompatible structures. Must have same scatterers in the same order"
             )
+        self._scatterer_flags = xrs.scatterer_flags()
         super().update_structure(xrs)
 
     @classmethod
