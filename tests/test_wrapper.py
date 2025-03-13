@@ -1,6 +1,5 @@
 from cctbx.array_family import flex
 from cctbx import miller
-import iotbx.pdb.mmcif
 import pytest
 
 from pydiscamb import DiscambWrapper, FCalcMethod
@@ -37,34 +36,44 @@ def test_fcalc_with_indices(random_structure):
 
 def test_fcalc_with_no_indices(random_structure):
     w = DiscambWrapper(random_structure)
+    assert w.hkl == []
     sf = w.f_calc()
     assert len(sf) == 0
 
 
-def test_update_structure(random_structure):
-    wrapper = DiscambWrapper(random_structure)
-    site = random_structure.scatterers()[0].site
-    random_structure.scatterers()[0].site = (site[2], site[1], site[0])
-
-
-@pytest.mark.xfail(reason="The wrapper is no longer updated along with the structure")
-def test_update_structure_recalculate_fcalc(random_structure):
-    wrapper = DiscambWrapper(random_structure)
+def test_update_structure(large_random_structure):
+    wrapper = DiscambWrapper(large_random_structure)
     sf_before = wrapper.f_calc(5)
-    site = random_structure.scatterers()[0].site
-    random_structure.scatterers()[0].site = (site[2], site[1], site[0])
+    large_random_structure.shake_sites_in_place(0.1)
+    wrapper.update_structure(large_random_structure)
     sf_after = wrapper.f_calc(5)
-    assert not pytest.approx(sf_before) == sf_after
+    assert pytest.approx(list(sf_before)) != list(sf_after)
 
 
-@pytest.mark.parametrize(
-    ["p", "dp"],
-    [
-        (False, True),
-        (True, False),
-        (True, True),
-    ],
-)
+def test_update_structure_error(random_structure, tyrosine):
+    w = DiscambWrapper(random_structure)
+    with pytest.raises(ValueError, match="Incompatible structures"):
+        w.update_structure(tyrosine)
+
+
+@pytest.mark.slow
+def test_cache(lysozyme):
+    from time import perf_counter
+
+    start = perf_counter()
+    w1 = DiscambWrapper(lysozyme, FCalcMethod.TAAM)
+    w1_time = perf_counter() - start
+
+    start = perf_counter()
+    w2 = DiscambWrapper(lysozyme, FCalcMethod.TAAM)
+    w2_time = perf_counter() - start
+
+    assert w1_time / w2_time > 10, "Atom assignment should be at least 10x slower than cache lookup"
+
+    assert all(a == b for a, b in zip(w1.f_calc(2), w2.f_calc(2)))
+
+
+@pytest.mark.parametrize(["p", "dp"], [(False, True), (True, False), (True, True)])
 def test_anomalous_scattering(p: bool, dp: bool, random_structure):
     wrapper = DiscambWrapper(random_structure)
     sf_before = wrapper.f_calc(5)
@@ -116,6 +125,7 @@ def test_default_init_with_kwargs(tyrosine, taam):
         ValueError, match="`miller_set` must be of type `cctbx.miller.set"
     ):
         w1.f_calc("incorrect input")
+
 
 class TestFromFile:
     def test_pdb(self, tmp_path, random_structure):

@@ -20,25 +20,11 @@ class FCalcMethod(Enum):
     TAAM = 1
 
 
-def get_default_calculator_params(
-    xrs: structure, method: FCalcMethod
-) -> Dict[str, Any]:
-    table = xrs.get_scattering_table()
-    out = {
-        "model": "iam",
-        "bank_path": get_default_databank(),
-        "table": table_alias("xray" if table is None else table),
-        "electron_scattering": table == "electron",
-    }
-    if method == FCalcMethod.IAM:
-        out.update({"electron_scattering": False})
-    elif method == FCalcMethod.TAAM:
-        out.update({"model": "taam"})
-    return out
-
-
 class DiscambWrapper(PythonInterface):
-    def __init__(self, xrs: structure, method=FCalcMethod.IAM, **kwargs):
+
+    __cache = {}
+
+    def __init__(self, xrs: structure, method: FCalcMethod = None, **kwargs):
         """
         Initialize a wrapper object for structure factor calculations using DiSCaMB.
         Pass an xray structure and either a FCalcMethod,
@@ -52,7 +38,7 @@ class DiscambWrapper(PythonInterface):
         Any kwargs present will override the defaults.
         The defaults are e.g. inferring the scattering table from `xrs`,
         and using the default TAAM databank.
-        See :code:`get_default_calculator_params` for details.
+        See :code:`DiscambWrapper._prepare_calculator_params` for details.
 
         Parameters
         ----------
@@ -61,15 +47,70 @@ class DiscambWrapper(PythonInterface):
         method : FCalcMethod, optional
             Which structure factor model to use, by default FCalcMethod.IAM
         """
-        calculator_params = get_default_calculator_params(xrs, method)
-        calculator_params.update(kwargs)
-        # Discamb likes spaces instead of underscores
-        calculator_params = {
-            key.replace("_", " "): val for key, val in calculator_params.items()
-        }
-
+        if self.__check_cache(xrs, method, kwargs) is not None:
+            self.update_structure(xrs)
+            return
+        calculator_params = self._prepare_calculator_params(xrs, method, kwargs)
         super().__init__(xrs, calculator_params)
+
         self._scatterer_flags = xrs.scatterer_flags()
+        self._atomstr = _concat_scatterer_labels(xrs)
+
+        self.__cache[self.__get_cache_key(xrs, method, kwargs)] = self
+
+    def __new__(cls, xrs: structure, method: FCalcMethod = None, **kwargs):
+        cache = cls.__check_cache(xrs, method, kwargs)
+        if cache is None:
+            return super().__new__(cls)
+        return cache
+
+    @classmethod
+    def __check_cache(cls, xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]):
+        key = cls.__get_cache_key(xrs, method, kwargs)
+        return cls.__cache.get(key)
+
+    @classmethod
+    def __get_cache_key(
+        cls, xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]
+    ):
+        atomstr = _concat_scatterer_labels(xrs)
+        params = cls._prepare_calculator_params(xrs, method, kwargs)
+        key = (atomstr, *sorted(params.items()))
+        return key
+
+    @classmethod
+    def __clear_cache(cls):
+        cls.__cache = {}
+
+    @staticmethod
+    def _prepare_calculator_params(
+        xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]
+    ) -> Dict[str, str]:
+        if method is None:
+            method = FCalcMethod.IAM
+        table = xrs.get_scattering_table()
+        out = {
+            "model": "iam",
+            "bank_path": get_default_databank(),
+            "table": table_alias("xray" if table is None else table),
+            "electron_scattering": table == "electron",
+        }
+        if method == FCalcMethod.IAM:
+            out.update({"electron_scattering": False})
+        elif method == FCalcMethod.TAAM:
+            out.update({"model": "taam"})
+        out.update(kwargs)
+        # Discamb likes spaces instead of underscores
+        out = {key.replace("_", " "): val for key, val in out.items()}
+        return out
+
+    def update_structure(self, xrs: structure):
+        atomstr = _concat_scatterer_labels(xrs)
+        if atomstr != self._atomstr:
+            raise ValueError(
+                "Incompatible structures. Must have same scatterers in the same order"
+            )
+        super().update_structure(xrs)
 
     @classmethod
     def from_file(
@@ -172,25 +213,32 @@ class DiscambWrapper(PythonInterface):
 
     ## Annotations
     @overload
-    def f_calc(self, miller_array: None) -> flex.complex_double: ...
+    def f_calc(self, miller_array: None) -> flex.complex_double:
+        ...
 
     @overload
-    def f_calc(self, d_min: float) -> flex.complex_double: ...
+    def f_calc(self, d_min: float) -> flex.complex_double:
+        ...
 
     @overload
-    def f_calc(self, miller_array: miller.set) -> miller.array: ...
+    def f_calc(self, miller_array: miller.set) -> miller.array:
+        ...
 
     @overload
-    def d_f_calc_hkl_d_params(self, hkl: Tuple[int, int, int]) -> FCalcDerivatives: ...
+    def d_f_calc_hkl_d_params(self, hkl: Tuple[int, int, int]) -> FCalcDerivatives:
+        ...
 
     @overload
-    def d_f_calc_hkl_d_params(self, h: int, k: int, l: int) -> FCalcDerivatives: ...
+    def d_f_calc_hkl_d_params(self, h: int, k: int, l: int) -> FCalcDerivatives:
+        ...
 
     @overload
-    def d_target_d_params(self, d_target_d_f_calc: miller.array) -> flex.double: ...
+    def d_target_d_params(self, d_target_d_f_calc: miller.array) -> flex.double:
+        ...
 
     @overload
-    def d_target_d_params(self, d_target_d_f_calc: list) -> List[TargetDerivatives]: ...
+    def d_target_d_params(self, d_target_d_f_calc: list) -> List[TargetDerivatives]:
+        ...
 
     ## Implementations
     def f_calc(self, miller_set=None):
@@ -274,3 +322,7 @@ def calculate_structure_factors_IAM(xrs: structure, d_min: float) -> List[comple
 
 def calculate_structure_factors_TAAM(xrs: structure, d_min: float) -> List[complex]:
     return _calculate_structure_factors(xrs, d_min, FCalcMethod.TAAM)
+
+
+def _concat_scatterer_labels(xrs: structure) -> str:
+    return "".join(s.label for s in xrs.scatterers())

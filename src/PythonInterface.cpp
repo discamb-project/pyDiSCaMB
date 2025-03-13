@@ -37,3 +37,10 @@ void PythonInterface::set_d_min(const double d_min){
 
     set_indices(miller_py.attr("indices")());
 }
+
+void PythonInterface::update_structure(py::object structure){
+    update_crystal_from_xray_structure(crystal, structure);
+    update_anomalous_from_xray_structure(anomalous, structure);
+    // DiscambStructureFactorCalculator::update_calculator is called before all relevant operations
+    // ensuring the updates here are handled
+}

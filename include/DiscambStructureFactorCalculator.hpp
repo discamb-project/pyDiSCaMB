@@ -39,10 +39,11 @@ class DiscambStructureFactorCalculator {
         
         std::vector<discamb::Vector3i> hkl;
 
+        discamb::Crystal crystal;
+        std::vector<std::complex<double>> anomalous;
+
     private:
         discamb::SfCalculator *mCalculator;
-        discamb::Crystal mCrystal;
-        std::vector<std::complex<double>> mAnomalous;
         discamb::StructuralParametersConverter mConverter;
         void update_calculator();
 };
