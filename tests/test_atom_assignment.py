@@ -1,7 +1,8 @@
 import pytest
 from cctbx.eltbx.chemical_elements import proper_caps_list as elements
 
-from pydiscamb import DiscambWrapper, FCalcMethod
+from pydiscamb import FCalcMethod
+from pydiscamb.discamb_wrapper import DiscambWrapper_Uncached as DiscambWrapper
 from pydiscamb.taam_parameters import is_MATTS_installed
 
 

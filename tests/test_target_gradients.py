@@ -4,7 +4,7 @@ import numpy as np
 from cctbx.array_family import flex
 import mmtbx.f_model
 
-from pydiscamb import DiscambWrapper
+from pydiscamb.discamb_wrapper import DiscambWrapper_Uncached as DiscambWrapper
 from pydiscamb._cpp_module import TargetDerivatives
 
 

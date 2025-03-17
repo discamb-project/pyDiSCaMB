@@ -1,6 +1,7 @@
 import pytest
 
-from pydiscamb import DiscambWrapper, FCalcMethod
+from pydiscamb import FCalcMethod
+from pydiscamb.discamb_wrapper import DiscambWrapper_Uncached as DiscambWrapper
 
 
 @pytest.mark.parametrize("method", [FCalcMethod.IAM, FCalcMethod.TAAM])

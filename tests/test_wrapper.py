@@ -2,7 +2,9 @@ from cctbx.array_family import flex
 from cctbx import miller
 import pytest
 
-from pydiscamb import DiscambWrapper, FCalcMethod
+from pydiscamb import FCalcMethod
+from pydiscamb.discamb_wrapper import DiscambWrapper_Uncached as DiscambWrapper
+from pydiscamb.discamb_wrapper import DiscambWrapper as DiscambWrapper_Cached
 
 
 def test_init(random_structure):
@@ -61,16 +63,17 @@ def test_cache(lysozyme):
     from time import perf_counter
 
     start = perf_counter()
-    w1 = DiscambWrapper(lysozyme, FCalcMethod.TAAM)
+    w1 = DiscambWrapper_Cached(lysozyme, FCalcMethod.TAAM)
     w1_time = perf_counter() - start
 
     start = perf_counter()
-    w2 = DiscambWrapper(lysozyme, FCalcMethod.TAAM)
+    w2 = DiscambWrapper_Cached(lysozyme, FCalcMethod.TAAM)
     w2_time = perf_counter() - start
 
     assert w1_time / w2_time > 10, "Atom assignment should be at least 10x slower than cache lookup"
 
     assert all(a == b for a, b in zip(w1.f_calc(2), w2.f_calc(2)))
+    assert w1 is w2
 
 
 @pytest.mark.parametrize(["p", "dp"], [(False, True), (True, False), (True, True)])

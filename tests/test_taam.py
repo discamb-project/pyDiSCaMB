@@ -1,6 +1,7 @@
 import pytest
 
-from pydiscamb import DiscambWrapper, FCalcMethod
+from pydiscamb import FCalcMethod
+from pydiscamb.discamb_wrapper import DiscambWrapper_Uncached as DiscambWrapper
 from pydiscamb.taam_parameters import is_MATTS_installed, get_TAAM_databanks
 
 def test_init(tyrosine):
