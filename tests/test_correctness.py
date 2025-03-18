@@ -1,12 +1,10 @@
 import pydiscamb
-from pydiscamb import FCalcMethod, DiscambWrapper
-
-from cctbx.development import random_structure
-from cctbx.sgtbx import space_group_info
-from cctbx.array_family import flex
-from cctbx.eltbx import xray_scattering
-
 import pytest
+from cctbx.array_family import flex
+from cctbx.development import random_structure
+from cctbx.eltbx import xray_scattering
+from cctbx.sgtbx import space_group_info
+from pydiscamb import DiscambWrapper, FCalcMethod
 
 
 def compare_structure_factors(f_calc_a, f_calc_b):

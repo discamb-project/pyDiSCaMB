@@ -1,6 +1,5 @@
 import pytest
-
-from pydiscamb import FCalcMethod, DiscambWrapper
+from pydiscamb import DiscambWrapper, FCalcMethod
 
 
 @pytest.mark.parametrize("method", [FCalcMethod.IAM, FCalcMethod.TAAM])

@@ -1,14 +1,13 @@
-from typing import overload, Tuple, Dict, Any, List, Union
 from enum import Enum
 from pathlib import Path
+from typing import Any, Dict, List, Tuple, Union, overload
 
-from cctbx.xray.structure import structure
-from cctbx.array_family import flex
 from cctbx import miller
-
+from cctbx.array_family import flex
+from cctbx.xray.structure import structure
 from pydiscamb._cpp_module import (
-    PythonInterface,
     FCalcDerivatives,
+    PythonInterface,
     TargetDerivatives,
     table_alias,
 )
@@ -176,8 +175,8 @@ class DiscambWrapper(PythonInterface):
 
     @classmethod
     def _from_pdb_str(cls, pdb_str: str, method, **kwargs) -> "DiscambWrapper":
-        import mmtbx.model
         import iotbx.pdb
+        import mmtbx.model
         from libtbx.utils import null_out
 
         pdb_inp = iotbx.pdb.input(lines=pdb_str.split("\n"), source_info=None)

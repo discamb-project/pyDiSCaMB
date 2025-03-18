@@ -1,5 +1,4 @@
 import pytest
-
 from cctbx.xray import structure
 
 
@@ -77,8 +76,8 @@ def large_random_structure() -> structure:
 
 @pytest.fixture
 def tyrosine() -> structure:
-    import mmtbx.model
     import iotbx.pdb
+    import mmtbx.model
     from libtbx.utils import null_out
 
     pdb_str = """
@@ -120,10 +119,10 @@ ATOM     24  HH  TYR A   4       4.712   5.804   4.444  1.00 30.00           H
 
 @pytest.fixture
 def lysozyme() -> structure:
-    import mmtbx.model
     import iotbx.pdb
-    from libtbx.utils import null_out
+    import mmtbx.model
     import requests
+    from libtbx.utils import null_out
 
     data = requests.get("https://files.rcsb.org/view/7ULY.pdb")
     pdb_str = data.content.decode("utf-8")

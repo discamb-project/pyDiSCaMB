@@ -1,19 +1,13 @@
-from ._cpp_module import (
-    __doc__,
-    get_discamb_version,
-    get_table,
-    wrapper_tests,
-)
-from .taam_parameters import get_TAAM_databanks
+from ._cpp_module import __doc__, get_discamb_version, get_table, wrapper_tests
 from .discamb_wrapper import (
     DiscambWrapper,
     FCalcMethod,
     calculate_structure_factors_IAM,
     calculate_structure_factors_TAAM,
 )
+from .taam_parameters import get_TAAM_databanks
 
 __all__ = [
-    "__doc__",
     "get_discamb_version",
     "calculate_structure_factors_IAM",
     "calculate_structure_factors_TAAM",

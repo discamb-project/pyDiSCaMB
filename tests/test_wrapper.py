@@ -1,8 +1,7 @@
-from cctbx.array_family import flex
-from cctbx import miller
 import pytest
-
-from pydiscamb import FCalcMethod, DiscambWrapper
+from cctbx import miller
+from cctbx.array_family import flex
+from pydiscamb import DiscambWrapper, FCalcMethod
 from pydiscamb.discamb_wrapper import DiscambWrapperCached
 
 
@@ -122,8 +121,8 @@ class TestUpdateStructure:
 class TestCache:
     def test_simple(self, random_structure):
         DiscambWrapperCached.__cache = {}
-        # Show that, even when objects are created in an unavailable scope, 
-        # that the object is still cached
+        # Show that, even when objects are created in an unavailable scope,
+        # the object is still cached
 
         def init_wrapper():
             w = DiscambWrapperCached(random_structure)
