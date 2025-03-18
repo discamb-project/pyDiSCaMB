@@ -1,6 +1,5 @@
 import pydiscamb
-from pydiscamb import FCalcMethod
-from pydiscamb.discamb_wrapper import DiscambWrapper_Uncached as DiscambWrapper
+from pydiscamb import FCalcMethod, DiscambWrapper
 
 from cctbx.development import random_structure
 from cctbx.sgtbx import space_group_info

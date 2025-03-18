@@ -20,14 +20,36 @@ class FCalcMethod(Enum):
     TAAM = 1
 
 
-class DiscambWrapper_Uncached(PythonInterface):
-
+class DiscambWrapper(PythonInterface):
     def __init__(self, xrs: structure, method: FCalcMethod = None, **kwargs):
+        """
+        Initialize a wrapper object for structure factor calculations using DiSCaMB.
+        Pass an xray structure and either a FCalcMethod,
+        or kwargs which are passed to  C++: :code:`discamb::SfCalculator::create`,
+        found in discamb/Scattering/SfCalculator.h
+
+        Notes
+        -----
+        The :code:`method` parameter is used for lookup of sensible default
+        values to be sent to :code:`discamb::SfCalculator::create`.
+        Any kwargs present will override the defaults.
+        The defaults are e.g. inferring the scattering table from `xrs`,
+        and using the default TAAM databank.
+        See :code:`DiscambWrapper_Uncached._prepare_calculator_params` for details.
+
+        Parameters
+        ----------
+        xrs : structure
+            Object defining the symmetry, atom positions, ADPs, occupancy ect.
+        method : FCalcMethod, optional
+            Which structure factor model to use, by default FCalcMethod.IAM
+        """
         calculator_params = self._prepare_calculator_params(xrs, method, kwargs)
         super().__init__(xrs, calculator_params)
 
         self._scatterer_flags = xrs.scatterer_flags()
         self._atomstr = _concat_scatterer_labels(xrs)
+        self._unit_cell = xrs.unit_cell()
 
     @staticmethod
     def _prepare_calculator_params(
@@ -52,9 +74,13 @@ class DiscambWrapper_Uncached(PythonInterface):
         return out
 
     def update_structure(self, xrs: structure):
-        if self._atomstr != _concat_scatterer_labels(xrs):
+        if (
+            self._atomstr != _concat_scatterer_labels(xrs)
+            or self._unit_cell != xrs.unit_cell()
+        ):
             raise ValueError(
-                "Incompatible structures. Must have same scatterers in the same order"
+                "Incompatible structures. "
+                "Must have same scatterers in the same order, and same unit cell"
             )
         self._scatterer_flags = xrs.scatterer_flags()
         super().update_structure(xrs)
@@ -62,7 +88,7 @@ class DiscambWrapper_Uncached(PythonInterface):
     @classmethod
     def from_file(
         cls, filepath: Union[str, Path], method: FCalcMethod = FCalcMethod.IAM, **kwargs
-    ) -> "DiscambWrapper_Uncached":
+    ) -> "DiscambWrapper":
         """Read a structure from a file
 
         Parameters
@@ -111,7 +137,7 @@ class DiscambWrapper_Uncached(PythonInterface):
     @classmethod
     def from_pdb_code(
         cls, pdb_code: str, method: FCalcMethod = FCalcMethod.IAM, **kwargs
-    ) -> "DiscambWrapper_Uncached":
+    ) -> "DiscambWrapper":
         """Download structure from rcsb.org
 
         Parameters
@@ -149,7 +175,7 @@ class DiscambWrapper_Uncached(PythonInterface):
         return cls._from_pdb_str(pdb_str, method, **kwargs)
 
     @classmethod
-    def _from_pdb_str(cls, pdb_str: str, method, **kwargs) -> "DiscambWrapper_Uncached":
+    def _from_pdb_str(cls, pdb_str: str, method, **kwargs) -> "DiscambWrapper":
         import mmtbx.model
         import iotbx.pdb
         from libtbx.utils import null_out
@@ -255,37 +281,15 @@ class DiscambWrapper_Uncached(PythonInterface):
         return out
 
 
-class DiscambWrapper(DiscambWrapper_Uncached):
+class DiscambWrapperCached(DiscambWrapper):
 
     __cache = {}
 
     def __init__(self, xrs: structure, method: FCalcMethod = None, **kwargs):
-        """
-        Initialize a wrapper object for structure factor calculations using DiSCaMB.
-        Pass an xray structure and either a FCalcMethod,
-        or kwargs which are passed to  C++: :code:`discamb::SfCalculator::create`,
-        found in discamb/Scattering/SfCalculator.h
-
-        Notes
-        -----
-        The :code:`method` parameter is used for lookup of sensible default
-        values to be sent to :code:`discamb::SfCalculator::create`.
-        Any kwargs present will override the defaults.
-        The defaults are e.g. inferring the scattering table from `xrs`,
-        and using the default TAAM databank.
-        See :code:`DiscambWrapper_Uncached._prepare_calculator_params` for details.
-
-        Parameters
-        ----------
-        xrs : structure
-            Object defining the symmetry, atom positions, ADPs, occupancy ect.
-        method : FCalcMethod, optional
-            Which structure factor model to use, by default FCalcMethod.IAM
-        """
         if self.__check_cache(xrs, method, kwargs) is not None:
             self.update_structure(xrs)
             return
-        
+
         super().__init__(xrs, method, **kwargs)
 
         self.__cache[self.__get_cache_key(xrs, method, kwargs)] = self
@@ -306,14 +310,16 @@ class DiscambWrapper(DiscambWrapper_Uncached):
         cls, xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]
     ):
         atomstr = _concat_scatterer_labels(xrs)
+        unitcell = xrs.unit_cell()
         params = cls._prepare_calculator_params(xrs, method, kwargs)
-        key = (atomstr, *sorted(params.items()))
+        key = (atomstr, unitcell, *sorted(params.items()))
         return key
+
 
 def _calculate_structure_factors(
     xrs: structure, d_min: float, method: FCalcMethod
 ) -> List[complex]:
-    w = DiscambWrapper_Uncached(xrs, method)
+    w = DiscambWrapper(xrs, method)
     w.set_d_min(d_min)
     return w.f_calc()
 
