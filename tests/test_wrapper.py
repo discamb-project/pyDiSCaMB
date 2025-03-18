@@ -120,7 +120,30 @@ class TestUpdateStructure:
 
 
 class TestCache:
-    def test_simple(self, lysozyme):
+    def test_simple(self, random_structure):
+        DiscambWrapperCached.__cache = {}
+        # Show that, even when objects are created in an unavailable scope, 
+        # that the object is still cached
+
+        def init_wrapper():
+            w = DiscambWrapperCached(random_structure)
+            res = id(w)
+            del w
+            return res
+
+        with pytest.raises(NameError):
+            # Wrapper is not in this scope
+            print(w)
+
+        wrapper_ids = [
+            init_wrapper(),
+            init_wrapper(),
+            init_wrapper(),
+            init_wrapper(),
+        ]
+        assert all(wi == init_wrapper() for wi in wrapper_ids)
+
+    def test_timesave(self, lysozyme):
         DiscambWrapperCached.__cache = {}
         from time import perf_counter
 
