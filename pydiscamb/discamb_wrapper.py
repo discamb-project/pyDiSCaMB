@@ -35,7 +35,7 @@ class DiscambWrapper(PythonInterface):
         Any kwargs present will override the defaults.
         The defaults are e.g. inferring the scattering table from `xrs`,
         and using the default TAAM databank.
-        See :code:`DiscambWrapper_Uncached._prepare_calculator_params` for details.
+        See :code:`DiscambWrapper._prepare_calculator_params` for details.
 
         Parameters
         ----------
