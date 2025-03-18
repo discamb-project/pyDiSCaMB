@@ -1,9 +1,7 @@
-import pytest
-import numpy as np
-
-from cctbx.array_family import flex
 import mmtbx.f_model
-
+import numpy as np
+import pytest
+from cctbx.array_family import flex
 from pydiscamb import DiscambWrapper
 from pydiscamb._cpp_module import TargetDerivatives
 

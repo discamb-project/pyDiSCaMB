@@ -1,11 +1,10 @@
 import pydiscamb
-
-from cctbx.development import random_structure
-from cctbx.sgtbx import space_group_info
-from cctbx.array_family import flex
-from cctbx.eltbx import xray_scattering
-
 import pytest
+from cctbx.array_family import flex
+from cctbx.development import random_structure
+from cctbx.eltbx import xray_scattering
+from cctbx.sgtbx import space_group_info
+from pydiscamb import DiscambWrapper, FCalcMethod
 
 
 def compare_structure_factors(f_calc_a, f_calc_b):
@@ -59,7 +58,7 @@ def get_IAM_correctness_score(
     xrs: random_structure.xray_structure, d_min: float = 2
 ) -> float:
     fcalc_cctbx = xrs.structure_factors(algorithm="direct", d_min=d_min).f_calc().data()
-    fcalc_discamb = pydiscamb.calculate_structure_factors_IAM(xrs, d_min)
+    fcalc_discamb = DiscambWrapper(xrs).f_calc(d_min)
 
     fcalc_discamb = flex.complex_double(fcalc_discamb)
     score = compare_structure_factors(fcalc_cctbx, fcalc_discamb)
@@ -96,8 +95,8 @@ def test_lysozyme_high_res(lysozyme):
 @pytest.mark.parametrize(
     "method",
     [
-        pydiscamb.FCalcMethod.IAM,
-        pydiscamb.FCalcMethod.TAAM,
+        FCalcMethod.IAM,
+        FCalcMethod.TAAM,
     ],
 )
 def test_indices_order(method, tyrosine):
@@ -118,11 +117,11 @@ def test_indices_order(method, tyrosine):
     inds_2 = [inds_1[i] for i in shuffle_inds]
 
     # Calculate fcalc with both sets of indices
-    w1 = pydiscamb.DiscambWrapper(tyrosine, method)
+    w1 = DiscambWrapper(tyrosine, method)
     w1.set_indices(inds_1)
     fc1 = w1.f_calc()
 
-    w2 = pydiscamb.DiscambWrapper(tyrosine, method)
+    w2 = DiscambWrapper(tyrosine, method)
     w2.set_indices(inds_2)
     fc2 = w2.f_calc()
 

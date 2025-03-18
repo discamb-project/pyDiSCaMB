@@ -1,14 +1,13 @@
-from typing import overload, Tuple, Dict, Any, List, Union
 from enum import Enum
 from pathlib import Path
+from typing import Any, Dict, List, Tuple, Union, overload
 
-from cctbx.xray.structure import structure
-from cctbx.array_family import flex
 from cctbx import miller
-
+from cctbx.array_family import flex
+from cctbx.xray.structure import structure
 from pydiscamb._cpp_module import (
-    PythonInterface,
     FCalcDerivatives,
+    PythonInterface,
     TargetDerivatives,
     table_alias,
 )
@@ -21,9 +20,6 @@ class FCalcMethod(Enum):
 
 
 class DiscambWrapper(PythonInterface):
-
-    __cache = {}
-
     def __init__(self, xrs: structure, method: FCalcMethod = None, **kwargs):
         """
         Initialize a wrapper object for structure factor calculations using DiSCaMB.
@@ -47,40 +43,12 @@ class DiscambWrapper(PythonInterface):
         method : FCalcMethod, optional
             Which structure factor model to use, by default FCalcMethod.IAM
         """
-        if self.__check_cache(xrs, method, kwargs) is not None:
-            self.update_structure(xrs)
-            return
         calculator_params = self._prepare_calculator_params(xrs, method, kwargs)
         super().__init__(xrs, calculator_params)
 
         self._scatterer_flags = xrs.scatterer_flags()
         self._atomstr = _concat_scatterer_labels(xrs)
-
-        self.__cache[self.__get_cache_key(xrs, method, kwargs)] = self
-
-    def __new__(cls, xrs: structure, method: FCalcMethod = None, **kwargs):
-        cache = cls.__check_cache(xrs, method, kwargs)
-        if cache is None:
-            return super().__new__(cls)
-        return cache
-
-    @classmethod
-    def __check_cache(cls, xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]):
-        key = cls.__get_cache_key(xrs, method, kwargs)
-        return cls.__cache.get(key)
-
-    @classmethod
-    def __get_cache_key(
-        cls, xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]
-    ):
-        atomstr = _concat_scatterer_labels(xrs)
-        params = cls._prepare_calculator_params(xrs, method, kwargs)
-        key = (atomstr, *sorted(params.items()))
-        return key
-
-    @classmethod
-    def __clear_cache(cls):
-        cls.__cache = {}
+        self._unit_cell = xrs.unit_cell()
 
     @staticmethod
     def _prepare_calculator_params(
@@ -105,9 +73,13 @@ class DiscambWrapper(PythonInterface):
         return out
 
     def update_structure(self, xrs: structure):
-        if self._atomstr != _concat_scatterer_labels(xrs):
+        if (
+            self._atomstr != _concat_scatterer_labels(xrs)
+            or self._unit_cell != xrs.unit_cell()
+        ):
             raise ValueError(
-                "Incompatible structures. Must have same scatterers in the same order"
+                "Incompatible structures. "
+                "Must have same scatterers in the same order, and same unit cell"
             )
         self._scatterer_flags = xrs.scatterer_flags()
         super().update_structure(xrs)
@@ -203,8 +175,8 @@ class DiscambWrapper(PythonInterface):
 
     @classmethod
     def _from_pdb_str(cls, pdb_str: str, method, **kwargs) -> "DiscambWrapper":
-        import mmtbx.model
         import iotbx.pdb
+        import mmtbx.model
         from libtbx.utils import null_out
 
         pdb_inp = iotbx.pdb.input(lines=pdb_str.split("\n"), source_info=None)
@@ -213,7 +185,7 @@ class DiscambWrapper(PythonInterface):
 
     ## Annotations
     @overload
-    def f_calc(self, miller_array: None) -> flex.complex_double:
+    def f_calc(self, miller_set: None) -> flex.complex_double:
         ...
 
     @overload
@@ -221,7 +193,7 @@ class DiscambWrapper(PythonInterface):
         ...
 
     @overload
-    def f_calc(self, miller_array: miller.set) -> miller.array:
+    def f_calc(self, miller_set: miller.set) -> miller.array:
         ...
 
     @overload
@@ -306,6 +278,41 @@ class DiscambWrapper(PythonInterface):
                 o_ind += 1
         assert o_ind == size
         return out
+
+
+class DiscambWrapperCached(DiscambWrapper):
+
+    __cache = {}
+
+    def __init__(self, xrs: structure, method: FCalcMethod = None, **kwargs):
+        if self.__check_cache(xrs, method, kwargs) is not None:
+            self.update_structure(xrs)
+            return
+
+        super().__init__(xrs, method, **kwargs)
+
+        self.__cache[self.__get_cache_key(xrs, method, kwargs)] = self
+
+    def __new__(cls, xrs: structure, method: FCalcMethod = None, **kwargs):
+        cache = cls.__check_cache(xrs, method, kwargs)
+        if cache is None:
+            return super().__new__(cls)
+        return cache
+
+    @classmethod
+    def __check_cache(cls, xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]):
+        key = cls.__get_cache_key(xrs, method, kwargs)
+        return cls.__cache.get(key)
+
+    @classmethod
+    def __get_cache_key(
+        cls, xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]
+    ):
+        atomstr = _concat_scatterer_labels(xrs)
+        unitcell = xrs.unit_cell()
+        params = cls._prepare_calculator_params(xrs, method, kwargs)
+        key = (atomstr, unitcell, *sorted(params.items()))
+        return key
 
 
 def _calculate_structure_factors(

@@ -1,5 +1,4 @@
 import pytest
-
 from pydiscamb import get_table
 
 

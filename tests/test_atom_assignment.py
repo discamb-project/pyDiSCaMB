@@ -1,6 +1,5 @@
 import pytest
 from cctbx.eltbx.chemical_elements import proper_caps_list as elements
-
 from pydiscamb import DiscambWrapper, FCalcMethod
 from pydiscamb.taam_parameters import is_MATTS_installed
 
@@ -78,6 +77,7 @@ def test_assignment_log_urecognized_structure(tmp_path):
         for i in range(36):
             assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
 
+
 @pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
 def test_assignment_log_tyrosine(tyrosine, tmp_path):
     logfile = tmp_path / "assignment.log"
@@ -114,6 +114,7 @@ def test_assignment_log_tyrosine(tyrosine, tmp_path):
         assert f.readline() == '   pdb=" HH  TYR A   4 "    H114    Z pdb=" OH  TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
         # fmt: on
 
+
 @pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
 def test_assignment_symmetry_wrapping(tmp_path):
     # Download a graphene cif
@@ -133,6 +134,7 @@ def test_assignment_symmetry_wrapping(tmp_path):
     w = DiscambWrapper(xrs, FCalcMethod.TAAM, assignment_info=str(logfile))
     with logfile.open("r") as f:
         assert f.readline() == "Atom type assigned to 2 of 2.\n"
+
 
 @pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
 def test_assignment_break_when_changing_to_heavy_atom(tmp_path):

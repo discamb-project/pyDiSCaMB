@@ -1,7 +1,7 @@
 import pytest
-
 from pydiscamb import DiscambWrapper, FCalcMethod
-from pydiscamb.taam_parameters import is_MATTS_installed, get_TAAM_databanks
+from pydiscamb.taam_parameters import get_TAAM_databanks, is_MATTS_installed
+
 
 def test_init(tyrosine):
     w = DiscambWrapper(tyrosine, FCalcMethod.TAAM)
@@ -100,6 +100,7 @@ def test_invalid_bank(tyrosine):
             model="matts",
             bank_path="non-existent bank file",
         )
+
 
 @pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
 def test_switching_banks(tyrosine):
