@@ -117,7 +117,7 @@ ATOM     24  HH  TYR A   4       4.712   5.804   4.444  1.00 30.00           H
     return xrs
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def lysozyme() -> structure:
     import iotbx.pdb
     import mmtbx.model
