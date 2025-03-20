@@ -5,10 +5,11 @@ on:
     branches:
       - 'main'
     # Only run tests on changes to actual code
-    paths-ignore:
-      - 'doc/**'
-      - 'data/**'
-      - 'conda/**'
+    paths:
+      - 'pydiscamb/**'
+      - 'tests/**'
+      - 'src/**'
+      - 'include/**'
   workflow_dispatch:
 
 jobs:
