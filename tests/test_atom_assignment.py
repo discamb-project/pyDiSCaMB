@@ -70,10 +70,12 @@ def test_assignment_log_urecognized_structure(tmp_path):
 
     with logfile.open("r") as f:
         assert f.readline() == "Atom type assigned to 0 of 86.\n"
+        # fmt: off
         assert f.readline() == "Atoms with unassigned atom types, represented with standard IAM :\n"
         for i in range(36, 86):
             assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
         assert f.readline() == "Atoms with unassigned atom types, represented with multipole model based IAM :\n"
+        # fmt: on
         for i in range(36):
             assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
 
