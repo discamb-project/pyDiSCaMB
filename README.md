@@ -1,5 +1,7 @@
 # pyDiSCaMB
 
+![Tests](https://github.com/viljarjf/pyDiSCaMB/actions/workflows/test.yml/badge.svg)
+
 Simple pybind11 wrapper to communicate with DiSCaMB from cctbx
 
 `git clone --recursive git@github.com:viljarjf/pyDiSCaMB.git`
