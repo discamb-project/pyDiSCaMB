@@ -1,16 +1,15 @@
 #include "scattering_table.hpp"
 
-#include "discamb/Scattering/NGaussianFormFactorsTable.h"
-#include "discamb/BasicChemistry/periodic_table.h"
-
-#include <sstream>
 #include <iomanip>
+#include <sstream>
+
+#include "discamb/BasicChemistry/periodic_table.h"
+#include "discamb/Scattering/NGaussianFormFactorsTable.h"
 
 using namespace std;
 using namespace discamb;
 
-
-string table_alias(string table){
+string table_alias(string table) {
     if (table == "it") return "IT92";
     if (table == "IT") return "IT92";
     if (table == "it92") return "IT92";
@@ -43,15 +42,15 @@ string table_alias(string table){
     return table;
 }
 
-vector<string> get_possible_entries(string atom){
-    vector<string> out {atom};
+vector<string> get_possible_entries(string atom) {
+    vector<string> out{atom};
     int charge;
     // Positive
-    for (charge = 1; charge <= 6; charge++){
+    for (charge = 1; charge <= 6; charge++) {
         out.push_back(atom + to_string(charge) + string("+"));
     }
     // Negative
-    for (charge = 1; charge <= 2; charge++){
+    for (charge = 1; charge <= 2; charge++) {
         out.push_back(atom + to_string(charge) + string("-"));
     }
     out.push_back(atom + string("val"));
@@ -59,17 +58,20 @@ vector<string> get_possible_entries(string atom){
     return out;
 }
 
-map<string, GaussianScatteringParameters> get_table(string table){
+map<string, GaussianScatteringParameters> get_table(string table) {
     string alias = table_alias(table);
     map<string, GaussianScatteringParameters> out;
-    for (int z = 1; z < 120; z++){
+    for (int z = 1; z < 120; z++) {
         string atom = periodic_table::symbol(z);
         vector<string> possible_entries = get_possible_entries(atom);
-        for (string possible_entry : possible_entries){
-            if (!n_gaussian_form_factors_table::hasFormFactor(possible_entry, alias)){
+        for (string possible_entry : possible_entries) {
+            if (!n_gaussian_form_factors_table::hasFormFactor(possible_entry,
+                                                              alias)) {
                 continue;
             }
-            NGaussianFormFactor ff = n_gaussian_form_factors_table::getFormFactor(possible_entry, alias);
+            NGaussianFormFactor ff =
+                n_gaussian_form_factors_table::getFormFactor(possible_entry,
+                                                             alias);
             GaussianScatteringParameters s;
             ff.get_parameters(s.a, s.b, s.c);
             out[possible_entry] = s;
@@ -78,17 +80,17 @@ map<string, GaussianScatteringParameters> get_table(string table){
     return out;
 }
 
-string GaussianScatteringParameters::repr(){
+string GaussianScatteringParameters::repr() {
     stringstream out;
     out << fixed << setprecision(2);
     out << "GaussianScatteringParameters(" << endl;
     out << "    a = [";
-    for (double ai: a){
+    for (double ai : a) {
         out << ai << ", ";
     }
     out << "]," << endl;
     out << "    b = [";
-    for (double bi: b){
+    for (double bi : b) {
         out << bi << ", ";
     }
     out << "]," << endl;
