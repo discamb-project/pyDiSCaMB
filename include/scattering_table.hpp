@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
 
 struct GaussianScatteringParameters {
@@ -11,6 +11,7 @@ struct GaussianScatteringParameters {
     std::string repr();
 };
 
-std::map<std::string, GaussianScatteringParameters> get_table(std::string table);
+std::map<std::string, GaussianScatteringParameters> get_table(
+    std::string table);
 
 std::string table_alias(std::string table);
