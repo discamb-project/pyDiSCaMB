@@ -1,4 +1,4 @@
-name: Run python linting
+name: Run linting
 
 on:
   pull_request:
