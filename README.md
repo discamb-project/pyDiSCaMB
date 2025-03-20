@@ -1,6 +1,6 @@
 # pyDiSCaMB
 
-![Tests](https://github.com/viljarjf/pyDiSCaMB/actions/workflows/test.yml/badge.svg)
+![Tests](https://github.com/viljarjf/pyDiSCaMB/actions/workflows/test.yaml/badge.svg)
 
 Simple pybind11 wrapper to communicate with DiSCaMB from cctbx
 
