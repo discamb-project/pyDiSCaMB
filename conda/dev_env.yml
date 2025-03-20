@@ -1,0 +1,9 @@
+name: pydiscamb-dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - cctbx-nightly::cctbx-base
+  - gcc=11.4
+  - openmp
+  - pybind11
