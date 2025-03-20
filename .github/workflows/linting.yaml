@@ -1,0 +1,33 @@
+name: Run python linting
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+    paths:
+      - 'pydiscamb/**'
+      - 'tests/**'
+      - 'src/**'
+      - 'include/**'
+  workflow_dispatch:
+
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black clang-format
+    - name: Analysing the code with black
+      run: |
+        black --check pydiscamb tests
+    - name: Analysing the code with clang-format
+      run: |
+        clang-format -n -Werror src/* include/*
