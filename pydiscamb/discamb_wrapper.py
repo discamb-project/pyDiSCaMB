@@ -1,6 +1,8 @@
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union, overload
+import csv
+import tempfile
 
 from cctbx import miller
 from cctbx.array_family import flex
@@ -17,6 +19,20 @@ from pydiscamb.taam_parameters import get_default_databank
 class FCalcMethod(Enum):
     IAM = 0
     TAAM = 1
+
+
+_NUM_TMP_ASSIGNMENT_FILES = 0
+
+
+def _get_tmp_assignment_filename() -> str:
+    global _NUM_TMP_ASSIGNMENT_FILES
+    out = (
+        Path(tempfile.gettempdir())
+        / f"atom_assignment_{_NUM_TMP_ASSIGNMENT_FILES :04}.csv"
+    )
+    _NUM_TMP_ASSIGNMENT_FILES += 1
+    _NUM_TMP_ASSIGNMENT_FILES %= 10_000  # limit to 4 digits
+    return str(out)
 
 
 class DiscambWrapper(PythonInterface):
@@ -45,6 +61,14 @@ class DiscambWrapper(PythonInterface):
         """
         calculator_params = self._prepare_calculator_params(xrs, method, kwargs)
         super().__init__(xrs, calculator_params)
+        if calculator_params.get("assignment csv") is not None:
+            assignment_csv = Path(calculator_params["assignment csv"])
+            assert assignment_csv.exists(), str(assignment_csv)
+            with assignment_csv.open("r") as f:
+                self.atom_type_assignment = {
+                    label: (atomtype, lcs)
+                    for label, atomtype, lcs in csv.reader(f, delimiter=";")
+                }
 
         self._scatterer_flags = xrs.scatterer_flags()
         self._atomstr = _concat_scatterer_labels(xrs)
@@ -53,7 +77,7 @@ class DiscambWrapper(PythonInterface):
     @staticmethod
     def _prepare_calculator_params(
         xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]
-    ) -> Dict[str, str]:
+    ):
         if method is None:
             method = FCalcMethod.IAM
         table = xrs.get_scattering_table()
@@ -62,17 +86,16 @@ class DiscambWrapper(PythonInterface):
             "bank_path": get_default_databank(),
             "table": table_alias("xray" if table is None else table),
             "electron_scattering": table == "electron",
-            "assignment_info": str(Path(__file__).parent / "tmp" / "assignment.log")
-            # TODO memory management: delete wrapper object gracefully
-            # Also then delete the log file then
-            # Maybe have some unique filename for this? having always the same will cause problems
-            # Then read the produced file after super().__init__
-
         }
         if method == FCalcMethod.IAM:
             out.update({"electron_scattering": False})
         elif method == FCalcMethod.TAAM:
-            out.update({"model": "taam"})
+            out.update(
+                {
+                    "model": "taam",
+                    "assignment_csv": _get_tmp_assignment_filename(),
+                }
+            )
         out.update(kwargs)
         # Discamb likes spaces instead of underscores
         out = {key.replace("_", " "): val for key, val in out.items()}
