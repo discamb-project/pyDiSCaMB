@@ -209,3 +209,14 @@ def test_assignment_break_when_changing_to_heavy_atom(tmp_path):
         assert f.readline() == "    H1        H101    Z C1 X Au1\n"
         assert f.readline() == "    H2        H101    Z C1 X Au1\n"
         assert f.readline() == "    H3        H101    Z C1 X Au1\n"
+
+
+def test_assignment_member():
+    xrs = _get_single_element_structure("Na")
+    xrs = xrs.concatenate(_get_single_element_structure("Au"))
+    w = DiscambWrapper(xrs, FCalcMethod.TAAM)
+    assert hasattr(w, "atom_type_assignment")
+    assert isinstance(w.atom_type_assignment, dict)
+    assert len(w.atom_type_assignment) == 2
+    assert w.atom_type_assignment["Na1"] == ("Na000", "")
+    assert w.atom_type_assignment["Au1"] == ("", "")
