@@ -62,6 +62,12 @@ class DiscambWrapper(PythonInterface):
             "bank_path": get_default_databank(),
             "table": table_alias("xray" if table is None else table),
             "electron_scattering": table == "electron",
+            "assignment_info": str(Path(__file__).parent / "tmp" / "assignment.log")
+            # TODO memory management: delete wrapper object gracefully
+            # Also then delete the log file then
+            # Maybe have some unique filename for this? having always the same will cause problems
+            # Then read the produced file after super().__init__
+
         }
         if method == FCalcMethod.IAM:
             out.update({"electron_scattering": False})
