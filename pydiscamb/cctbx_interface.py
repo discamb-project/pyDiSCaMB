@@ -1,15 +1,15 @@
-from __future__ import absolute_import, division, print_function
 from cctbx.xray.structure_factors.gradients_base import gradients_base
-from cctbx.xray.structure_factors.misc import expensive_function_call_message
-from cctbx import adptbx
-from libtbx.utils import user_plus_sys_time
+from cctbx.xray.structure_factors.gradients_direct import gradients_direct
+from cctbx.xray.structure_factors.manager import managed_calculation_base
+from cctbx.xray.structure_factors.from_scatterers_direct import from_scatterers_direct
 from cctbx.array_family import flex
 
 from pydiscamb.discamb_wrapper import DiscambWrapper, FCalcMethod
 
 
-class gradients_discamb(gradients_base):
-
+class gradients_discamb(gradients_direct):
+    # TODO consider moving this class to cctbx
+    # TODO add timings
     def __init__(
         self,
         xray_structure,
@@ -27,89 +27,91 @@ class gradients_discamb(gradients_base):
             miller_set,
             algorithm="discamb",
         )
-        w = DiscambWrapper(xray_structure, FCalcMethod.TAAM)
-        w.set_indices(miller_set.indices())
-        self._grads = w.d_target_d_params(list(d_target_d_f_calc))
-
+        self._results = CctbxGradientsResult(
+            self.xray_structure(), miller_set, d_target_d_f_calc
+        )
         self.d_target_d_site_cart_was_used = False
         self.d_target_d_u_cart_was_used = False
 
-    def d_target_d_site_frac(self):
-        return self.check_size(
-            flex.vec3_double([g.site_derivatives for g in self._grads])
-        )
+class from_scatterers_discamb(from_scatterers_direct):
 
-    def d_target_d_u_iso(self):
-        return self.check_size(
-            flex.double(
-                [
-                    g.site_derivatives[0] if len(g.site_derivatives) == 1 else 0
-                    for g in self._grads
-                ]
-            )
-        )
+  def __init__(self, xray_structure,
+                     miller_set,
+                     manager=None,
+                     cos_sin_table=False,
+                     algorithm="discamb"):
+    # TODO add timings
+    managed_calculation_base.__init__(self,
+      manager, xray_structure, miller_set, algorithm="discamb")
+    self._results = CctbxStructureFactorsResult(xray_structure, miller_set)
 
-    def d_target_d_occupancy(self):
-        return self.check_size(
-            flex.double([g.occupancy_derivatives for g in self._grads])
-        )
 
-    def d_target_d_fp(self):
-        return self.check_size(flex.double([0 for g in self._grads]))
 
-    def d_target_d_fdp(self):
-        return self.check_size(flex.double([0 for g in self._grads]))
+class CctbxGradientsResult:
+    def __init__(self, xrs, miller_set, d_target_d_f_calc):
+        w = DiscambWrapper(xrs, FCalcMethod.TAAM)
+        w.set_indices(miller_set.indices())
+        self._grads = w.d_target_d_params(list(d_target_d_f_calc))
 
-    def packed(self):
+
+        self._d_target_d_site_frac = flex.vec3_double(d_target_d_f_calc.size(), (0, 0, 0))
+        self._d_target_d_u_iso = flex.double(d_target_d_f_calc.size(), 0)
+        self._d_target_d_u_star = flex.sym_mat3(d_target_d_f_calc.size(), (0, 0, 0, 0, 0, 0))
+        self._d_target_d_occupancy = flex.double(d_target_d_f_calc.size(), 0)
+        self._d_target_d_fp = flex.double(d_target_d_f_calc.size(), 0)
+        self._d_target_d_fdp = flex.double(d_target_d_f_calc.size(), 0)
+
         size = 0
         for s in self.xray_structure().scatterer_flags():
             size += 3 * s.grad_site()
             size += 1 * s.grad_u_iso()
             size += 6 * s.grad_u_aniso()
             size += 1 * s.grad_occupancy()
-        out = flex.double(size, 0)
-        o_ind = 0
-        for s_ind, s in enumerate(self.xray_structure().scatterer_flags()):
+        self._packed = flex.double(size, 0)
+
+        packed_ind = 0
+        for i, s in enumerate(self.xray_structure().scatterer_flags()):
             if s.grad_site():
                 for j in range(3):
-                    out[o_ind] = self._grads[s_ind].site_derivatives[j]
-                    o_ind += 1
+                    self._d_target_d_site_frac[i] = self._grads[i].site_derivatives[j]
+                    self._packed[packed_ind] = self._grads[i].site_derivatives[j]
+                    packed_ind += 1
             if s.grad_u_iso():
-                out[o_ind] = self._grads[s_ind].adp_derivatives[0]
-                o_ind += 1
+                self._d_target_d_u_iso[i] = self._grads[i].adp_derivatives[0]
+                self._packed[packed_ind] = self._grads[i].adp_derivatives[0]
+                packed_ind += 1
             if s.grad_u_aniso():
                 for j in range(6):
-                    out[o_ind] = self._grads[s_ind].adp_derivatives[j]
-                    o_ind += 1
+                    self._d_target_d_u_star[i] = self._grads[i].adp_derivatives[j]
+                    self._packed[packed_ind] = self._grads[i].adp_derivatives[j]
+                    packed_ind += 1
             if s.grad_occupancy():
-                out[o_ind] = self._grads[s_ind].occupancy_derivatives
-                o_ind += 1
-        assert o_ind == size
-        return out
+                self._d_target_d_occupancy[i] = self._grads[i].occupancy_derivatives
+                self._packed[packed_ind] = self._grads[i].occupancy_derivatives
+                packed_ind += 1
+        assert packed_ind == size
 
-    def d_target_d_site_cart(self):
-        if self.d_target_d_site_cart_was_used:
-            raise RuntimeError(expensive_function_call_message)
-        self.d_target_d_site_cart_was_used = True
-        return (
-            self.d_target_d_site_frac()
-            * self.xray_structure().unit_cell().fractionalization_matrix()
-        )
-
+    def d_target_d_site_frac(self):
+        return self._d_target_d_site_frac
+    def d_target_d_u_iso(self):
+        return self._d_target_d_u_iso
     def d_target_d_u_star(self):
-        return self.check_size(
-            flex.sym_mat3(
-                [
-                    g.site_derivatives if len(g.site_derivatives) == 6 else [0] * 6
-                    for g in self._grads
-                ]
-            )
-        )
+        return self._d_target_d_u_star
+    def d_target_d_occupancy(self):
+        return self._d_target_d_occupancy
+    def d_target_d_fp(self):
+        return self._d_target_d_fp
+    def d_target_d_fdp(self):
+        return self._d_target_d_fdp
+    def packed(self):
+        return self._packed
 
-    def d_target_d_u_cart(self):
-        if self.d_target_d_u_cart_was_used:
-            raise RuntimeError(expensive_function_call_message)
-        self.d_target_d_u_cart_was_used = True
-        return adptbx.grad_u_star_as_u_cart(
-            self.xray_structure().unit_cell(), self.d_target_d_u_star()
-        )
+
+class CctbxStructureFactorsResult:
+    def __init__(self, xrs, miller_set):
+        w = DiscambWrapper(xrs, FCalcMethod.TAAM)
+        w.set_indices(miller_set.indices())
+        self._fcalc = w.f_calc()
+
+    def f_calc(self):
+        return self._fcalc
