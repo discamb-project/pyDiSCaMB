@@ -33,18 +33,22 @@ class gradients_discamb(gradients_direct):
         self.d_target_d_site_cart_was_used = False
         self.d_target_d_u_cart_was_used = False
 
+
 class from_scatterers_discamb(from_scatterers_direct):
 
-  def __init__(self, xray_structure,
-                     miller_set,
-                     manager=None,
-                     cos_sin_table=False,
-                     algorithm="discamb"):
-    # TODO add timings
-    managed_calculation_base.__init__(self,
-      manager, xray_structure, miller_set, algorithm="discamb")
-    self._results = CctbxStructureFactorsResult(xray_structure, miller_set)
-
+    def __init__(
+        self,
+        xray_structure,
+        miller_set,
+        manager=None,
+        cos_sin_table=False,
+        algorithm="discamb",
+    ):
+        # TODO add timings
+        managed_calculation_base.__init__(
+            self, manager, xray_structure, miller_set, algorithm="discamb"
+        )
+        self._results = CctbxFromScatterersResult(xray_structure, miller_set)
 
 
 class CctbxGradientsResult:
@@ -53,10 +57,13 @@ class CctbxGradientsResult:
         w.set_indices(miller_set.indices())
         self._grads = w.d_target_d_params(list(d_target_d_f_calc))
 
-
-        self._d_target_d_site_frac = flex.vec3_double(d_target_d_f_calc.size(), (0, 0, 0))
+        self._d_target_d_site_frac = flex.vec3_double(
+            d_target_d_f_calc.size(), (0, 0, 0)
+        )
         self._d_target_d_u_iso = flex.double(d_target_d_f_calc.size(), 0)
-        self._d_target_d_u_star = flex.sym_mat3(d_target_d_f_calc.size(), (0, 0, 0, 0, 0, 0))
+        self._d_target_d_u_star = flex.sym_mat3(
+            d_target_d_f_calc.size(), (0, 0, 0, 0, 0, 0)
+        )
         self._d_target_d_occupancy = flex.double(d_target_d_f_calc.size(), 0)
         self._d_target_d_fp = flex.double(d_target_d_f_calc.size(), 0)
         self._d_target_d_fdp = flex.double(d_target_d_f_calc.size(), 0)
@@ -93,21 +100,27 @@ class CctbxGradientsResult:
 
     def d_target_d_site_frac(self):
         return self._d_target_d_site_frac
+
     def d_target_d_u_iso(self):
         return self._d_target_d_u_iso
+
     def d_target_d_u_star(self):
         return self._d_target_d_u_star
+
     def d_target_d_occupancy(self):
         return self._d_target_d_occupancy
+
     def d_target_d_fp(self):
         return self._d_target_d_fp
+
     def d_target_d_fdp(self):
         return self._d_target_d_fdp
+
     def packed(self):
         return self._packed
 
 
-class CctbxStructureFactorsResult:
+class CctbxFromScatterersResult:
     def __init__(self, xrs, miller_set):
         w = DiscambWrapper(xrs, FCalcMethod.TAAM)
         w.set_indices(miller_set.indices())
