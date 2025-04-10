@@ -132,3 +132,41 @@ def lysozyme() -> structure:
     xrs = model.get_xray_structure()
     xrs.scattering_type_registry(table="electron")
     return xrs
+
+
+@pytest.fixture
+def ethane() -> structure:
+    from cctbx import crystal, xray
+    from cctbx.array_family import flex
+
+    crystal_symmetry = crystal.symmetry(
+        unit_cell=(10, 10, 10, 90, 90, 90), space_group_symbol="P1"
+    )
+    coords = [
+        (-0.7560, 0.0000, 0.0000),
+        (0.7560, 0.0000, 0.0000),
+        (-1.1404, 0.6586, 0.7845),
+        (-1.1404, 0.3501, -0.9626),
+        (-1.1405, -1.0087, 0.1781),
+        (1.1404, -0.3501, 0.9626),
+        (1.1405, 1.0087, -0.1781),
+        (1.1404, -0.6586, -0.7845),
+    ]
+    sites = [crystal_symmetry.unit_cell().fractionalize(coord) for coord in coords]
+
+    scatterers = flex.xray_scatterer(
+        [
+            xray.scatterer("C1", site=sites[0]),
+            xray.scatterer("C2", site=sites[1]),
+            xray.scatterer("H1", site=sites[2]),
+            xray.scatterer("H2", site=sites[3]),
+            xray.scatterer("H3", site=sites[4]),
+            xray.scatterer("H4", site=sites[5]),
+            xray.scatterer("H5", site=sites[6]),
+            xray.scatterer("H6", site=sites[7]),
+        ]
+    )
+
+    xrs = xray.structure(crystal_symmetry=crystal_symmetry, scatterers=scatterers)
+    xrs.scattering_type_registry(table="it1992")
+    return xrs

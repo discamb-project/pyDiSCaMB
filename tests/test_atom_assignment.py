@@ -139,45 +139,12 @@ def test_assignment_symmetry_wrapping(tmp_path):
 
 
 @pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
-def test_assignment_break_when_changing_to_heavy_atom(tmp_path):
+def test_assignment_break_when_changing_to_heavy_atom(tmp_path, ethane):
     # Ethene in a big P1 box.
     # All H should be H101, both C should be C401
-    from cctbx import crystal, xray
-    from cctbx.array_family import flex
-
-    crystal_symmetry = crystal.symmetry(
-        unit_cell=(10, 10, 10, 90, 90, 90), space_group_symbol="P1"
-    )
-    coords = [
-        (-0.7560, 0.0000, 0.0000),
-        (0.7560, 0.0000, 0.0000),
-        (-1.1404, 0.6586, 0.7845),
-        (-1.1404, 0.3501, -0.9626),
-        (-1.1405, -1.0087, 0.1781),
-        (1.1404, -0.3501, 0.9626),
-        (1.1405, 1.0087, -0.1781),
-        (1.1404, -0.6586, -0.7845),
-    ]
-    sites = [crystal_symmetry.unit_cell().fractionalize(coord) for coord in coords]
-
-    scatterers = flex.xray_scatterer(
-        [
-            xray.scatterer("C1", site=sites[0]),
-            xray.scatterer("C2", site=sites[1]),
-            xray.scatterer("H1", site=sites[2]),
-            xray.scatterer("H2", site=sites[3]),
-            xray.scatterer("H3", site=sites[4]),
-            xray.scatterer("H4", site=sites[5]),
-            xray.scatterer("H5", site=sites[6]),
-            xray.scatterer("H6", site=sites[7]),
-        ]
-    )
-
-    xrs = xray.structure(crystal_symmetry=crystal_symmetry, scatterers=scatterers)
-    xrs.scattering_type_registry(table="it1992")
 
     logfile = tmp_path / "assignment.log"
-    w = DiscambWrapper(xrs, FCalcMethod.TAAM, assignment_info=str(logfile))
+    w = DiscambWrapper(ethane, FCalcMethod.TAAM, assignment_info=str(logfile))
     with logfile.open("r") as f:
         assert f.readline() == "Atom type assigned to 8 of 8.\n"
         f.readline()
@@ -193,6 +160,7 @@ def test_assignment_break_when_changing_to_heavy_atom(tmp_path):
     # Now: change one of the carbons to gold.
     # The three hydrogens on the carbon should still be H101,
     # but the other three hydrogens should be spherical
+    xrs = ethane.deep_copy_scatterers()
     xrs.scatterers()[1].label = "Au1"
     xrs.scatterers()[1].scattering_type = "Au"
     w = DiscambWrapper(xrs, FCalcMethod.TAAM, assignment_info=str(logfile))
@@ -211,12 +179,54 @@ def test_assignment_break_when_changing_to_heavy_atom(tmp_path):
         assert f.readline() == "    H3        H101    Z C1 X Au1\n"
 
 
-def test_assignment_member():
-    xrs = _get_single_element_structure("Na")
-    xrs = xrs.concatenate(_get_single_element_structure("Au"))
-    w = DiscambWrapper(xrs, FCalcMethod.TAAM)
-    assert hasattr(w, "atom_type_assignment")
-    assert isinstance(w.atom_type_assignment, dict)
-    assert len(w.atom_type_assignment) == 2
-    assert w.atom_type_assignment["Na1"] == ("Na000", "")
-    assert w.atom_type_assignment["Au1"] == ("", "")
+class TestAssignmentDict:
+    def test_spherical(self):
+        xrs = _get_single_element_structure("Na")
+        w = DiscambWrapper(xrs, FCalcMethod.TAAM)
+        assert hasattr(w, "atom_type_assignment")
+        assert isinstance(w.atom_type_assignment, dict)
+        assert len(w.atom_type_assignment) == 1
+        assert w.atom_type_assignment["Na1"] == ("Na000", "")
+
+    def test_untyped(self):
+        xrs = _get_single_element_structure("Au")
+        w = DiscambWrapper(xrs, FCalcMethod.TAAM)
+        assert hasattr(w, "atom_type_assignment")
+        assert isinstance(w.atom_type_assignment, dict)
+        assert len(w.atom_type_assignment) == 1
+        assert w.atom_type_assignment["Au1"] == ("", "")
+
+    def test_multipolar(self, ethane):
+        w = DiscambWrapper(ethane, FCalcMethod.TAAM)
+        assert hasattr(w, "atom_type_assignment")
+        assert isinstance(w.atom_type_assignment, dict)
+        assert len(w.atom_type_assignment) == ethane.scatterers().size()
+        assert all(a for a, b in w.atom_type_assignment.values())
+        assert all(b for a, b in w.atom_type_assignment.values())
+
+    def test_IAM(self, ethane):
+        w = DiscambWrapper(ethane, FCalcMethod.IAM)
+        assert hasattr(w, "atom_type_assignment")
+        assert isinstance(w.atom_type_assignment, dict)
+        assert len(w.atom_type_assignment) == ethane.scatterers().size()
+        assert not any(a for a, b in w.atom_type_assignment.values())
+        assert not any(b for a, b in w.atom_type_assignment.values())
+
+    def test_explicit_file_exists(self, random_structure, tmp_path):
+        csv = tmp_path / "assignment_log.csv"
+        w = DiscambWrapper(random_structure, FCalcMethod.TAAM, assignment_csv=str(csv))
+        assert csv.exists()
+        assert hasattr(w, "atom_type_assignment")
+        assert isinstance(w.atom_type_assignment, dict)
+        assert len(w.atom_type_assignment) == random_structure.scatterers().size()
+
+    def test_csv_is_deleted(self, random_structure):
+        import os, tempfile
+
+        n_tmpfiles_before = len(os.listdir(tempfile.gettempdir()))
+        w = DiscambWrapper(random_structure, FCalcMethod.TAAM)
+        n_tmpfiles_after = len(os.listdir(tempfile.gettempdir()))
+        assert n_tmpfiles_after == n_tmpfiles_before
+        assert hasattr(w, "atom_type_assignment")
+        assert isinstance(w.atom_type_assignment, dict)
+        assert len(w.atom_type_assignment) == random_structure.scatterers().size()

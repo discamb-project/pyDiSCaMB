@@ -35,7 +35,7 @@ def test_f_calc_approx_IAM(tyrosine, table, expected_R):
 def test_from_parameters(tyrosine):
     wrapper = DiscambWrapper(
         tyrosine,
-        model="taam",
+        FCalcMethod.TAAM,
         unit_cell_charge=1000,
         scale=True,
     )
@@ -46,7 +46,7 @@ def test_from_parameters(tyrosine):
 def test_logging(tyrosine, tmp_path):
     wrapper = DiscambWrapper(
         tyrosine,
-        model="matts",
+        FCalcMethod.TAAM,
         assignment_info=str(tmp_path / "assignment.txt"),
         parameters_info=str(tmp_path / "parameters.log"),
         multipole_cif=str(tmp_path / "structure.cif"),
@@ -61,13 +61,13 @@ def test_logging(tyrosine, tmp_path):
 def test_unit_cell_charge_scaling(tyrosine):
     w1 = DiscambWrapper(
         tyrosine,
-        model="matts",
+        FCalcMethod.TAAM,
         unit_cell_charge=-1000,
         scale=True,
     )
     w2 = DiscambWrapper(
         tyrosine,
-        model="matts",
+        FCalcMethod.TAAM,
         unit_cell_charge=1000,
         scale=True,
     )
@@ -77,13 +77,13 @@ def test_unit_cell_charge_scaling(tyrosine):
 def test_unit_cell_charge_scaling_off(tyrosine):
     w1 = DiscambWrapper(
         tyrosine,
-        model="matts",
+        FCalcMethod.TAAM,
         unit_cell_charge=1000,
         scale=False,
     )
     w2 = DiscambWrapper(
         tyrosine,
-        model="matts",
+        FCalcMethod.TAAM,
         unit_cell_charge=0,
         scale=False,
     )
@@ -97,7 +97,7 @@ def test_invalid_bank(tyrosine):
     ):
         w = DiscambWrapper(
             tyrosine,
-            model="matts",
+            FCalcMethod.TAAM,
             bank_path="non-existent bank file",
         )
 
@@ -109,6 +109,6 @@ def test_switching_banks(tyrosine):
     for bank in banks:
         w = DiscambWrapper(
             tyrosine,
-            model="matts",
+            FCalcMethod.TAAM,
             bank_path=bank,
         )
