@@ -66,18 +66,15 @@ class DiscambWrapper(PythonInterface):
             self.atom_type_assignment = {
                 atom.label: ("", "") for atom in xrs.scatterers()
             }
-        if kwargs.get("assignment_csv") is not None:
-            assignment_csv = Path(calculator_params["assignment csv"])
-            assert assignment_csv.exists(), str(assignment_csv)
-            with assignment_csv.open("r") as f:
-                self.atom_type_assignment = {
-                    label: (atomtype, lcs)
-                    for label, atomtype, lcs in csv.reader(f, delimiter=";")
-                }
-        if (
-            kwargs.get("assignment_csv") is None
-            and calculator_params["model"] == "taam"
-        ):
+            return
+        assignment_csv = Path(calculator_params["assignment csv"])
+        assert assignment_csv.exists(), str(assignment_csv)
+        with assignment_csv.open("r") as f:
+            self.atom_type_assignment = {
+                label: (atomtype, lcs)
+                for label, atomtype, lcs in csv.reader(f, delimiter=";")
+            }
+        if kwargs.get("assignment_csv") is None:
             os.remove(calculator_params["assignment csv"])
 
     @staticmethod
