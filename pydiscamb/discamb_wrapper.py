@@ -1,12 +1,14 @@
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union, overload
+from typing import Dict, List, Tuple, Union, overload
 import csv
 import tempfile
+import os
 
 from cctbx import miller
 from cctbx.array_family import flex
 from cctbx.xray.structure import structure
+
 from pydiscamb._cpp_module import (
     FCalcDerivatives,
     PythonInterface,
@@ -21,18 +23,9 @@ class FCalcMethod(Enum):
     TAAM = 1
 
 
-_NUM_TMP_ASSIGNMENT_FILES = 0
-
-
 def _get_tmp_assignment_filename() -> str:
-    global _NUM_TMP_ASSIGNMENT_FILES
-    out = (
-        Path(tempfile.gettempdir())
-        / f"atom_assignment_{_NUM_TMP_ASSIGNMENT_FILES :04}.csv"
-    )
-    _NUM_TMP_ASSIGNMENT_FILES += 1
-    _NUM_TMP_ASSIGNMENT_FILES %= 10_000  # limit to 4 digits
-    return str(out)
+    _, out = tempfile.mkstemp(".csv", "pyDiSCaMB-atom-assignment")
+    return out
 
 
 class DiscambWrapper(PythonInterface):
@@ -61,7 +54,9 @@ class DiscambWrapper(PythonInterface):
         """
         calculator_params = self._prepare_calculator_params(xrs, method, kwargs)
         super().__init__(xrs, calculator_params)
-        if calculator_params.get("assignment csv") is not None:
+
+        # Get assignment info
+        if kwargs.get("assignment_csv") is not None:
             assignment_csv = Path(calculator_params["assignment csv"])
             assert assignment_csv.exists(), str(assignment_csv)
             with assignment_csv.open("r") as f:
@@ -69,7 +64,10 @@ class DiscambWrapper(PythonInterface):
                     label: (atomtype, lcs)
                     for label, atomtype, lcs in csv.reader(f, delimiter=";")
                 }
+        if kwargs.get("assignment_csv") is None and calculator_params["model"] == "taam":
+            os.remove(calculator_params["assignment csv"])
 
+        # Store some stuff from xrs
         self._scatterer_flags = xrs.scatterer_flags()
         self._atomstr = _concat_scatterer_labels(xrs)
         self._unit_cell = xrs.unit_cell()
@@ -81,21 +79,23 @@ class DiscambWrapper(PythonInterface):
         if method is None:
             method = FCalcMethod.IAM
         table = xrs.get_scattering_table()
-        out = {
-            "model": "iam",
-            "bank_path": get_default_databank(),
-            "table": table_alias("xray" if table is None else table),
-            "electron_scattering": table == "electron",
-        }
+        alias = table_alias("xray" if table is None else table)
         if method == FCalcMethod.IAM:
-            out.update({"electron_scattering": False})
+            out = {
+                "model": "iam",
+                "table": alias,
+                "electron_scattering": False,
+            }
         elif method == FCalcMethod.TAAM:
-            out.update(
-                {
-                    "model": "taam",
-                    "assignment_csv": _get_tmp_assignment_filename(),
-                }
-            )
+            out = {
+                "model": "taam",
+                "bank_path": get_default_databank(),
+                "electron_scattering": table == "electron",
+                "table": alias,
+                "assignment_csv": _get_tmp_assignment_filename(),
+
+            }
+        
         out.update(kwargs)
         # Discamb likes spaces instead of underscores
         out = {key.replace("_", " "): val for key, val in out.items()}
