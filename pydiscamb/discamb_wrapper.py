@@ -55,7 +55,17 @@ class DiscambWrapper(PythonInterface):
         calculator_params = self._prepare_calculator_params(xrs, method, kwargs)
         super().__init__(xrs, calculator_params)
 
+        # Store some stuff from xrs
+        self._scatterer_flags = xrs.scatterer_flags()
+        self._atomstr = _concat_scatterer_labels(xrs)
+        self._unit_cell = xrs.unit_cell()
+
         # Get assignment info
+        if calculator_params["model"] != "taam":
+            # TODO accept aliases? like "matts" or "ubdb"
+            self.atom_type_assignment = {
+                atom.label: ("", "") for atom in xrs.scatterers()
+            }
         if kwargs.get("assignment_csv") is not None:
             assignment_csv = Path(calculator_params["assignment csv"])
             assert assignment_csv.exists(), str(assignment_csv)
@@ -64,13 +74,11 @@ class DiscambWrapper(PythonInterface):
                     label: (atomtype, lcs)
                     for label, atomtype, lcs in csv.reader(f, delimiter=";")
                 }
-        if kwargs.get("assignment_csv") is None and calculator_params["model"] == "taam":
+        if (
+            kwargs.get("assignment_csv") is None
+            and calculator_params["model"] == "taam"
+        ):
             os.remove(calculator_params["assignment csv"])
-
-        # Store some stuff from xrs
-        self._scatterer_flags = xrs.scatterer_flags()
-        self._atomstr = _concat_scatterer_labels(xrs)
-        self._unit_cell = xrs.unit_cell()
 
     @staticmethod
     def _prepare_calculator_params(
@@ -93,9 +101,8 @@ class DiscambWrapper(PythonInterface):
                 "electron_scattering": table == "electron",
                 "table": alias,
                 "assignment_csv": _get_tmp_assignment_filename(),
-
             }
-        
+
         out.update(kwargs)
         # Discamb likes spaces instead of underscores
         out = {key.replace("_", " "): val for key, val in out.items()}
