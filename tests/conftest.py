@@ -133,6 +133,7 @@ def lysozyme() -> structure:
     xrs.scattering_type_registry(table="electron")
     return xrs
 
+
 @pytest.fixture
 def ethane() -> structure:
     from cctbx import crystal, xray
