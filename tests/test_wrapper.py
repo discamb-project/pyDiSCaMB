@@ -20,21 +20,35 @@ class TestInit:
         fc2 = w2.f_calc(2.0)
         assert pytest.approx(list(fc1)) == list(fc2)
 
-    @pytest.mark.parametrize("method", [FCalcMethod.IAM, FCalcMethod.TAAM])
-    def test_no_memory_leak(self, lysozyme, method):
+    @pytest.mark.slow
+    @pytest.mark.parametrize(
+            "method", 
+            [
+                # Multiple runs to ensure cached code does not interfere either
+                FCalcMethod.TAAM,
+                FCalcMethod.IAM, 
+                FCalcMethod.IAM, 
+                FCalcMethod.TAAM,
+                FCalcMethod.IAM, 
+                FCalcMethod.TAAM,
+                ]
+                )
+    def test_no_memory_leak(self, tyrosine, method):
         import psutil
-        hkl = flex.miller_index(30_000, (1, 2, 3))
+        
+        def instatiate_wrapper(n):
+            hkl = flex.miller_index(1000, (1, 2, 3))
+            for i in range(n):
+                w = DiscambWrapper(tyrosine, method)
+                w.set_indices(hkl)
+                assert len(w.hkl) == 1000
+        instatiate_wrapper(1)
         
         mem_before = psutil.Process().memory_info()
-        
-        def instatiate_wrapper():
-            for i in range(10):
-                w = DiscambWrapper(lysozyme, method)
-                w.set_indices(hkl)
-                del w
-        instatiate_wrapper()
-        
-        assert mem_before.vms == psutil.Process().memory_info().vms
+        instatiate_wrapper(200)
+        mem_after = psutil.Process().memory_info()
+        assert mem_before.vms == mem_after.vms
+        assert mem_before.rss == mem_after.rss
 
 class TestFCalc:
     def test_simple(self, random_structure):
