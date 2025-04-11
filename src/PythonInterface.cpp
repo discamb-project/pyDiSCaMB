@@ -8,14 +8,14 @@ using namespace discamb;
 
 namespace py = pybind11;
 
-PythonInterface::PythonInterface(py::object structure,
+PythonInterface::PythonInterface(py::object &structure,
                                  nlohmann::json calculator_params)
     : mStructure(structure),
       DiscambStructureFactorCalculator(
           calculator_params, crystal_from_xray_structure(structure),
           anomalous_from_xray_structure(structure)) {};
 
-void PythonInterface::set_indices(py::object indices) {
+void PythonInterface::set_indices(py::object &indices) {
     hkl.clear();
     for (auto hkl_py_auto : indices) {
         py::tuple hkl_py = hkl_py_auto.cast<py::tuple>();
@@ -35,7 +35,7 @@ void PythonInterface::set_d_min(const double d_min) {
     set_indices(miller_py.attr("indices")());
 }
 
-void PythonInterface::update_structure(py::object structure) {
+void PythonInterface::update_structure(py::object &structure) {
     update_crystal_from_xray_structure(crystal, structure);
     update_anomalous_from_xray_structure(anomalous, structure);
     // DiscambStructureFactorCalculator::update_calculator is called before all

@@ -12,15 +12,15 @@
 
 namespace py = pybind11;
 
-discamb::Crystal crystal_from_xray_structure(const py::object structure);
+discamb::Crystal crystal_from_xray_structure(const py::object &structure);
 
 std::vector<std::complex<double>> anomalous_from_xray_structure(
-    const py::object structure);
+    const py::object &structure);
 
-std::string table_from_xray_structure(const py::object structure);
+std::string table_from_xray_structure(const py::object &structure);
 
 void update_crystal_from_xray_structure(discamb::Crystal &crystal,
-                                        const py::object structure);
+                                        const py::object &structure);
 
 void update_anomalous_from_xray_structure(
-    std::vector<std::complex<double>> &anomalous, const py::object structure);
+    std::vector<std::complex<double>> &anomalous, const py::object &structure);
