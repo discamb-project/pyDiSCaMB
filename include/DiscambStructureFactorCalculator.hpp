@@ -25,7 +25,7 @@ class DiscambStructureFactorCalculator {
     DiscambStructureFactorCalculator(
         nlohmann::json calculator_parameters, discamb::Crystal crystal,
         std::vector<std::complex<double>> anomalous);
-    ~DiscambStructureFactorCalculator(){delete mCalculator;}
+    ~DiscambStructureFactorCalculator();
 
     std::vector<std::complex<double>> f_calc();
 
