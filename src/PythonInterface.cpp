@@ -31,8 +31,8 @@ void PythonInterface::set_d_min(const double d_min) {
         0;
     py::object miller_py =
         mStructure.attr("build_miller_set")(anomalous_flag, d_min);
-
-    set_indices(miller_py.attr("indices")());
+    py::object miller_indices = miller_py.attr("indices")();
+    set_indices(miller_indices);
 }
 
 void PythonInterface::update_structure(py::object &structure) {

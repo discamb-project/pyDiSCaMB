@@ -131,7 +131,7 @@ void update_crystal_from_xray_structure(discamb::Crystal &crystal,
 }
 
 void update_anomalous_from_xray_structure(vector<complex<double>> &anomalous,
-                                          const py::object structure) {
+                                          const py::object &structure) {
     assert(anomalous.size() ==
            structure.attr("scatterers")().attr("size")().cast<int>());
     int idx = 0;

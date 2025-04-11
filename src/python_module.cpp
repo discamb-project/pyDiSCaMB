@@ -66,7 +66,7 @@ PYBIND11_MODULE(_cpp_module, m) {
             "PythonInterface", 
             R"pbdoc(Calculate structure factors using DiSCaMB)pbdoc"
         )
-        .def(py::init<py::object, py::dict>(), py::arg("structure"), py::arg("kwargs"))
+        .def(py::init<py::object &, py::dict>(), py::arg("structure"), py::arg("kwargs"))
         .def(
             "f_calc", 
             &PythonInterface::f_calc, 
