@@ -1,4 +1,4 @@
-import pydiscamb
+from random import choices
 import pytest
 from cctbx.array_family import flex
 from cctbx.development import random_structure
@@ -79,12 +79,46 @@ def test_IAM_correctness_random_crystal(
         ["random occupancy", None],
         ["no anomalous", "fprime", "fdoubleprime", "fprime + fdoubleprime"],
         ["single weak", "single strong", "many weak", "many strong", "mixed strength"],
-        ["it1992", "wk1995", "electron", None],
+        ["it1992", "wk1995", "electron"],
     ):
         xrs = get_random_crystal(space_group, *args)
         score = get_IAM_correctness_score(xrs)
         # Use 0.05% as threshold
         assert score < 0.0005
+
+
+def test_IAM_correctness_some_random_crystals(
+    space_group: int,
+):
+    from itertools import product
+
+    for args in choices(
+        product(
+            ["random u_iso", "random u_aniso", None],
+            ["random occupancy", None],
+            ["no anomalous", "fprime", "fdoubleprime", "fprime + fdoubleprime"],
+            [
+                "single weak",
+                "single strong",
+                "many weak",
+                "many strong",
+                "mixed strength",
+            ],
+            ["it1992", "wk1995", "electron"],
+        ),
+        k=250,
+    ):
+        xrs = get_random_crystal(space_group, *args)
+        score = get_IAM_correctness_score(xrs)
+        # Use 0.05% as threshold
+        assert score < 0.0005
+
+
+@pytest.mark.xfail(reason="n_gaussian table has no counterpart in DiSCaMB")
+def test_n_gaussian_table():
+    xrs = get_random_crystal(space_group, None, "no anomalous", "single weak", None)
+    score = get_IAM_correctness_score(xrs)
+    assert score < 0.0005
 
 
 @pytest.mark.slow
