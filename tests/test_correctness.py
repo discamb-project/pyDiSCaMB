@@ -88,13 +88,12 @@ def test_IAM_correctness_random_crystal(
         assert score < 0.0005
 
 
-def test_IAM_correctness_some_random_crystals(
-    space_group: int,
-):
+def test_IAM_correctness_some_random_crystals():
     from itertools import product
 
     for args in choices(
-        product(
+        list(product(
+            list(range(1, 231)),
             ["random u_iso", "random u_aniso", None],
             ["random occupancy", None],
             ["no anomalous", "fprime", "fdoubleprime", "fprime + fdoubleprime"],
@@ -106,10 +105,10 @@ def test_IAM_correctness_some_random_crystals(
                 "mixed strength",
             ],
             ["it1992", "wk1995", "electron"],
-        ),
+        )),
         k=250,
     ):
-        xrs = get_random_crystal(space_group, *args)
+        xrs = get_random_crystal(*args)
         score = get_IAM_correctness_score(xrs)
         # Use 0.05% as threshold
         assert score < 0.0005
@@ -117,7 +116,7 @@ def test_IAM_correctness_some_random_crystals(
 
 @pytest.mark.xfail(reason="n_gaussian table has no counterpart in DiSCaMB")
 def test_n_gaussian_table():
-    xrs = get_random_crystal(space_group, None, "no anomalous", "single weak", None)
+    xrs = get_random_crystal(1, None, "no anomalous", "single weak", None)
     score = get_IAM_correctness_score(xrs)
     assert score < 0.0005
 
