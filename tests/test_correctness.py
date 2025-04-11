@@ -6,6 +6,7 @@ from cctbx.eltbx import xray_scattering
 from cctbx.sgtbx import space_group_info
 from pydiscamb import DiscambWrapper, FCalcMethod
 
+import pydiscamb
 
 def compare_structure_factors(f_calc_a, f_calc_b):
     f_calc_a = flex.abs(f_calc_a)
