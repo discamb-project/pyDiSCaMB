@@ -5,6 +5,12 @@ from pydiscamb import DiscambWrapper, FCalcMethod
 from pydiscamb.discamb_wrapper import DiscambWrapperCached
 
 
+try:
+    import resource
+    HAS_RESOURCE_LIB = True
+except ImportError:
+    HAS_RESOURCE_LIB = False
+
 class TestInit:
     def test_simple(self, random_structure):
         w = DiscambWrapper(random_structure)
@@ -19,6 +25,22 @@ class TestInit:
         fc2 = w2.f_calc(2.0)
         assert pytest.approx(list(fc1)) == list(fc2)
 
+    @pytest.mark.skipif(not HAS_RESOURCE_LIB, reason="Needs the 'resource' library, only available on unix")
+    @pytest.mark.parametrize("method", [FCalcMethod.IAM, FCalcMethod.TAAM])
+    def test_no_memory_leak(self, lysozyme, method):
+        hkl = flex.miller_index((1, 2, 3), 30_000)
+        
+        mem_before = resource.getrusage(resource.RUSAGE_SELF)
+        
+        w = DiscambWrapper(lysozyme, method)
+        w.set_indices(hkl)
+
+        mem_wrapper = resource.getrusage(resource.RUSAGE_SELF)
+        assert mem_before < mem_wrapper
+        
+        del w
+        mem_after = resource.getrusage(resource.RUSAGE_SELF)
+        assert mem_after == mem_before
 
 class TestFCalc:
     def test_simple(self, random_structure):
