@@ -1,10 +1,12 @@
-import pydiscamb
+from random import choices
 import pytest
 from cctbx.array_family import flex
 from cctbx.development import random_structure
 from cctbx.eltbx import xray_scattering
 from cctbx.sgtbx import space_group_info
 from pydiscamb import DiscambWrapper, FCalcMethod
+
+import pydiscamb
 
 
 def compare_structure_factors(f_calc_a, f_calc_b):
@@ -50,7 +52,8 @@ def get_random_crystal(
         xrs.shake_fps()
     if "fdoubleprime" in with_anomalous:
         xrs.shake_fdps()
-    xrs.scattering_type_registry(table=scattering_table)
+    if scattering_table:
+        xrs.scattering_type_registry(table=scattering_table)
     return xrs
 
 
@@ -84,6 +87,41 @@ def test_IAM_correctness_random_crystal(
         score = get_IAM_correctness_score(xrs)
         # Use 0.05% as threshold
         assert score < 0.0005
+
+
+def test_IAM_correctness_some_random_crystals():
+    from itertools import product
+
+    for args in choices(
+        list(
+            product(
+                list(range(1, 231)),
+                ["random u_iso", "random u_aniso", None],
+                ["random occupancy", None],
+                ["no anomalous", "fprime", "fdoubleprime", "fprime + fdoubleprime"],
+                [
+                    "single weak",
+                    "single strong",
+                    "many weak",
+                    "many strong",
+                    "mixed strength",
+                ],
+                ["it1992", "wk1995", "electron"],
+            )
+        ),
+        k=250,
+    ):
+        xrs = get_random_crystal(*args)
+        score = get_IAM_correctness_score(xrs)
+        # Use 0.05% as threshold
+        assert score < 0.0005
+
+
+@pytest.mark.xfail(reason="n_gaussian table has no counterpart in DiSCaMB")
+def test_n_gaussian_table():
+    xrs = get_random_crystal(1, None, "no anomalous", "single weak", None)
+    score = get_IAM_correctness_score(xrs)
+    assert score < 0.0005
 
 
 @pytest.mark.slow
