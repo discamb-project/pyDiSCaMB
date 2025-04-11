@@ -8,6 +8,7 @@ from pydiscamb import DiscambWrapper, FCalcMethod
 
 import pydiscamb
 
+
 def compare_structure_factors(f_calc_a, f_calc_b):
     f_calc_a = flex.abs(f_calc_a)
     f_calc_b = flex.abs(f_calc_b)
@@ -92,20 +93,22 @@ def test_IAM_correctness_some_random_crystals():
     from itertools import product
 
     for args in choices(
-        list(product(
-            list(range(1, 231)),
-            ["random u_iso", "random u_aniso", None],
-            ["random occupancy", None],
-            ["no anomalous", "fprime", "fdoubleprime", "fprime + fdoubleprime"],
-            [
-                "single weak",
-                "single strong",
-                "many weak",
-                "many strong",
-                "mixed strength",
-            ],
-            ["it1992", "wk1995", "electron"],
-        )),
+        list(
+            product(
+                list(range(1, 231)),
+                ["random u_iso", "random u_aniso", None],
+                ["random occupancy", None],
+                ["no anomalous", "fprime", "fdoubleprime", "fprime + fdoubleprime"],
+                [
+                    "single weak",
+                    "single strong",
+                    "many weak",
+                    "many strong",
+                    "mixed strength",
+                ],
+                ["it1992", "wk1995", "electron"],
+            )
+        ),
         k=250,
     ):
         xrs = get_random_crystal(*args)
