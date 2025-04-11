@@ -19,6 +19,37 @@ class TestInit:
         fc2 = w2.f_calc(2.0)
         assert pytest.approx(list(fc1)) == list(fc2)
 
+    @pytest.mark.slow
+    @pytest.mark.parametrize(
+        "method",
+        [
+            # Multiple runs to ensure cached code does not interfere either
+            FCalcMethod.TAAM,
+            FCalcMethod.IAM,
+            FCalcMethod.IAM,
+            FCalcMethod.TAAM,
+            FCalcMethod.IAM,
+            FCalcMethod.TAAM,
+        ],
+    )
+    def test_no_memory_leak(self, tyrosine, method):
+        import psutil
+
+        def instatiate_wrapper(n):
+            hkl = flex.miller_index(1000, (1, 2, 3))
+            for i in range(n):
+                w = DiscambWrapper(tyrosine, method)
+                w.set_indices(hkl)
+                assert len(w.hkl) == 1000
+
+        instatiate_wrapper(1)
+
+        mem_before = psutil.Process().memory_info()
+        instatiate_wrapper(200)
+        mem_after = psutil.Process().memory_info()
+        assert mem_before.vms == mem_after.vms
+        assert mem_before.rss == mem_after.rss
+
 
 class TestFCalc:
     def test_simple(self, random_structure):

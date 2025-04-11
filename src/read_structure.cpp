@@ -8,7 +8,7 @@ using namespace discamb;
 
 namespace py = pybind11;
 
-Crystal crystal_from_xray_structure(const py::object structure) {
+Crystal crystal_from_xray_structure(const py::object &structure) {
     Crystal crystal;
     py::tuple cell_params = structure.attr("unit_cell")().attr("parameters")();
     crystal.unitCell.set(cell_params[0].cast<double>(),
@@ -42,14 +42,14 @@ Crystal crystal_from_xray_structure(const py::object structure) {
 }
 
 vector<complex<double>> anomalous_from_xray_structure(
-    const py::object structure) {
+    const py::object &structure) {
     vector<complex<double>> out;
     out.resize(structure.attr("scatterers")().attr("size")().cast<int>());
     update_anomalous_from_xray_structure(out, structure);
     return out;
 }
 
-string table_from_xray_structure(const py::object structure) {
+string table_from_xray_structure(const py::object &structure) {
     auto py_table_string = structure.attr("get_scattering_table")();
     if (py::isinstance<py::none>(py_table_string)) {
         return table_alias("xray");
@@ -58,7 +58,7 @@ string table_from_xray_structure(const py::object structure) {
 }
 
 void update_crystal_from_xray_structure(discamb::Crystal &crystal,
-                                        const py::object structure) {
+                                        const py::object &structure) {
     assert(crystal.atoms.size() ==
            structure.attr("scatterers")().attr("size")().cast<int>());
 
@@ -131,7 +131,7 @@ void update_crystal_from_xray_structure(discamb::Crystal &crystal,
 }
 
 void update_anomalous_from_xray_structure(vector<complex<double>> &anomalous,
-                                          const py::object structure) {
+                                          const py::object &structure) {
     assert(anomalous.size() ==
            structure.attr("scatterers")().attr("size")().cast<int>());
     int idx = 0;

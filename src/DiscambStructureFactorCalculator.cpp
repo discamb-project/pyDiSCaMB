@@ -29,6 +29,9 @@ DiscambStructureFactorCalculator::DiscambStructureFactorCalculator(
     assert(crystal.atoms.size() == anomalous.size());
     update_calculator();
 }
+DiscambStructureFactorCalculator::~DiscambStructureFactorCalculator() {
+    delete mCalculator;
+}
 
 vector<complex<double>> DiscambStructureFactorCalculator::f_calc() {
     update_calculator();
