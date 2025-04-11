@@ -50,7 +50,8 @@ def get_random_crystal(
         xrs.shake_fps()
     if "fdoubleprime" in with_anomalous:
         xrs.shake_fdps()
-    xrs.scattering_type_registry(table=scattering_table)
+    if scattering_table:
+        xrs.scattering_type_registry(table=scattering_table)
     return xrs
 
 
@@ -78,7 +79,7 @@ def test_IAM_correctness_random_crystal(
         ["random occupancy", None],
         ["no anomalous", "fprime", "fdoubleprime", "fprime + fdoubleprime"],
         ["single weak", "single strong", "many weak", "many strong", "mixed strength"],
-        ["it1992", "wk1995", "electron"],
+        ["it1992", "wk1995", "electron", None],
     ):
         xrs = get_random_crystal(space_group, *args)
         score = get_IAM_correctness_score(xrs)
