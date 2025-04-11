@@ -35,9 +35,11 @@ string table_alias(string table) {
     if (table == "Waasmeier-Kirfel-95") return "Waasmeier-Kirfel";
     if (table == "Waasmeier-Kirfel-1995") return "Waasmeier-Kirfel";
 
-    if (table == "xray") return "Waasmeier-Kirfel";
+    if (table == "xray") return "IT92";
 
     if (table == "electron") return "electron-cctbx";
+
+    if (table == "n_gaussian") return "IT92";
 
     return table;
 }
