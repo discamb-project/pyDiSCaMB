@@ -7,7 +7,7 @@ from cctbx.array_family import flex
 from pydiscamb.discamb_wrapper import DiscambWrapper, FCalcMethod
 
 
-class gradients_discamb(gradients_direct):
+class gradients_taam(gradients_direct):
     # TODO consider moving this class to cctbx
     # TODO add timings
     def __init__(
@@ -25,16 +25,16 @@ class gradients_discamb(gradients_direct):
             manager,
             xray_structure,
             miller_set,
-            algorithm="discamb",
+            algorithm="taam",
         )
         self._results = CctbxGradientsResult(
-            self.xray_structure(), miller_set, d_target_d_f_calc
+            self.xray_structure(), miller_set, d_target_d_f_calc, FCalcMethod.TAAM,
         )
         self.d_target_d_site_cart_was_used = False
         self.d_target_d_u_cart_was_used = False
 
 
-class from_scatterers_discamb(from_scatterers_direct):
+class from_scatterers_taam(from_scatterers_direct):
 
     def __init__(
         self,
@@ -42,18 +42,18 @@ class from_scatterers_discamb(from_scatterers_direct):
         miller_set,
         manager=None,
         cos_sin_table=False,
-        algorithm="discamb",
+        algorithm="taam",
     ):
         # TODO add timings
         managed_calculation_base.__init__(
-            self, manager, xray_structure, miller_set, algorithm="discamb"
+            self, manager, xray_structure, miller_set, algorithm="taam"
         )
-        self._results = CctbxFromScatterersResult(xray_structure, miller_set)
+        self._results = CctbxFromScatterersResult(xray_structure, miller_set, FCalcMethod.TAAM)
 
 
 class CctbxGradientsResult:
-    def __init__(self, xrs, miller_set, d_target_d_f_calc):
-        w = DiscambWrapper(xrs, FCalcMethod.TAAM)
+    def __init__(self, xrs, miller_set, d_target_d_f_calc, method, **kwargs):
+        w = DiscambWrapper(xrs, method, **kwargs)
         w.set_indices(miller_set.indices())
         self._grads = w.d_target_d_params(list(d_target_d_f_calc))
 
@@ -121,8 +121,8 @@ class CctbxGradientsResult:
 
 
 class CctbxFromScatterersResult:
-    def __init__(self, xrs, miller_set):
-        w = DiscambWrapper(xrs, FCalcMethod.TAAM)
+    def __init__(self, xrs, miller_set, method, **kwargs):
+        w = DiscambWrapper(xrs, method, **kwargs)
         w.set_indices(miller_set.indices())
         self._fcalc = w.f_calc()
 
