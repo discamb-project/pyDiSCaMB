@@ -28,7 +28,10 @@ class gradients_taam(gradients_direct):
             algorithm="taam",
         )
         self._results = CctbxGradientsResult(
-            self.xray_structure(), miller_set, d_target_d_f_calc, FCalcMethod.TAAM,
+            self.xray_structure(),
+            miller_set,
+            d_target_d_f_calc,
+            FCalcMethod.TAAM,
         )
         self.d_target_d_site_cart_was_used = False
         self.d_target_d_u_cart_was_used = False
@@ -48,7 +51,9 @@ class from_scatterers_taam(from_scatterers_direct):
         managed_calculation_base.__init__(
             self, manager, xray_structure, miller_set, algorithm="taam"
         )
-        self._results = CctbxFromScatterersResult(xray_structure, miller_set, FCalcMethod.TAAM)
+        self._results = CctbxFromScatterersResult(
+            xray_structure, miller_set, FCalcMethod.TAAM
+        )
 
 
 class CctbxGradientsResult:
