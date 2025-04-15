@@ -58,7 +58,9 @@ class from_scatterers_taam(from_scatterers_direct):
 
 
 class CctbxGradientsResult:
-    def __init__(self, xrs, miller_set, d_target_d_f_calc, n_parameters, method, **kwargs):
+    def __init__(
+        self, xrs, miller_set, d_target_d_f_calc, n_parameters, method, **kwargs
+    ):
         w = DiscambWrapper(xrs, method, **kwargs)
         w.set_indices(miller_set.indices())
         grads = w.d_target_d_params(list(d_target_d_f_calc))
@@ -86,7 +88,8 @@ class CctbxGradientsResult:
                 self._d_target_d_occupancy[i] = grads[i].occupancy_derivatives
 
         self._packed = flex.double(n_parameters, 0)
-        if n_parameters <= 0: return
+        if n_parameters <= 0:
+            return
 
         packed_ind = 0
         for i, s in enumerate(xrs.scatterer_flags()):

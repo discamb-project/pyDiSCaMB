@@ -16,9 +16,11 @@ from pydiscamb._cpp_module import (
 from pydiscamb.taam_parameters import get_default_databank
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from cctbx import miller
     from cctbx.xray.structure import structure
+
 
 class FCalcMethod(Enum):
     IAM = 0
@@ -328,7 +330,9 @@ class DiscambWrapperCached(DiscambWrapper):
         return cache
 
     @classmethod
-    def __check_cache(cls, xrs: "structure", method: FCalcMethod, kwargs: Dict[str, str]):
+    def __check_cache(
+        cls, xrs: "structure", method: FCalcMethod, kwargs: Dict[str, str]
+    ):
         key = cls.__get_cache_key(xrs, method, kwargs)
         return cls.__cache.get(key)
 
