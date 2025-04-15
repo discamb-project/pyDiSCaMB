@@ -31,6 +31,7 @@ class gradients_taam(gradients_direct):
             self.xray_structure(),
             miller_set,
             d_target_d_f_calc,
+            n_parameters,
             FCalcMethod.TAAM,
         )
         self.d_target_d_site_cart_was_used = False
@@ -57,51 +58,53 @@ class from_scatterers_taam(from_scatterers_direct):
 
 
 class CctbxGradientsResult:
-    def __init__(self, xrs, miller_set, d_target_d_f_calc, method, **kwargs):
+    def __init__(self, xrs, miller_set, d_target_d_f_calc, n_parameters, method, **kwargs):
         w = DiscambWrapper(xrs, method, **kwargs)
         w.set_indices(miller_set.indices())
-        self._grads = w.d_target_d_params(list(d_target_d_f_calc))
+        grads = w.d_target_d_params(list(d_target_d_f_calc))
 
         self._d_target_d_site_frac = flex.vec3_double(
-            d_target_d_f_calc.size(), (0, 0, 0)
+            xrs.scatterers().size(), (0, 0, 0)
         )
-        self._d_target_d_u_iso = flex.double(d_target_d_f_calc.size(), 0)
-        self._d_target_d_u_star = flex.sym_mat3(
-            d_target_d_f_calc.size(), (0, 0, 0, 0, 0, 0)
+        self._d_target_d_u_iso = flex.double(xrs.scatterers().size(), 0)
+        self._d_target_d_u_star = flex.sym_mat3_double(
+            xrs.scatterers().size(), (0, 0, 0, 0, 0, 0)
         )
-        self._d_target_d_occupancy = flex.double(d_target_d_f_calc.size(), 0)
-        self._d_target_d_fp = flex.double(d_target_d_f_calc.size(), 0)
-        self._d_target_d_fdp = flex.double(d_target_d_f_calc.size(), 0)
+        self._d_target_d_occupancy = flex.double(xrs.scatterers().size(), 0)
+        self._d_target_d_fp = flex.double(xrs.scatterers().size(), 0)
+        self._d_target_d_fdp = flex.double(xrs.scatterers().size(), 0)
 
-        size = 0
-        for s in self.xray_structure().scatterer_flags():
-            size += 3 * s.grad_site()
-            size += 1 * s.grad_u_iso()
-            size += 6 * s.grad_u_aniso()
-            size += 1 * s.grad_occupancy()
-        self._packed = flex.double(size, 0)
+        for i, s in enumerate(xrs.scatterer_flags()):
+            if s.grad_site():
+                self._d_target_d_site_frac[i] = grads[i].site_derivatives
+            if s.grad_u_iso():
+                self._d_target_d_u_iso[i] = grads[i].adp_derivatives[0]
+            if s.grad_u_aniso():
+                for j in range(6):
+                    self._d_target_d_u_star[i] = grads[i].adp_derivatives[j]
+            if s.grad_occupancy():
+                self._d_target_d_occupancy[i] = grads[i].occupancy_derivatives
+
+        self._packed = flex.double(n_parameters, 0)
+        if n_parameters <= 0: return
 
         packed_ind = 0
-        for i, s in enumerate(self.xray_structure().scatterer_flags()):
+        for i, s in enumerate(xrs.scatterer_flags()):
             if s.grad_site():
                 for j in range(3):
-                    self._d_target_d_site_frac[i] = self._grads[i].site_derivatives[j]
-                    self._packed[packed_ind] = self._grads[i].site_derivatives[j]
+                    self._packed[packed_ind] = grads[i].site_derivatives[j]
                     packed_ind += 1
             if s.grad_u_iso():
-                self._d_target_d_u_iso[i] = self._grads[i].adp_derivatives[0]
-                self._packed[packed_ind] = self._grads[i].adp_derivatives[0]
+                self._packed[packed_ind] = grads[i].adp_derivatives[0]
                 packed_ind += 1
             if s.grad_u_aniso():
                 for j in range(6):
-                    self._d_target_d_u_star[i] = self._grads[i].adp_derivatives[j]
-                    self._packed[packed_ind] = self._grads[i].adp_derivatives[j]
+                    self._packed[packed_ind] = grads[i].adp_derivatives[j]
                     packed_ind += 1
             if s.grad_occupancy():
-                self._d_target_d_occupancy[i] = self._grads[i].occupancy_derivatives
-                self._packed[packed_ind] = self._grads[i].occupancy_derivatives
+                self._packed[packed_ind] = grads[i].occupancy_derivatives
                 packed_ind += 1
-        assert packed_ind == size
+        assert packed_ind == n_parameters
 
     def d_target_d_site_frac(self):
         return self._d_target_d_site_frac
