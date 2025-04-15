@@ -5,9 +5,7 @@ import csv
 import tempfile
 import os
 
-from cctbx import miller
 from cctbx.array_family import flex
-from cctbx.xray.structure import structure
 
 from pydiscamb._cpp_module import (
     FCalcDerivatives,
@@ -17,6 +15,10 @@ from pydiscamb._cpp_module import (
 )
 from pydiscamb.taam_parameters import get_default_databank
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from cctbx import miller
+    from cctbx.xray.structure import structure
 
 class FCalcMethod(Enum):
     IAM = 0
@@ -29,7 +31,7 @@ def _get_tmp_assignment_filename() -> str:
 
 
 class DiscambWrapper(PythonInterface):
-    def __init__(self, xrs: structure, method: FCalcMethod = None, **kwargs):
+    def __init__(self, xrs: "structure", method: FCalcMethod = None, **kwargs):
         """
         Initialize a wrapper object for structure factor calculations using DiSCaMB.
         Pass an xray structure and either a FCalcMethod,
@@ -79,7 +81,7 @@ class DiscambWrapper(PythonInterface):
 
     @staticmethod
     def _prepare_calculator_params(
-        xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]
+        xrs: "structure", method: FCalcMethod, kwargs: Dict[str, str]
     ):
         if method is None:
             method = FCalcMethod.IAM
@@ -105,7 +107,7 @@ class DiscambWrapper(PythonInterface):
         out = {key.replace("_", " "): val for key, val in out.items()}
         return out
 
-    def update_structure(self, xrs: structure):
+    def update_structure(self, xrs: "structure"):
         if (
             self._atomstr != _concat_scatterer_labels(xrs)
             or self._unit_cell != xrs.unit_cell()
@@ -224,7 +226,7 @@ class DiscambWrapper(PythonInterface):
     def f_calc(self, d_min: float) -> flex.complex_double: ...
 
     @overload
-    def f_calc(self, miller_set: miller.set) -> miller.array: ...
+    def f_calc(self, miller_set: "miller.set") -> "miller.array": ...
 
     @overload
     def d_f_calc_hkl_d_params(self, hkl: Tuple[int, int, int]) -> FCalcDerivatives: ...
@@ -233,7 +235,7 @@ class DiscambWrapper(PythonInterface):
     def d_f_calc_hkl_d_params(self, h: int, k: int, l: int) -> FCalcDerivatives: ...
 
     @overload
-    def d_target_d_params(self, d_target_d_f_calc: miller.array) -> flex.double: ...
+    def d_target_d_params(self, d_target_d_f_calc: "miller.array") -> flex.double: ...
 
     @overload
     def d_target_d_params(self, d_target_d_f_calc: list) -> List[TargetDerivatives]: ...
@@ -310,7 +312,7 @@ class DiscambWrapperCached(DiscambWrapper):
 
     __cache = {}
 
-    def __init__(self, xrs: structure, method: FCalcMethod = None, **kwargs):
+    def __init__(self, xrs: "structure", method: FCalcMethod = None, **kwargs):
         if self.__check_cache(xrs, method, kwargs) is not None:
             self.update_structure(xrs)
             return
@@ -319,20 +321,20 @@ class DiscambWrapperCached(DiscambWrapper):
 
         self.__cache[self.__get_cache_key(xrs, method, kwargs)] = self
 
-    def __new__(cls, xrs: structure, method: FCalcMethod = None, **kwargs):
+    def __new__(cls, xrs: "structure", method: FCalcMethod = None, **kwargs):
         cache = cls.__check_cache(xrs, method, kwargs)
         if cache is None:
             return super().__new__(cls)
         return cache
 
     @classmethod
-    def __check_cache(cls, xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]):
+    def __check_cache(cls, xrs: "structure", method: FCalcMethod, kwargs: Dict[str, str]):
         key = cls.__get_cache_key(xrs, method, kwargs)
         return cls.__cache.get(key)
 
     @classmethod
     def __get_cache_key(
-        cls, xrs: structure, method: FCalcMethod, kwargs: Dict[str, str]
+        cls, xrs: "structure", method: FCalcMethod, kwargs: Dict[str, str]
     ):
         atomstr = _concat_scatterer_labels(xrs)
         unitcell = xrs.unit_cell()
@@ -342,20 +344,20 @@ class DiscambWrapperCached(DiscambWrapper):
 
 
 def _calculate_structure_factors(
-    xrs: structure, d_min: float, method: FCalcMethod
+    xrs: "structure", d_min: float, method: FCalcMethod
 ) -> List[complex]:
     w = DiscambWrapper(xrs, method)
     w.set_d_min(d_min)
     return w.f_calc()
 
 
-def calculate_structure_factors_IAM(xrs: structure, d_min: float) -> List[complex]:
+def calculate_structure_factors_IAM(xrs: "structure", d_min: float) -> List[complex]:
     return _calculate_structure_factors(xrs, d_min, FCalcMethod.IAM)
 
 
-def calculate_structure_factors_TAAM(xrs: structure, d_min: float) -> List[complex]:
+def calculate_structure_factors_TAAM(xrs: "structure", d_min: float) -> List[complex]:
     return _calculate_structure_factors(xrs, d_min, FCalcMethod.TAAM)
 
 
-def _concat_scatterer_labels(xrs: structure) -> str:
+def _concat_scatterer_labels(xrs: "structure") -> str:
     return "".join(s.label for s in xrs.scatterers())
