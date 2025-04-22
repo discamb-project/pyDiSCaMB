@@ -3,8 +3,50 @@ from cctbx.xray.structure_factors.gradients_direct import gradients_direct
 from cctbx.xray.structure_factors.manager import managed_calculation_base
 from cctbx.xray.structure_factors.from_scatterers_direct import from_scatterers_direct
 from cctbx.array_family import flex
+import iotbx.phil
 
 from pydiscamb.discamb_wrapper import DiscambWrapperCached, FCalcMethod
+
+taam_master_params = iotbx.phil.parse(
+    """
+    electron_scattering = None
+        .type = bool
+        .help = Whether to use Mott-Bethe to convert x-ray scattering factors to electron scattering factors. 
+    bank_path = None
+        .type = str
+        .help = Path to TAAM parameter bank file
+    assignment_info = None
+        .type = str
+        .help = Path to output log file of atom type assignment
+    assignment_csv = None
+        .type = str
+        .help = Path to output csv file of atom type assignment
+    parameters_info = None
+        .type = str
+        .help = Path to output log file of multipolar parameters
+    multipole_cif = None
+        .type = str
+        .help = Path to output multipolar cif file
+    unit_cell_charge = None
+        .type = float
+        .help = Unit cell charge, used to scale multipolar parameters
+    scale = None
+        .type = bool
+        .help = Whether to scale multipolar parameters to fit the given charge
+    n_cores = None
+        .type = int
+        .help = Number of cores to use for computing
+    table = None
+        .type = str
+        .help = Scattering table to use for untyped atoms
+    iam_electron_scattering = None
+        .type = bool
+        .help = Whether to use Mott-Bethe on untyped atoms to convert x-ray scattering factors to electron scattering factors. 
+    frozen_lcs = None
+        .type = bool
+        .help = Whether to re-calculate local coordinate systems for all atoms when updating the structure
+"""
+)
 
 
 class gradients_taam(gradients_direct):
@@ -18,8 +60,18 @@ class gradients_taam(gradients_direct):
         d_target_d_f_calc,
         n_parameters,
         manager=None,
-        cos_sin_table=False,
+        extra_params=None,
     ):
+        if extra_params is None:
+            extra_params_dict = {}
+        else:
+            assert extra_params.__phil_name__ == "taam"
+            # Translate to dict
+            extra_params_dict = {
+                key: getattr(extra_params, key)
+                for key in dir(extra_params)
+                if key[:2] != "__" and getattr(extra_params, key) is not None
+            }
         gradients_base.__init__(
             self,
             manager,
@@ -33,6 +85,7 @@ class gradients_taam(gradients_direct):
             d_target_d_f_calc,
             n_parameters,
             FCalcMethod.TAAM,
+            **extra_params_dict,
         )
         self.d_target_d_site_cart_was_used = False
         self.d_target_d_u_cart_was_used = False
@@ -45,15 +98,25 @@ class from_scatterers_taam(from_scatterers_direct):
         xray_structure,
         miller_set,
         manager=None,
-        cos_sin_table=False,
         algorithm="taam",
+        extra_params=None,
     ):
+        if extra_params is None:
+            extra_params_dict = {}
+        else:
+            assert extra_params.__phil_name__ == "taam"
+            # Translate to dict
+            extra_params_dict = {
+                key: getattr(extra_params, key)
+                for key in dir(extra_params)
+                if key[:2] != "__" and getattr(extra_params, key) is not None
+            }
         # TODO add timings
         managed_calculation_base.__init__(
             self, manager, xray_structure, miller_set, algorithm="taam"
         )
         self._results = CctbxFromScatterersResult(
-            xray_structure, miller_set, FCalcMethod.TAAM
+            xray_structure, miller_set, FCalcMethod.TAAM, **extra_params_dict
         )
 
 
