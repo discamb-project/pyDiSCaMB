@@ -6,6 +6,7 @@ import tempfile
 import os
 
 from cctbx.array_family import flex
+from cctbx import miller
 
 from pydiscamb._cpp_module import (
     FCalcDerivatives,
@@ -18,7 +19,6 @@ from pydiscamb.taam_parameters import get_default_databank
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from cctbx import miller
     from cctbx.xray.structure import structure
 
 
