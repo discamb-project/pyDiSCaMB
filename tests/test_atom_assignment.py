@@ -157,6 +157,7 @@ def test_assignment_log_tyrosine(tyrosine, tmp_path):
         f.readline()  # Empty line at the bottom
         assert f.readline() == ""  # Check for EOF
 
+
 @pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
 def test_assignment_symmetry_wrapping(tmp_path):
     # Download a graphene cif
