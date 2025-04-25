@@ -49,35 +49,74 @@ def test_assignment_heavy_element(el: str):
     assert pytest.approx(fc1) == fc2
 
 
-def test_assignment_log_urecognized_structure(tmp_path):
-    logfile = tmp_path / "assignment.log"
+class TestAssignmentLogUnrecognizedStructure:
 
-    from cctbx.development import random_structure as cctbx_random_structure
-    from cctbx.sgtbx import space_group_info
+    def get_structure(self, atom_range: slice):
+        from cctbx.development import random_structure as cctbx_random_structure
+        from cctbx.sgtbx import space_group_info
 
-    group = space_group_info(19)
-    xrs = cctbx_random_structure.xray_structure(
-        space_group_info=group,
-        elements=elements()[:86],
-        general_positions_only=False,
-        use_u_iso=True,
-        random_u_iso=False,
-        random_occupancy=False,
-    )
-    xrs.scattering_type_registry(table="wk1995")
+        group = space_group_info(19)
+        xrs = cctbx_random_structure.xray_structure(
+            space_group_info=group,
+            elements=elements()[atom_range],
+            general_positions_only=False,
+            use_u_iso=True,
+            random_u_iso=False,
+            random_occupancy=False,
+        )
+        xrs.scattering_type_registry(table="wk1995")
+        return xrs
 
-    w = DiscambWrapper(xrs, FCalcMethod.TAAM, assignment_info=str(logfile))
+    def test_full(self, tmp_path):
+        logfile = tmp_path / "assignment.log"
 
-    with logfile.open("r") as f:
-        assert f.readline() == "Atom type assigned to 0 of 86.\n"
-        # fmt: off
-        assert f.readline() == "Atoms with unassigned atom types, represented with standard IAM :\n"
-        for i in range(36, 86):
-            assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
-        assert f.readline() == "Atoms with unassigned atom types, represented with multipole model based IAM :\n"
-        # fmt: on
-        for i in range(36):
-            assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
+        xrs = self.get_structure(slice(0, 86, None))
+        w = DiscambWrapper(xrs, FCalcMethod.TAAM, assignment_info=str(logfile))
+
+        with logfile.open("r") as f:
+            assert f.readline() == "Atom type assigned to 0 of 86.\n"
+            # fmt: off
+            assert f.readline() == "Atoms with unassigned atom types, represented with standard IAM :\n"
+            for i in range(36, 86):
+                assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
+            assert f.readline() == "Atoms with unassigned atom types, represented with multipole model based IAM :\n"
+            # fmt: on
+            for i in range(36):
+                assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
+            f.readline()  # Empty line at the bottom
+            assert f.readline() == ""  # Check for EOF
+
+    def test_multipole(self, tmp_path):
+        logfile = tmp_path / "assignment.log"
+
+        xrs = self.get_structure(slice(0, 36, None))
+        w = DiscambWrapper(xrs, FCalcMethod.TAAM, assignment_info=str(logfile))
+
+        with logfile.open("r") as f:
+            assert f.readline() == "Atom type assigned to 0 of 36.\n"
+            # fmt: off
+            assert f.readline() == "Atoms with unassigned atom types, represented with multipole model based IAM :\n"
+            # fmt: on
+            for i in range(36):
+                assert f.readline() == f"{elements()[i]}{i + 1}\n".rjust(8)
+            f.readline()  # Empty line at the bottom
+            assert f.readline() == ""  # Check for EOF
+
+    def test_iam(self, tmp_path):
+        logfile = tmp_path / "assignment.log"
+
+        xrs = self.get_structure(slice(36, 86, None))
+        w = DiscambWrapper(xrs, FCalcMethod.TAAM, assignment_info=str(logfile))
+
+        with logfile.open("r") as f:
+            assert f.readline() == "Atom type assigned to 0 of 50.\n"
+            # fmt: off
+            assert f.readline() == "Atoms with unassigned atom types, represented with standard IAM :\n"
+            # fmt: on
+            for i in range(50):
+                assert f.readline() == f"{elements()[i + 36]}{i + 1}\n".rjust(8)
+            f.readline()  # Empty line at the bottom
+            assert f.readline() == ""  # Check for EOF
 
 
 @pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
@@ -115,6 +154,8 @@ def test_assignment_log_tyrosine(tyrosine, tmp_path):
         assert f.readline() == '   pdb=" HE2 TYR A   4 "    H104    Z pdb=" CE2 TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
         assert f.readline() == '   pdb=" HH  TYR A   4 "    H114    Z pdb=" OH  TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
         # fmt: on
+        f.readline()  # Empty line at the bottom
+        assert f.readline() == ""  # Check for EOF
 
 
 @pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
