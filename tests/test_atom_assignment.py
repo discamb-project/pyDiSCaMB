@@ -154,7 +154,8 @@ def test_assignment_log_tyrosine(tyrosine, tmp_path):
         assert f.readline() == '   pdb=" HE2 TYR A   4 "    H104    Z pdb=" CE2 TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
         assert f.readline() == '   pdb=" HH  TYR A   4 "    H114    Z pdb=" OH  TYR A   4 " X pdb=" CZ  TYR A   4 "\n'
         # fmt: on
-
+        f.readline()  # Empty line at the bottom
+        assert f.readline() == ""  # Check for EOF
 
 @pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
 def test_assignment_symmetry_wrapping(tmp_path):
