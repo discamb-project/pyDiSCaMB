@@ -90,15 +90,15 @@ def test_unit_cell_charge_scaling_off(tyrosine):
     )
     assert pytest.approx(w1.f_calc(2)) == w2.f_calc(2)
 
-
+@pytest.mark.xfail(
+    condition=sys.platform.startswith("win"),
+    reason="Bug on windows where exception object is unpopulated from discamb",
+    raises=AssertionError, # Thrown by pytest when raises fails
+)
 def test_invalid_bank(tyrosine):
-    match_str = "Problem with accessing/openning file 'non-existent bank file' for reading UBDB type bank"
-    if sys.platform.startswith("win"):
-        # Bug on window. For some reason, the error object is not populated from discamb
-        match_str = ""
     with pytest.raises(
         RuntimeError,
-        match=match_str,
+        match="Problem with accessing/openning file 'non-existent bank file' for reading UBDB type bank",
     ):
         w = DiscambWrapper(
             tyrosine,
