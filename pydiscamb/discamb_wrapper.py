@@ -90,7 +90,6 @@ class DiscambWrapper(PythonInterface):
                 # Could not delete the file. Should be fine, it's in the tmp dir.
                 # As of May 2025, this error is consistently thrown in the windows testrunners of cctbx
                 pass
-        
 
     @staticmethod
     def _prepare_calculator_params(
