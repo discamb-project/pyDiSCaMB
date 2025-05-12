@@ -90,10 +90,11 @@ def test_unit_cell_charge_scaling_off(tyrosine):
     )
     assert pytest.approx(w1.f_calc(2)) == w2.f_calc(2)
 
+
 @pytest.mark.xfail(
     condition=sys.platform.startswith("win"),
     reason="Bug on windows where exception object is unpopulated from discamb",
-    raises=AssertionError, # Thrown by pytest when raises fails
+    raises=AssertionError,  # Thrown by pytest when raises fails
 )
 def test_invalid_bank(tyrosine):
     with pytest.raises(
