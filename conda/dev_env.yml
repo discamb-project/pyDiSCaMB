@@ -4,5 +4,5 @@ channels:
   - defaults
 dependencies:
   - cctbx-nightly::cctbx-base
-  - openmp
+  - llvm-openmp
   - pybind11
