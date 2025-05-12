@@ -3,6 +3,4 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - cctbx-nightly::cctbx-base
-  - llvm-openmp
-  - pybind11
+  - vs2022_win-64

@@ -1,5 +1,8 @@
+import sys
+
 import pytest
 from cctbx.eltbx.chemical_elements import proper_caps_list as elements
+
 from pydiscamb import DiscambWrapper, FCalcMethod
 from pydiscamb.taam_parameters import is_MATTS_installed
 
@@ -261,6 +264,10 @@ class TestAssignmentDict:
         assert isinstance(w.atom_type_assignment, dict)
         assert len(w.atom_type_assignment) == random_structure.scatterers().size()
 
+    @pytest.mark.skipif(
+        condition=sys.platform.startswith("win"),
+        reason="File is not deleted on windows",
+    )
     def test_csv_is_deleted(self, random_structure):
         import os, tempfile
 

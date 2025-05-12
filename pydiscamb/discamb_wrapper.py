@@ -33,6 +33,9 @@ def _get_tmp_assignment_filename() -> str:
 
 
 class DiscambWrapper(PythonInterface):
+
+    atom_type_assignment: "dict[str, tuple[str, str]]"
+
     def __init__(self, xrs: "structure", method: FCalcMethod = None, **kwargs):
         """
         Initialize a wrapper object for structure factor calculations using DiSCaMB.
@@ -76,10 +79,17 @@ class DiscambWrapper(PythonInterface):
         with assignment_csv.open("r") as f:
             self.atom_type_assignment = {
                 label: (atomtype, lcs)
-                for label, atomtype, lcs in csv.reader(f, delimiter=";")
+                for label, atomtype, lcs in csv.reader(f, delimiter=";", strict=True)
             }
         if kwargs.get("assignment_csv") is None:
-            os.remove(calculator_params["assignment csv"])
+            # If we made a tempfile, we are responsible for cleaning it up,
+            # as per the docs for tempfile.mkstemp
+            try:
+                os.remove(calculator_params["assignment csv"])
+            except PermissionError:
+                # Could not delete the file. Should be fine, it's in the tmp dir.
+                # As of May 2025, this error is consistently thrown in the windows testrunners of cctbx
+                pass
 
     @staticmethod
     def _prepare_calculator_params(
