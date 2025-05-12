@@ -264,11 +264,6 @@ class TestAssignmentDict:
         assert isinstance(w.atom_type_assignment, dict)
         assert len(w.atom_type_assignment) == random_structure.scatterers().size()
 
-    @pytest.mark.xfail(
-        condition=sys.platform.startswith("win"),
-        reason="bug in a 3rd party library",
-        raises=PermissionError,
-    )
     def test_csv_is_deleted(self, random_structure):
         import os, tempfile
 
