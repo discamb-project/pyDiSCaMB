@@ -17,11 +17,10 @@ jobs:
   build-and-test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        #, macOS-latest]
-        python-version: [3.9]
-        #, "3.10", 3.11, 3.12]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        python-version: [3.9, "3.10", 3.11, 3.12]
     defaults:
       run:
         shell: bash -el {0}
