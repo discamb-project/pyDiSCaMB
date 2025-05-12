@@ -265,8 +265,8 @@ class TestAssignmentDict:
         assert len(w.atom_type_assignment) == random_structure.scatterers().size()
 
     @pytest.mark.skipif(
-            condition=sys.platform.startswith("win"),
-            reason="File is not deleted on windows"
+        condition=sys.platform.startswith("win"),
+        reason="File is not deleted on windows",
     )
     def test_csv_is_deleted(self, random_structure):
         import os, tempfile
