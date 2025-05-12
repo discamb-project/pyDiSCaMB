@@ -18,27 +18,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        #, macOS-latest]
-        python-version: [3.9, "3.10", 3.11, 3.12]
-    name: Build ${{ matrix.os }} for Python ${{ matrix.python-version }}
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        python-version: [3.9]
+        #, "3.10", 3.11, 3.12]
+    name: Build and test on ${{ matrix.os }} for Python ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Setup conda
-        uses: s-weigand/setup-conda@v1
-        with:
-          python-version: ${{ matrix.python-version }}
-          conda-channels: conda-forge
+      - name: Add conda to system path
+        run: |
+          echo $CONDA/bin >> $GITHUB_PATH
       - run: which python
       - name: Install dependencies
-        run: conda env create -f conda/dev_env.yml
+        run: conda env update --file conda/dev_env.yml --name base
       - name: Install compiler
-        run: conda env update --file ${{ format('conda/compiler_{0}.yml', matrix.os) }}
-      - run: conda activate pydiscamb-dev
-      - run: python -m pip --version
-      - run: pip --version
+        run: conda env update --file ${{ format('conda/compiler_{0}.yml', matrix.os) }} --name base
       - name: Install pyDiSCaMB
         run: pip install .
       - name: Test with pytest
