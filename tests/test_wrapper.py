@@ -1,3 +1,4 @@
+import sys
 import pytest
 from cctbx import miller
 from cctbx.array_family import flex
@@ -19,6 +20,10 @@ class TestInit:
         fc2 = w2.f_calc(2.0)
         assert pytest.approx(list(fc1)) == list(fc2)
 
+    @pytest.mark.skipif(
+        condition=sys.platform != "linux",
+        reason="Only testing for memory leaks on linux for now",
+    )
     @pytest.mark.slow
     @pytest.mark.parametrize(
         "method",

@@ -79,7 +79,7 @@ class DiscambWrapper(PythonInterface):
         with assignment_csv.open("r") as f:
             self.atom_type_assignment = {
                 label: (atomtype, lcs)
-                for label, atomtype, lcs in csv.reader(f, delimiter=";")
+                for label, atomtype, lcs in csv.reader(f, delimiter=";", strict=True)
             }
         if kwargs.get("assignment_csv") is None:
             # If we made a tempfile, we are responsible for cleaning it up,
