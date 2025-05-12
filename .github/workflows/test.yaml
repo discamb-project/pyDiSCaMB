@@ -29,15 +29,14 @@ jobs:
       - name: Setup conda
         uses: s-weigand/setup-conda@v1
         with:
-          update-conda: true
           python-version: ${{ matrix.python-version }}
           conda-channels: conda-forge
-      - run: conda activate base
       - run: which python
       - name: Install dependencies
-        run: conda env update --file conda/dev_env.yml --name base
+        run: conda env create -f conda/dev_env.yml
       - name: Install compiler
-        run: conda env update --file ${{ format('conda/compiler_{0}.yml', matrix.os) }} --name base
+        run: conda env update --file ${{ format('conda/compiler_{0}.yml', matrix.os) }}
+      - run: conda activate pydiscamb-dev
       - run: python -m pip --version
       - run: pip --version
       - name: Install pyDiSCaMB

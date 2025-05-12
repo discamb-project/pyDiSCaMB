@@ -1,3 +1,4 @@
+name: pydiscamb-dev
 channels:
   - conda-forge
   - defaults
