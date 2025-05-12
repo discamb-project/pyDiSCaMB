@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         #, macOS-latest]
-        python-version: [3.9, 3.10, 3.11, 3.12]
+        python-version: [3.9, "3.10", 3.11, 3.12]
     name: Build ${{ matrix.os }} for Python ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v3
@@ -33,7 +33,7 @@ jobs:
       - run: conda --version
       - run: which python
       - name: Install dependencies
-        run: conda env update --file conda/dev_env.yml --name base
+        run: conda env update --file conda/dev_env.yml
       - name: Install pyDiSCaMB
         run: pip install .
       - name: Test with pytest
