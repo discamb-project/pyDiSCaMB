@@ -28,7 +28,7 @@ jobs:
         with:
           submodules: recursive
       - name: Setup conda
-      - uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: pydiscamb-dev
           environment-file: conda/dev_env.yml
