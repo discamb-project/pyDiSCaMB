@@ -36,7 +36,7 @@ DiscambStructureFactorCalculator::~DiscambStructureFactorCalculator() {
 }
 
 vector<complex<double>> DiscambStructureFactorCalculator::f_calc() {
-    if (mStale){
+    if (mStale) {
         mFcalc.resize(hkl.size());
         vector<bool> count_atom_contribution(crystal.atoms.size(), true);
         mCalculator->calculateStructureFactors(
