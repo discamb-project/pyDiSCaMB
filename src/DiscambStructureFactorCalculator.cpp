@@ -25,7 +25,7 @@ DiscambStructureFactorCalculator::DiscambStructureFactorCalculator(
       anomalous(anomalous),
       mConverter(crystal.unitCell),
       mStale(true),
-      mFcalc({0.0}) {
+      mFcalc({{0.0, 0.0}}) {
     assert(crystal.atoms.size() > 0);
     assert(anomalous.size() > 0);
     assert(crystal.atoms.size() == anomalous.size());
