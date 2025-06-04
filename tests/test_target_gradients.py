@@ -219,3 +219,36 @@ class TestTargetGradients:
 
         assert exp.size() == res.size()
         assert pytest.approx(list(res), abs=1e-6, rel=1e-5) == list(exp)
+
+    @pytest.mark.slow
+    def test_stale(self, lysozyme):
+        """Fcalc is cached when computing gradients"""
+        w = DiscambWrapper(lysozyme)
+
+        f_obs = abs(lysozyme.structure_factors(d_min=1).f_calc())
+
+        lysozyme.shake_sites_in_place(rms_difference=0.1)
+        lysozyme.shake_adp()
+        lysozyme.shake_occupancies()
+
+        model = mmtbx.f_model.manager(f_obs=f_obs, xray_structure=lysozyme)
+        model.sfg_params.algorithm = "direct"
+        target = model.target_functor()(compute_gradients=True)
+        d_target_d_f_calc = target.d_target_d_f_calc_work()
+
+        from time import perf_counter
+
+        start_slow = perf_counter()
+        w.f_calc()
+        end_slow = perf_counter()
+
+        w.update_structure(lysozyme)  # make it stale
+        w.d_target_d_params(d_target_d_f_calc)
+
+        start_fast = perf_counter()
+        w.f_calc()
+        end_fast = perf_counter()
+
+        time_slow = end_slow - start_slow
+        time_fast = end_fast - start_fast
+        assert time_fast < time_slow / 10
