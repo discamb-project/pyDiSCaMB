@@ -126,6 +126,36 @@ class TestFCalc:
         ):
             w.f_calc("incorrect input")
 
+    @pytest.mark.slow
+    def test_stale(self, tyrosine):
+        """
+        Computing fcalc multiple times without updates should be
+        much faster as we cache the result.
+        """
+        w = DiscambWrapper(tyrosine)
+        w.set_d_min(1.6)
+
+        from time import perf_counter
+
+        start_slow = perf_counter()
+        w.f_calc()
+        end_slow = perf_counter()
+
+        start_fast = perf_counter()
+        w.f_calc()
+        end_fast = perf_counter()
+
+        time_slow = end_slow - start_slow
+        time_fast = end_fast - start_fast
+        assert time_fast < time_slow / 10
+
+        w.update_structure(tyrosine)  # make it stale
+        start_update = perf_counter()
+        w.f_calc()
+        end_update = perf_counter()
+        time_update = end_update - start_update
+        assert time_update > time_slow / 10
+
 
 class TestUpdateStructure:
     def test_simple(self, large_random_structure):

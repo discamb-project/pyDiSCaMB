@@ -23,7 +23,9 @@ DiscambStructureFactorCalculator::DiscambStructureFactorCalculator(
     : mCalculator(SfCalculator::create(crystal, calculator_parameters)),
       crystal(crystal),
       anomalous(anomalous),
-      mConverter(crystal.unitCell) {
+      mConverter(crystal.unitCell),
+      mStale(true),
+      mFcalc({{0.0, 0.0}}) {
     assert(crystal.atoms.size() > 0);
     assert(anomalous.size() > 0);
     assert(crystal.atoms.size() == anomalous.size());
@@ -34,13 +36,14 @@ DiscambStructureFactorCalculator::~DiscambStructureFactorCalculator() {
 }
 
 vector<complex<double>> DiscambStructureFactorCalculator::f_calc() {
-    update_calculator();
-    vector<complex<double>> sf;
-    sf.resize(hkl.size());
-    vector<bool> count_atom_contribution(crystal.atoms.size(), true);
-    mCalculator->calculateStructureFactors(
-        crystal.atoms, hkl, sf, count_atom_contribution);
-    return sf;
+    if (mStale) {
+        mFcalc.resize(hkl.size());
+        vector<bool> count_atom_contribution(crystal.atoms.size(), true);
+        mCalculator->calculateStructureFactors(
+            crystal.atoms, hkl, mFcalc, count_atom_contribution);
+        mStale = false;
+    }
+    return mFcalc;
 }
 
 vector<FCalcDerivatives> DiscambStructureFactorCalculator::d_f_calc_d_params() {
@@ -55,7 +58,6 @@ vector<FCalcDerivatives> DiscambStructureFactorCalculator::d_f_calc_d_params() {
 
 FCalcDerivatives DiscambStructureFactorCalculator::d_f_calc_hkl_d_params(
     int h, int k, int l) {
-    update_calculator();
     FCalcDerivatives out;
     out.hkl = {h, k, l};
     vector<bool> count_atom_contribution(crystal.atoms.size(), true);
@@ -67,9 +69,8 @@ FCalcDerivatives DiscambStructureFactorCalculator::d_f_calc_hkl_d_params(
 vector<TargetFunctionAtomicParamDerivatives>
 DiscambStructureFactorCalculator::d_target_d_params(
     vector<complex<double>> d_target_d_f_calc) {
-    update_calculator();
     assert(hkl.size() == d_target_d_f_calc.size());
-    vector<complex<double>> sf;
+    mFcalc.resize(hkl.size());
     vector<TargetFunctionAtomicParamDerivatives> out;
     out.resize(crystal.atoms.size());
     vector<bool> count_atom_contribution(crystal.atoms.size(), true);
@@ -77,10 +78,12 @@ DiscambStructureFactorCalculator::d_target_d_params(
     mCalculator->calculateStructureFactorsAndDerivatives(
         crystal.atoms,
         hkl,
-        sf,
+        mFcalc,
         out,
         d_target_d_f_calc,
         count_atom_contribution);
+
+    mStale = false;
 
     // Ensure correct convention (U_cart and Cartesian)
     structural_parameters_convention::AdpConvention ac = crystal.adpConvention;
@@ -126,4 +129,5 @@ void DiscambStructureFactorCalculator::update_calculator() {
     assert(anomalous.size() == crystal.atoms.size());
     mCalculator->setAnomalous(anomalous);
     mConverter.set(crystal.unitCell);
+    mStale = true;
 }
