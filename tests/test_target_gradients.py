@@ -237,6 +237,7 @@ class TestTargetGradients:
 
         from time import perf_counter
 
+        w.set_indices(d_target_d_f_calc.indices())
         start_slow = perf_counter()
         w.f_calc()
         end_slow = perf_counter()
