@@ -232,7 +232,6 @@ class TestTargetGradients:
         lysozyme.shake_occupancies()
 
         model = mmtbx.f_model.manager(f_obs=f_obs, xray_structure=lysozyme)
-        model.sfg_params.algorithm = "direct"
         target = model.target_functor()(compute_gradients=True)
         d_target_d_f_calc = target.d_target_d_f_calc_work()
 

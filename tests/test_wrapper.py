@@ -152,7 +152,7 @@ class TestFCalc:
         w.update_structure(tyrosine)  # make it stale
         start_update = perf_counter()
         w.f_calc()
-        end_update = perf_counter
+        end_update = perf_counter()
         time_update = end_update - start_update
         assert time_update > time_slow / 10
 
