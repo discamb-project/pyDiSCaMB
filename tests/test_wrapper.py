@@ -47,7 +47,7 @@ class TestInit:
                 w.set_indices(hkl)
                 assert len(w.hkl) == 1000
 
-        instatiate_wrapper(5) # Run a few times first, just in case 
+        instatiate_wrapper(5)  # Run a few times first, just in case
 
         n = 400
         p = psutil.Process()
@@ -59,10 +59,13 @@ class TestInit:
             assert mem_before.vms == mem_after.vms
             assert mem_before.rss == mem_after.rss
         except AssertionError:
-            limit_per_instance = 1000 # bytes
-            warnings.warn(f"Not exact match for memory, retrying with max {limit_per_instance} bytes per instance")
+            limit_per_instance = 1000  # bytes
+            warnings.warn(
+                f"Not exact match for memory, retrying with max {limit_per_instance} bytes per instance"
+            )
             assert abs(mem_before.vms - mem_after.vms) / n < limit_per_instance
             assert abs(mem_before.rss - mem_after.rss) / n < limit_per_instance
+
 
 class TestFCalc:
     def test_simple(self, random_structure):

@@ -47,6 +47,7 @@ pydiscamb_master_params = iotbx.phil.parse(
 """
 )
 
+
 def scope_to_taam_dict(scope: scope_extract) -> dict[str, Any]:
     assert hasattr(scope, "discamb")
     taam_params = scope.discamb.taam
@@ -60,6 +61,7 @@ def scope_to_taam_dict(scope: scope_extract) -> dict[str, Any]:
     out["algorithm"] = out.pop("implementation")
 
     return out
+
 
 class gradients_taam(gradients_direct):
     # TODO consider moving this class to cctbx
@@ -78,7 +80,7 @@ class gradients_taam(gradients_direct):
             extra_params_dict = {}
         else:
             extra_params_dict = scope_to_taam_dict(extra_params)
-            
+
         gradients_base.__init__(
             self,
             manager,
