@@ -1,57 +1,65 @@
+from typing import Any
+
 from cctbx.xray.structure_factors.gradients_base import gradients_base
 from cctbx.xray.structure_factors.gradients_direct import gradients_direct
 from cctbx.xray.structure_factors.manager import managed_calculation_base
 from cctbx.xray.structure_factors.from_scatterers_direct import from_scatterers_direct
 from cctbx.array_family import flex
 import iotbx.phil
+from libtbx.phil import scope_extract
 
 from pydiscamb.discamb_wrapper import DiscambWrapperCached, FCalcMethod
+from pydiscamb.taam_parameters import get_default_databank
 
 pydiscamb_master_params = iotbx.phil.parse(
-    """
+    f"""
     taam 
     .help = Transferrable Aspherical Atom Model (TAAM)-specific parameters
-    {
-        electron_scattering = None
+    {{
+        electron_scattering = False
             .type = bool
             .help = Whether to use Mott-Bethe to convert x-ray scattering factors to electron scattering factors. 
-        bank_path = None
+        bank_path = {get_default_databank()}
             .type = str
             .help = Path to TAAM parameter bank file
-        assignment_info = None
-            .type = str
-            .help = Path to output log file of atom type assignment
-        assignment_csv = None
-            .type = str
-            .help = Path to output csv file of atom type assignment
-        parameters_info = None
-            .type = str
-            .help = Path to output log file of multipolar parameters
-        multipole_cif = None
-            .type = str
-            .help = Path to output multipolar cif file
-        unit_cell_charge = None
+        unit_cell_charge = 0.0
             .type = float
             .help = Unit cell charge, used to scale multipolar parameters
-        scale = None
+        do_charge_scaling = True
             .type = bool
             .help = Whether to scale multipolar parameters to fit the given charge
-        n_cores = None
+        n_cores = 1
             .type = int
             .help = Number of cores to use for computing
         table = None
             .type = str
-            .help = Scattering table to use for untyped atoms
-        iam_electron_scattering = None
+            .help = Scattering table to use for untyped atoms. Inferred from the structure if not given
+        iam_electron_scattering = False
             .type = bool
             .help = Whether to use Mott-Bethe on untyped atoms to convert x-ray scattering factors to electron scattering factors. 
-        frozen_lcs = None
+        frozen_lcs = False
             .type = bool
             .help = Whether to re-calculate local coordinate systems for all atoms when updating the structure
-    }
+        implementation = *standard large_molecule
+            .type = choice
+            .help = Choice of implementation for calculations. "large_molecules" has some optimizations for this usecase
+    }}
 """
 )
 
+def scope_to_taam_dict(scope: scope_extract) -> dict[str, Any]:
+    assert hasattr(scope, "discamb")
+    taam_params = scope.discamb.taam
+    out = {
+        key: getattr(taam_params, key)
+        for key in dir(taam_params)
+        if key[:2] != "__" and getattr(taam_params, key) is not None
+    }
+    # Manually translate params renamed in the scope
+    out["scale"] = out.pop("do_charge_scaling")
+    out["algorithm"] = out.pop("implementation")
+
+    return out
 
 class gradients_taam(gradients_direct):
     # TODO consider moving this class to cctbx
@@ -69,14 +77,8 @@ class gradients_taam(gradients_direct):
         if extra_params is None:
             extra_params_dict = {}
         else:
-            assert hasattr(extra_params, "discamb")
-            taam_params = extra_params.discamb.taam
-            # Translate to dict
-            extra_params_dict = {
-                key: getattr(taam_params, key)
-                for key in dir(taam_params)
-                if key[:2] != "__" and getattr(taam_params, key) is not None
-            }
+            extra_params_dict = scope_to_taam_dict(extra_params)
+            
         gradients_base.__init__(
             self,
             manager,
@@ -109,14 +111,8 @@ class from_scatterers_taam(from_scatterers_direct):
         if extra_params is None:
             extra_params_dict = {}
         else:
-            assert hasattr(extra_params, "discamb")
-            taam_params = extra_params.discamb.taam
-            # Translate to dict
-            extra_params_dict = {
-                key: getattr(taam_params, key)
-                for key in dir(taam_params)
-                if key[:2] != "__" and getattr(taam_params, key) is not None
-            }
+            extra_params_dict = scope_to_taam_dict(extra_params)
+
         # TODO add timings
         managed_calculation_base.__init__(
             self, manager, xray_structure, miller_set, algorithm="taam"
