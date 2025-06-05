@@ -154,8 +154,7 @@ class CctbxGradientsResult:
             if s.grad_u_iso():
                 self._d_target_d_u_iso[i] = grads[i].adp_derivatives[0]
             if s.grad_u_aniso():
-                for j in range(6):
-                    self._d_target_d_u_star[i] = grads[i].adp_derivatives[j]
+                self._d_target_d_u_star[i] = grads[i].adp_derivatives
             if s.grad_occupancy():
                 self._d_target_d_occupancy[i] = grads[i].occupancy_derivatives
 
