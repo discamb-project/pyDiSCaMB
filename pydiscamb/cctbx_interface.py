@@ -16,33 +16,34 @@ pydiscamb_master_params = iotbx.phil.parse(
     taam 
     .help = Transferrable Aspherical Atom Model (TAAM)-specific parameters
     {{
-        electron_scattering = False
+        use_mott_bethe = False
             .type = bool
             .help = Whether to use Mott-Bethe to convert x-ray scattering factors to electron scattering factors. 
-        bank_path = {get_default_databank()}
-            .type = str
-            .help = Path to TAAM parameter bank file
         unit_cell_charge = 0.0
             .type = float
             .help = Unit cell charge, used to scale multipolar parameters
-        do_charge_scaling = True
+        scale_pval_to_charge = True
             .type = bool
             .help = Whether to scale multipolar parameters to fit the given charge
-        n_cores = 1
+        nproc = 1
             .type = int
             .help = Number of cores to use for computing
-        table = None
+        scattering_table_untyped = None
             .type = str
             .help = Scattering table to use for untyped atoms. Inferred from the structure if not given
-        iam_electron_scattering = False
+        use_mott_bethe_untyped = False
             .type = bool
             .help = Whether to use Mott-Bethe on untyped atoms to convert x-ray scattering factors to electron scattering factors. 
-        frozen_lcs = False
+        freeze_local_coordinate_system = False
             .type = bool
             .help = Whether to re-calculate local coordinate systems for all atoms when updating the structure
         implementation = *standard large_molecule
             .type = choice
             .help = Choice of implementation for calculations. "large_molecules" has some optimizations for this usecase
+        bank_path = {get_default_databank()}
+            .type = str
+            .help = Path to TAAM parameter bank file
+            .expert_level = 2
     }}
 """
 )
@@ -57,7 +58,11 @@ def scope_to_taam_dict(scope: scope_extract) -> dict[str, Any]:
         if key[:2] != "__" and getattr(taam_params, key) is not None
     }
     # Manually translate params renamed in the scope
-    out["scale"] = out.pop("do_charge_scaling")
+    out["electron_scattering"] = out.pop("use_mott_bethe")
+    out["scale"] = out.pop("scale_pval_to_charge")
+    out["n_cores"] = out.pop("nproc")
+    out["electron_scattering_iam"] = out.pop("use_mott_bethe_untyped")
+    out["frozen_lcs"] = out.pop("freeze_local_coordinate_system")
     out["algorithm"] = out.pop("implementation")
 
     return out
