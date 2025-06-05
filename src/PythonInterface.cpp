@@ -8,11 +8,10 @@ using namespace discamb;
 
 namespace py = pybind11;
 
-PythonInterface::PythonInterface(py::object &structure,
-                                 nlohmann::json calculator_params)
+PythonInterface::PythonInterface(py::object &structure, py::dict kwargs)
     : mStructure(structure),
       DiscambStructureFactorCalculator(
-          calculator_params, crystal_from_xray_structure(structure),
+          kwargs.cast<nlohmann::json>(), crystal_from_xray_structure(structure),
           anomalous_from_xray_structure(structure)) {};
 
 void PythonInterface::set_indices(py::object &indices) {
