@@ -49,7 +49,7 @@ class CctbxGradientsResult:
     ):
         w = DiscambWrapperCached(xrs, method, **kwargs)
         w.set_indices(miller_set.indices())
-        grads = w.d_target_d_params(list(d_target_d_f_calc))
+        grads = w.d_target_d_params(list(d_target_d_f_calc.data()))
 
         self._d_target_d_site_frac = flex.vec3_double(
             xrs.scatterers().size(), (0, 0, 0)
