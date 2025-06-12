@@ -1,13 +1,12 @@
+import csv
+import os
+import tempfile
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Tuple, Union, overload
-import csv
-import tempfile
-import os
 
-from cctbx.array_family import flex
 from cctbx import miller
-
+from cctbx.array_family import flex
 from pydiscamb._cpp_module import (
     FCalcDerivatives,
     PythonInterface,
