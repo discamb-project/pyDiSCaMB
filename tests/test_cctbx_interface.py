@@ -4,6 +4,7 @@ from iotbx.phil import parse
 
 from pydiscamb.cctbx_interface import *
 
+
 class TestCctbxGradients:
 
     @pytest.fixture
@@ -17,7 +18,7 @@ class TestCctbxGradients:
         target = model.target_functor()(compute_gradients=True)
         d_target_d_f_calc = target.d_target_d_f_calc_work()
         return f_obs, d_target_d_f_calc, tyrosine
-    
+
     def test_init(self, d_tyrosine):
         f_obs, d_target_d_f_calc, tyrosine = d_tyrosine
         res = gradients_taam(
@@ -64,7 +65,9 @@ class TestCctbxGradients:
         )
 
         # Checking all, but only the first will be different
-        assert not pytest.approx(res1.d_target_d_site_frac()) == list(res2.d_target_d_site_frac())
+        assert not pytest.approx(res1.d_target_d_site_frac()) == list(
+            res2.d_target_d_site_frac()
+        )
 
 
 class TestCctbxFcalc:
