@@ -1,10 +1,12 @@
 import pytest
 from mmtbx.f_model import manager
 from iotbx.phil import parse
+from conftest import SKIP_IF_CCTBX_PR_NOT_MERGED
 
 from pydiscamb.cctbx_interface import *
 
 
+@SKIP_IF_CCTBX_PR_NOT_MERGED
 class TestCctbxGradients:
 
     @pytest.fixture
@@ -70,6 +72,7 @@ class TestCctbxGradients:
         )
 
 
+@SKIP_IF_CCTBX_PR_NOT_MERGED
 class TestCctbxFcalc:
     def test_init(self, tyrosine):
         f_obs = tyrosine.structure_factors(d_min=1.7).f_calc()

@@ -1,5 +1,11 @@
 import pytest
 from cctbx.xray import structure
+from cctbx.xray.structure_factors import misc
+
+SKIP_IF_CCTBX_PR_NOT_MERGED = pytest.mark.skipif(
+    not hasattr(misc, "pydiscamb_is_installed"),
+    reason="PR #1060 in cctbx must be merged",
+)
 
 
 @pytest.fixture
