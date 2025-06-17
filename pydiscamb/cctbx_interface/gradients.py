@@ -49,7 +49,6 @@ class CctbxGradientsResult:
     ):
         w = DiscambWrapperCached(xrs, method, **kwargs)
         w.set_indices(miller_set.indices())
-        grads = w.d_target_d_params(list(d_target_d_f_calc.data()))
 
         self._d_target_d_site_frac = flex.vec3_double(
             xrs.scatterers().size(), (0, 0, 0)
@@ -62,6 +61,8 @@ class CctbxGradientsResult:
         self._d_target_d_fp = flex.double(xrs.scatterers().size(), 0)
         self._d_target_d_fdp = flex.double(xrs.scatterers().size(), 0)
 
+
+        grads = w.selected_d_target_d_params(list(d_target_d_f_calc.data()))
         for i, s in enumerate(xrs.scatterer_flags()):
             if s.grad_site():
                 self._d_target_d_site_frac[i] = grads[i].site_derivatives

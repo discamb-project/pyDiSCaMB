@@ -66,6 +66,7 @@ FCalcDerivatives DiscambStructureFactorCalculator::d_f_calc_hkl_d_params(
     return out;
 }
 
+vector<TargetFunctionAtomicParamDerivatives>
 DiscambStructureFactorCalculator::d_target_d_params(
     vector<complex<double>> d_target_d_f_calc) {
     return selected_d_target_d_params(d_target_d_f_calc, true, true,
