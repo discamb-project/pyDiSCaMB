@@ -61,7 +61,6 @@ class CctbxGradientsResult:
         self._d_target_d_fp = flex.double(xrs.scatterers().size(), 0)
         self._d_target_d_fdp = flex.double(xrs.scatterers().size(), 0)
 
-
         grads = w.selected_d_target_d_params(list(d_target_d_f_calc.data()))
         for i, s in enumerate(xrs.scatterer_flags()):
             if s.grad_site():
