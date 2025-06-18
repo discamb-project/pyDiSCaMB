@@ -1,5 +1,7 @@
 import sys
+
 import pytest
+
 from pydiscamb import DiscambWrapper, FCalcMethod
 from pydiscamb.taam_parameters import get_TAAM_databanks, is_MATTS_installed
 

@@ -93,6 +93,17 @@ PYBIND11_MODULE(_cpp_module, m) {
             py::arg("d_target_d_f_calc")
         )
         .def(
+            "selected_d_target_d_params",
+            &PythonInterface::selected_d_target_d_params,
+            py::return_value_policy::take_ownership,
+            R"pbdoc(Calculate the derivatives of a target function)pbdoc",
+            py::arg("d_target_d_f_calc"),
+            py::arg("site"),
+            py::arg("adp"),
+            py::arg("occupancy"),
+            py::arg("fp")
+        )
+        .def(
             "set_indices",
             &PythonInterface::set_indices,
             R"pbdoc(Set indices for calculating f_calc. Input must be iterable of tuples with three ints)pbdoc",

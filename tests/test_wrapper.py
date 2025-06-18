@@ -1,7 +1,9 @@
 import sys
+
 import pytest
 from cctbx import miller
 from cctbx.array_family import flex
+
 from pydiscamb import DiscambWrapper, FCalcMethod
 from pydiscamb.discamb_wrapper import DiscambWrapperCached
 
@@ -38,7 +40,9 @@ class TestInit:
         ],
     )
     def test_no_memory_leak(self, tyrosine, method):
-        import psutil, warnings
+        import warnings
+
+        import psutil
 
         def instatiate_wrapper(n):
             hkl = flex.miller_index(1000, (1, 2, 3))
@@ -137,7 +141,6 @@ class TestFCalc:
         ):
             w.f_calc("incorrect input")
 
-    @pytest.mark.slow
     def test_stale(self, tyrosine):
         """
         Computing fcalc multiple times without updates should be

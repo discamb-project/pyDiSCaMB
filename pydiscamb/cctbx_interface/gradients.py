@@ -49,7 +49,6 @@ class CctbxGradientsResult:
     ):
         w = DiscambWrapperCached(xrs, method, **kwargs)
         w.set_indices(miller_set.indices())
-        grads = w.d_target_d_params(list(d_target_d_f_calc.data()))
 
         self._d_target_d_site_frac = flex.vec3_double(
             xrs.scatterers().size(), (0, 0, 0)
@@ -62,13 +61,28 @@ class CctbxGradientsResult:
         self._d_target_d_fp = flex.double(xrs.scatterers().size(), 0)
         self._d_target_d_fdp = flex.double(xrs.scatterers().size(), 0)
 
+        grads = w.selected_d_target_d_params(
+            list(d_target_d_f_calc.data()),
+            any(s.grad_site() for s in xrs.scatterer_flags()),
+            any(s.grad_u_iso() or s.grad_u_aniso() for s in xrs.scatterer_flags()),
+            any(s.grad_occupancy() for s in xrs.scatterer_flags()),
+            any(s.grad_fp() or s.grad_fdp() for s in xrs.scatterer_flags()),
+        )
         for i, s in enumerate(xrs.scatterer_flags()):
             if s.grad_site():
                 self._d_target_d_site_frac[i] = grads[i].site_derivatives
             if s.grad_u_iso():
                 self._d_target_d_u_iso[i] = grads[i].adp_derivatives[0]
             if s.grad_u_aniso():
-                self._d_target_d_u_star[i] = grads[i].adp_derivatives
+                # Nicer error message if grad flag is set without setting scatterer to aniso
+                try:
+                    self._d_target_d_u_star[i] = grads[i].adp_derivatives
+                except TypeError as e:
+                    if str(e) == "'int' object is not iterable":
+                        raise ValueError(
+                            "Attempted to compute aniso gradient for iso scatterer"
+                        ) from e
+                    raise e
             if s.grad_occupancy():
                 self._d_target_d_occupancy[i] = grads[i].occupancy_derivatives
 

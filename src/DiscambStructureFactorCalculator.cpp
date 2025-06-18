@@ -69,19 +69,29 @@ FCalcDerivatives DiscambStructureFactorCalculator::d_f_calc_hkl_d_params(
 vector<TargetFunctionAtomicParamDerivatives>
 DiscambStructureFactorCalculator::d_target_d_params(
     vector<complex<double>> d_target_d_f_calc) {
+    return selected_d_target_d_params(
+        d_target_d_f_calc, true, true, true, true);
+}
+
+vector<TargetFunctionAtomicParamDerivatives>
+DiscambStructureFactorCalculator::selected_d_target_d_params(
+    vector<complex<double>> d_target_d_f_calc, bool site, bool adp,
+    bool occupancy, bool fp) {
     assert(hkl.size() == d_target_d_f_calc.size());
     mFcalc.resize(hkl.size());
     vector<TargetFunctionAtomicParamDerivatives> out;
     out.resize(crystal.atoms.size());
     vector<bool> count_atom_contribution(crystal.atoms.size(), true);
 
+    DerivativesSelector ds{site, adp, occupancy, fp};
     mCalculator->calculateStructureFactorsAndDerivatives(
         crystal.atoms,
         hkl,
         mFcalc,
         out,
         d_target_d_f_calc,
-        count_atom_contribution);
+        count_atom_contribution,
+        ds);
 
     mStale = false;
 
