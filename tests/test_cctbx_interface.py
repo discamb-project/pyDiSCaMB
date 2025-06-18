@@ -131,6 +131,7 @@ class TestResultsObjects:
         if adp == "iso":
             xrs.scatterers()[0].flags.set_grad_u_iso(True)
         if adp == "aniso":
+            xrs.scatterers()[0].convert_to_anisotropic(xrs.unit_cell())
             xrs.scatterers()[0].flags.set_grad_u_aniso(True)
         if oc:
             xrs.scatterers()[0].flags.set_grad_occupancy(True)
@@ -149,3 +150,12 @@ class TestResultsObjects:
         else:
             assert all(s == 0 for s in res.d_target_d_u_iso())
             assert all(all(i == 0 for i in s) for s in res.d_target_d_u_star())
+    
+    def test_grad_error_with_iso_aniso_flags(self, d_tyrosine):
+        _, d_target_d_f_calc, tyrosine = d_tyrosine
+        xrs = tyrosine.deep_copy_scatterers()
+        xrs.scatterers()[0].convert_to_isotropic(xrs.unit_cell())
+        xrs.scatterers()[0].flags.set_grad_u_aniso(True)
+
+        with pytest.raises(ValueError, match="Attempted to compute aniso gradient for iso scatterer"):
+            CctbxGradientsResult(xrs, d_target_d_f_calc.set(), d_target_d_f_calc, 0, FCalcMethod.TAAM, algorithm="macromol")
