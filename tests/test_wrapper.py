@@ -137,7 +137,6 @@ class TestFCalc:
         ):
             w.f_calc("incorrect input")
 
-    @pytest.mark.slow
     def test_stale(self, tyrosine):
         """
         Computing fcalc multiple times without updates should be

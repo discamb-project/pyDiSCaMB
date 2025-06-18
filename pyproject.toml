@@ -42,3 +42,4 @@ markers = [
   "slow",
   "veryslow",
 ]
+xfail_strict=true

@@ -124,7 +124,7 @@ def test_n_gaussian_table():
     assert score < 0.0005
 
 
-@pytest.mark.slow
+@pytest.mark.veryslow
 def test_lysozyme_high_res(lysozyme):
     score = get_IAM_correctness_score(lysozyme, d_min=0.5)
     assert score < 0.0002

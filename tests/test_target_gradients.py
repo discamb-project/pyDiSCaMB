@@ -238,7 +238,7 @@ class TestTargetGradients:
     @pytest.mark.parametrize("adp", [True, False])
     @pytest.mark.parametrize("oc", [True, False])
     @pytest.mark.parametrize("fp", [True, False])
-    def test_discamb_flags(self, tyrosine, algorithm, site, adp, oc, fp):
+    def test_discamb_flags_taam(self, tyrosine, algorithm, site, adp, oc, fp):
         xrs = tyrosine
 
         import random
@@ -282,6 +282,57 @@ class TestTargetGradients:
 
         if site and adp and oc and algorithm == "standard":
             assert False, "All flags are set when algorithm is standard"
+
+    @pytest.mark.xfail(reason="IAM does not support gradient flags yet")
+    @pytest.mark.slow
+    @pytest.mark.parametrize("site", [True, False])
+    @pytest.mark.parametrize("adp", [True, False])
+    @pytest.mark.parametrize("oc", [True, False])
+    @pytest.mark.parametrize("fp", [True, False])
+    def test_discamb_flags_iam(self, tyrosine, site, adp, oc, fp):
+        xrs = tyrosine
+
+        import random
+
+        random.seed(0)
+        flex.set_random_seed(0)
+
+        f_obs = abs(xrs.structure_factors(d_min=2).f_calc())
+        xrs.shake_sites_in_place(rms_difference=0.1)
+        model = mmtbx.f_model.manager(f_obs=f_obs, xray_structure=xrs)
+        target = model.target_functor()(compute_gradients=True)
+        d_target_d_f_calc = target.d_target_d_f_calc_work()
+
+        w = DiscambWrapper(xrs)
+        w.set_indices(d_target_d_f_calc.indices())
+        grads = w.selected_d_target_d_params(
+            list(d_target_d_f_calc.data()),
+            site,
+            adp,
+            oc,
+            fp,
+        )
+
+        if site:
+            assert any(any(i != 0 for i in g.site_derivatives) for g in grads)
+        else:
+            assert all(all(i == 0 for i in g.site_derivatives) for g in grads)
+
+        if adp:
+            assert any(any(i != 0 for i in g.adp_derivatives) for g in grads)
+        else:
+            assert all(all(i == 0 for i in g.adp_derivatives) for g in grads)
+
+        if oc:
+            assert any(g.occupancy_derivatives != 0 for g in grads)
+        else:
+            assert all(g.occupancy_derivatives == 0 for g in grads)
+
+        # if fp:
+        #     assert all(g.anomalous for g in grads)
+
+        if site and adp and oc:
+            assert False, "Default behaviour is all grads, we xfail it"
 
     @pytest.mark.slow
     def test_stale(self, lysozyme):
