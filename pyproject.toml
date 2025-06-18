@@ -46,10 +46,13 @@ editable.rebuild = false
 # The CMake build directory. Defaults to a unique temporary directory.
 build-dir = "build"
 
-[[tool.scikit-build.overrides]]
-if.state = "editable"
-cmake.build-type = "Debug"
+# Message to display after successful install
+messages.after-success = " ====== Release version successfully built ====== "
 
+[[tool.scikit-build.overrides]]
+if.state = "^editable"
+cmake.build-type = "Debug"
+messages.after-success = " ====== Debug version successfully built ====== "
 
 [tool.pytest.ini_options]
 testpaths = [
