@@ -79,7 +79,9 @@ class CctbxGradientsResult:
                     self._d_target_d_u_star[i] = grads[i].adp_derivatives
                 except TypeError as e:
                     if str(e) == "'int' object is not iterable":
-                        raise ValueError("Attempted to compute aniso gradient for iso scatterer") from e
+                        raise ValueError(
+                            "Attempted to compute aniso gradient for iso scatterer"
+                        ) from e
                     raise e
             if s.grad_occupancy():
                 self._d_target_d_occupancy[i] = grads[i].occupancy_derivatives

@@ -3,10 +3,14 @@ from mmtbx.f_model import manager
 from iotbx.phil import parse
 from conftest import SKIP_IF_CCTBX_PR_NOT_MERGED
 
-from pydiscamb.cctbx_interface import gradients_taam, from_scatterers_taam, pydiscamb_master_params
+from pydiscamb.cctbx_interface import (
+    gradients_taam,
+    from_scatterers_taam,
+)
 from pydiscamb.cctbx_interface.from_scatterers import CctbxFromScatterersResult
 from pydiscamb.cctbx_interface.gradients import CctbxGradientsResult
 from pydiscamb.discamb_wrapper import FCalcMethod
+
 
 @pytest.fixture
 def d_tyrosine(tyrosine):
@@ -20,10 +24,9 @@ def d_tyrosine(tyrosine):
     d_target_d_f_calc = target.d_target_d_f_calc_work()
     return f_obs, d_target_d_f_calc, tyrosine
 
+
 @SKIP_IF_CCTBX_PR_NOT_MERGED
 class TestCctbxObjects:
-
-    
 
     def test_grads_init(self, d_tyrosine):
         f_obs, d_target_d_f_calc, tyrosine = d_tyrosine
@@ -112,12 +115,22 @@ class TestResultsObjects:
 
     def test_grads_init(self, d_tyrosine):
         _, d_target_d_f_calc, tyrosine = d_tyrosine
-        res = CctbxGradientsResult(tyrosine, d_target_d_f_calc.set(), d_target_d_f_calc, 0, FCalcMethod.IAM)
+        res = CctbxGradientsResult(
+            tyrosine,
+            d_target_d_f_calc.set(),
+            d_target_d_f_calc,
+            0,
+            FCalcMethod.IAM,
+        )
         assert hasattr(res, "packed")
-    
+
     def test_fcalc_init(self, d_tyrosine):
         _, d_target_d_f_calc, tyrosine = d_tyrosine
-        res = CctbxFromScatterersResult(tyrosine, d_target_d_f_calc.set(), FCalcMethod.IAM)
+        res = CctbxFromScatterersResult(
+            tyrosine,
+            d_target_d_f_calc.set(),
+            FCalcMethod.IAM,
+        )
         assert hasattr(res, "f_calc")
 
     @pytest.mark.parametrize("site", [True, False])
@@ -136,8 +149,14 @@ class TestResultsObjects:
         if oc:
             xrs.scatterers()[0].flags.set_grad_occupancy(True)
 
-        res = CctbxGradientsResult(xrs, d_target_d_f_calc.set(), d_target_d_f_calc, 0, FCalcMethod.TAAM, algorithm="macromol")
-
+        res = CctbxGradientsResult(
+            xrs,
+            d_target_d_f_calc.set(),
+            d_target_d_f_calc,
+            0,
+            FCalcMethod.TAAM,
+            algorithm="macromol",
+        )
 
         assert all(all(i == 0 for i in s) for s in res.d_target_d_site_frac()) ^ site
         assert all(s == 0 for s in res.d_target_d_occupancy()) ^ oc
@@ -150,12 +169,21 @@ class TestResultsObjects:
         else:
             assert all(s == 0 for s in res.d_target_d_u_iso())
             assert all(all(i == 0 for i in s) for s in res.d_target_d_u_star())
-    
+
     def test_grad_error_with_iso_aniso_flags(self, d_tyrosine):
         _, d_target_d_f_calc, tyrosine = d_tyrosine
         xrs = tyrosine.deep_copy_scatterers()
         xrs.scatterers()[0].convert_to_isotropic(xrs.unit_cell())
         xrs.scatterers()[0].flags.set_grad_u_aniso(True)
 
-        with pytest.raises(ValueError, match="Attempted to compute aniso gradient for iso scatterer"):
-            CctbxGradientsResult(xrs, d_target_d_f_calc.set(), d_target_d_f_calc, 0, FCalcMethod.TAAM, algorithm="macromol")
+        with pytest.raises(
+            ValueError, match="Attempted to compute aniso gradient for iso scatterer"
+        ):
+            CctbxGradientsResult(
+                xrs,
+                d_target_d_f_calc.set(),
+                d_target_d_f_calc,
+                0,
+                FCalcMethod.TAAM,
+                algorithm="macromol",
+            )
