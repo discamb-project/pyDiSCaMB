@@ -8,7 +8,7 @@ from libtbx.utils import null_out
 
 from pydiscamb.discamb_wrapper.fcalc_method import FCalcMethod
 
-Self = TypeVar("Self", bound="FactoryMethodMixin")
+Self = TypeVar("Self", bound="FactoryMethodsMixin")
 
 
 class FactoryMethodsMixin:
