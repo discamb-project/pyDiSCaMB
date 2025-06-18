@@ -61,7 +61,13 @@ class CctbxGradientsResult:
         self._d_target_d_fp = flex.double(xrs.scatterers().size(), 0)
         self._d_target_d_fdp = flex.double(xrs.scatterers().size(), 0)
 
-        grads = w.selected_d_target_d_params(list(d_target_d_f_calc.data()))
+        grads = w.selected_d_target_d_params(
+            list(d_target_d_f_calc.data()),
+            any(s.grad_site() for s in xrs.scatterer_flags()),
+            any(s.grad_u_iso() or s.grad_u_aniso() for s in xrs.scatterer_flags()),
+            any(s.grad_occupancy() for s in xrs.scatterer_flags()),
+            any(s.grad_fp() or s.grad_fdp() for s in xrs.scatterer_flags()),
+        )
         for i, s in enumerate(xrs.scatterer_flags()):
             if s.grad_site():
                 self._d_target_d_site_frac[i] = grads[i].site_derivatives
