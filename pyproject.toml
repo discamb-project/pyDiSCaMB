@@ -28,10 +28,28 @@ requires = [
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
+# The build type to use when building the project.
+cmake.build-type = "Release"
+
+# Fill out extra tags that are not required.
 wheel.expand-macos-universal-tags = true
 
-[tool.scikit-build.cmake]
-build-type = "Release"
+# Select the editable mode to use. Can be "redirect" (default) or "inplace".
+editable.mode = "redirect"
+
+# Turn on verbose output for the editable mode rebuilds.
+editable.verbose = true
+
+# Rebuild the project when the package is imported.
+editable.rebuild = false
+
+# The CMake build directory. Defaults to a unique temporary directory.
+build-dir = "build"
+
+[[tool.scikit-build.overrides]]
+if.state = "editable"
+cmake.build-type = "Debug"
+
 
 [tool.pytest.ini_options]
 testpaths = [
