@@ -31,14 +31,14 @@ class DiscambStructureFactorCalculator {
 
     std::vector<FCalcDerivatives> d_f_calc_d_params();
     FCalcDerivatives d_f_calc_hkl_d_params(int h, int k, int l);
-    
+
     std::vector<discamb::TargetFunctionAtomicParamDerivatives>
     d_target_d_params(std::vector<std::complex<double>> d_target_d_f_calc);
 
     std::vector<discamb::TargetFunctionAtomicParamDerivatives>
     selected_d_target_d_params(
-        std::vector<std::complex<double>> d_target_d_f_calc,
-        bool site, bool adp, bool occupancy, bool fp);
+        std::vector<std::complex<double>> d_target_d_f_calc, bool site,
+        bool adp, bool occupancy, bool fp);
 
     std::vector<discamb::Vector3i> hkl;
 
