@@ -2,83 +2,77 @@
 
 ![Tests](https://github.com/viljarjf/pyDiSCaMB/actions/workflows/test.yaml/badge.svg?branch=main)
 
-Simple pybind11 wrapper to communicate with DiSCaMB from cctbx
-
-`git clone --recursive git@github.com:viljarjf/pyDiSCaMB.git`
+Simple pybind11 wrapper to communicate with DiSCaMB from cctbx, built with scikit-build and cmake.
 
 **LICENSE NOTE**
+
 Recursive cloning installs the [MATTS databank](https://www.github.com/discamb-project/MATTS), which uses a license restricting commercial use.
 Building the project with the databank will **include the databank in the built module**, which should be taken into account if the build is distributed.
 
-## Installation
+# Installation
 
-Tested with Cmake 3.22.3, gcc 11.4 on WSL2 ubuntu in Windows 11.
-These can be installed with conda (`conda install gcc=11.4`).
-Also verified using MSVC 19.41.
+Tested on ubuntu, macOS, and windows, on python 3.9-3.12.
+Currently (June 2025) not available as pre-built packages, manual installation instructions follow:
 
+## Using Conda
+A environment file is provided. You also need a C++ compiler, which is in a seperate file depending on your operating system.
+Replace the brackets below with the appropriate choice (e.g. `compiler_macOS-latest.yml`).
 ```bash
-conda create --name pyDiSCaMB_dev python=3.8 -y
-conda activate pyDiSCaMB_dev
-conda install openmp -c conda-forge -y
-pip install .
+git clone --recursive git@github.com:viljarjf/pyDiSCaMB.git
+conda create -f pyDiSCaMB/conda/dev_env.yml
+conda env update --file pyDiSCaMB/conda/compiler_[any of "macOS", "ubuntu", "windows"]-latest.yml
+conda activate pydiscamb-dev
+pip install pyDiSCaMB/
 ```
 
-## Build with conda
-Tested on Ubuntu WSL2.
-
-Install conda-build [(recommended to do in base env)](https://docs.conda.io/projects/conda-build/en/latest/install-conda-build.html)
-
+## Using Phenix
+With [Phenix](https://phenix-online.org/), installation is even simpler:
 ```bash
-conda activate base
-conda install conda-build
+git clone --recursive git@github.com:viljarjf/pyDiSCaMB.git
+phenix.python -m pip install pyDiSCaMB/
 ```
+Only tested on versions newer than around 2.0rc1-5500.
 
-Build the package
-```bash
-cd pyDiSCaMB
-conda build ./conda -c conda-forge
-```
-
-## Example usage
+# Example usage
 
 ```python
-from __future__ import absolute_import, division, print_function
+from pydiscamb import DiscambWrapper
 
-import pydiscamb
+wrapper = DiscambWrapper.from_cif("your_structure.cif")
+wrapper.set_d_min(2.0)
+f_calc = wrapper.f_calc()
 
-def run():
-  # Generate a random structure
-  from cctbx.development import random_structure as cctbx_random_structure
-  from cctbx.sgtbx import space_group_info
-
-  group = space_group_info(19)
-  xrs = cctbx_random_structure.xray_structure(
-      space_group_info=group,
-      elements=["Ni", "C"] * 3,
-  )
-  xrs.scattering_type_registry(table = "electron")
-
-  d_min = 2
-
-  # Calculate structure factors with cctbx
-  fcalc= xrs.structure_factors(d_min=d_min).f_calc()
-  fcalc_cctbx = fcalc.data()
-
-  # Calculate structure factors with DiSCaMB
-  fcalc_discamb = pydiscamb.calculate_structure_factors_IAM(xrs, d_min)
-
-  # Output the difference of the results
-  diff = [fc - fd for fc, fd in zip(fcalc_cctbx, fcalc_discamb)]
-  print(f"Number of reflections: {len(diff)}")
-  print(f"Mean f_calc deviation: {sum(diff) / len(diff) :.1e}")
-
-if (__name__ == "__main__"):
-  run()
+# Now do what you want with the list of structure factors
 ```
+
+# Development
+
+Feel free to open pull requests. Currently under development by Viljar Femoen.
+
+## Installation
+
+Make a fork of [https://github.com/viljarjf/pyDiSCaMB](https://github.com/viljarjf/pyDiSCaMB) and use your new URL for cloning instead.
+Otherwise the instructions are like before.
+
+To debug, install in an editable state:
+```bash
+pip install -e pyDiSCaMB/
+```
+This sets the `Debug` flag in cmake, allowing you to use e.g. gdb.
+Confirmed to work with both C++ and python breakpoints in WSL Ubuntu, using gdb and [Python C++ Debugger](https://marketplace.visualstudio.com/items/?itemName=benjamin-simmonds.pythoncpp-debug) for VS Code.
 
 ## Testing
 
+Performed automatically on multiple OSs and Python version for all pull requests.
+Can be done manually as follows:
+
 ```bash
-conda install cctbx-base pytest -c conda-forge
-pytest
+pip install pytest
+pytest pyDiSCaMB/
 ```
+
+To avoid slow or very slow tests, instead run 
+```bash
+pytest -m "not veryslow" pyDiSCaMB/
+```
+change "veryslow" for "slow" to avoid even more tests.
