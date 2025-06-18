@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, TypeVar
+from typing import TypeVar, Union
 
 import iotbx.cif
 import iotbx.pdb
@@ -7,7 +7,6 @@ import mmtbx.model
 from libtbx.utils import null_out
 
 from pydiscamb.discamb_wrapper.fcalc_method import FCalcMethod
-
 
 Self = TypeVar("Self", bound="FactoryMethodMixin")
 

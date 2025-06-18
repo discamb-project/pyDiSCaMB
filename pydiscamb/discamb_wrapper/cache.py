@@ -1,12 +1,10 @@
-from typing import Dict
+from typing import TYPE_CHECKING, Dict
 
-from pydiscamb.discamb_wrapper.fcalc_method import FCalcMethod
 from pydiscamb.discamb_wrapper.discamb_wrapper import (
-    _concat_scatterer_labels,
     DiscambWrapper,
+    _concat_scatterer_labels,
 )
-
-from typing import TYPE_CHECKING
+from pydiscamb.discamb_wrapper.fcalc_method import FCalcMethod
 
 if TYPE_CHECKING:
     from cctbx.xray.structure import structure
@@ -16,7 +14,9 @@ class DiscambWrapperCached(DiscambWrapper):
 
     __cache = {}
 
-    def __init__(self, xrs: "structure", method: FCalcMethod = FCalcMethod.IAM, **kwargs):
+    def __init__(
+        self, xrs: "structure", method: FCalcMethod = FCalcMethod.IAM, **kwargs
+    ):
         if self.__check_cache(xrs, method, kwargs) is not None:
             self.update_structure(xrs)
             return

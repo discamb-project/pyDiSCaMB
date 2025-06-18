@@ -1,10 +1,8 @@
-from typing import List
+from typing import TYPE_CHECKING, List
 
-from pydiscamb.discamb_wrapper.discamb_wrapper import DiscambWrapper
 from pydiscamb.discamb_wrapper.cache import DiscambWrapperCached
+from pydiscamb.discamb_wrapper.discamb_wrapper import DiscambWrapper
 from pydiscamb.discamb_wrapper.fcalc_method import FCalcMethod
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from cctbx.xray.structure import structure

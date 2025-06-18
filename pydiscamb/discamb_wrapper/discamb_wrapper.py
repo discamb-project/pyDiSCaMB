@@ -1,20 +1,14 @@
 import csv
 import os
 from pathlib import Path
-from typing import List, Tuple, overload
+from typing import TYPE_CHECKING, List, Tuple, overload
 
 from cctbx import miller
 from cctbx.array_family import flex
-from pydiscamb._cpp_module import (
-    FCalcDerivatives,
-    PythonInterface,
-    TargetDerivatives,
-)
 
+from pydiscamb._cpp_module import FCalcDerivatives, PythonInterface, TargetDerivatives
 from pydiscamb.discamb_wrapper.factory_methods import FactoryMethodsMixin
 from pydiscamb.discamb_wrapper.fcalc_method import FCalcMethod
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from cctbx.xray.structure import structure

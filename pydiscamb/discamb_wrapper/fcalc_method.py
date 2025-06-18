@@ -1,12 +1,10 @@
 import tempfile
 from enum import Enum
-
-from pydiscamb._cpp_module import (
-    table_alias,
-)
-from pydiscamb.taam_parameters import get_default_databank
-
 from typing import TYPE_CHECKING, Dict
+
+
+from pydiscamb._cpp_module import table_alias
+from pydiscamb.taam_parameters import get_default_databank
 
 if TYPE_CHECKING:
     from cctbx.xray.structure import structure
