@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from cctbx.xray.structure import structure
     from cctbx import miller
 
+
 def _concat_scatterer_labels(xrs: "structure") -> str:
     return "".join(s.label for s in xrs.scatterers())
 
@@ -120,6 +121,7 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
             self.set_d_min(miller_set)
             return self.f_calc()
         from cctbx import miller
+
         if not isinstance(miller_set, miller.set):
             raise ValueError("`miller_set` must be of type `cctbx.miller.set")
 

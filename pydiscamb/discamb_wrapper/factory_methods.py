@@ -49,6 +49,7 @@ class FactoryMethodsMixin:
         # Try reading as "normal" cif, might be mmcif
         if filepath.suffix == ".cif":
             import iotbx.cif
+
             cif = iotbx.cif.reader(input_string=filepath.read_text())
             structures = cif.build_crystal_structures()
             if len(structures.keys()) == 1:
@@ -104,6 +105,7 @@ class FactoryMethodsMixin:
         import iotbx.pdb
         import mmtbx.model
         from libtbx.utils import null_out
+
         pdb_inp = iotbx.pdb.input(lines=pdb_str.split("\n"), source_info=None)
         model = mmtbx.model.manager(model_input=pdb_inp, log=null_out())
         return cls(model.get_xray_structure(), method, **kwargs)
