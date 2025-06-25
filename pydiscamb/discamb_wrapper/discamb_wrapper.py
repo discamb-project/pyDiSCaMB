@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple, overload
 
-from cctbx import miller
 from cctbx.array_family import flex
 
 from pydiscamb._cpp_module import FCalcDerivatives, PythonInterface, TargetDerivatives
@@ -12,6 +11,7 @@ from pydiscamb.discamb_wrapper.fcalc_method import FCalcMethod
 
 if TYPE_CHECKING:
     from cctbx.xray.structure import structure
+    from cctbx import miller
 
 
 def _concat_scatterer_labels(xrs: "structure") -> str:
@@ -120,6 +120,8 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
         if isinstance(miller_set, (int, float)):  # d_min
             self.set_d_min(miller_set)
             return self.f_calc()
+        from cctbx import miller
+
         if not isinstance(miller_set, miller.set):
             raise ValueError("`miller_set` must be of type `cctbx.miller.set")
 

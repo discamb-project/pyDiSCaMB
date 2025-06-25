@@ -1,11 +1,6 @@
 from pathlib import Path
 from typing import TypeVar, Union
 
-import iotbx.cif
-import iotbx.pdb
-import mmtbx.model
-from libtbx.utils import null_out
-
 from pydiscamb.discamb_wrapper.fcalc_method import FCalcMethod
 
 Self = TypeVar("Self", bound="FactoryMethodsMixin")
@@ -53,6 +48,7 @@ class FactoryMethodsMixin:
 
         # Try reading as "normal" cif, might be mmcif
         if filepath.suffix == ".cif":
+            import iotbx.cif
 
             cif = iotbx.cif.reader(input_string=filepath.read_text())
             structures = cif.build_crystal_structures()
@@ -106,6 +102,9 @@ class FactoryMethodsMixin:
 
     @classmethod
     def _from_pdb_str(cls: type[Self], pdb_str: str, method, **kwargs) -> Self:
+        import iotbx.pdb
+        import mmtbx.model
+        from libtbx.utils import null_out
 
         pdb_inp = iotbx.pdb.input(lines=pdb_str.split("\n"), source_info=None)
         model = mmtbx.model.manager(model_input=pdb_inp, log=null_out())
