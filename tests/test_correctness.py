@@ -172,7 +172,19 @@ def test_lysozyme_high_res(lysozyme):
         FCalcMethod.TAAM,
     ],
 )
-def test_indices_order(method, tyrosine):
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        "standard",
+        pytest.param(
+            "macromol",
+            marks=pytest.mark.xfail(
+                reason="macromol relies on ordered incides",
+            )
+        ),
+    ],
+)
+def test_indices_order(method, algorithm, tyrosine):
     from random import randint, shuffle
 
     # 1000 random indices
@@ -190,11 +202,11 @@ def test_indices_order(method, tyrosine):
     inds_2 = [inds_1[i] for i in shuffle_inds]
 
     # Calculate fcalc with both sets of indices
-    w1 = DiscambWrapper(tyrosine, method)
+    w1 = DiscambWrapper(tyrosine, method, algorithm=algorithm)
     w1.set_indices(inds_1)
     fc1 = w1.f_calc()
 
-    w2 = DiscambWrapper(tyrosine, method)
+    w2 = DiscambWrapper(tyrosine, method, algorithm=algorithm)
     w2.set_indices(inds_2)
     fc2 = w2.f_calc()
 
