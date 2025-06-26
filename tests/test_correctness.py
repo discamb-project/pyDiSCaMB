@@ -58,10 +58,10 @@ def get_random_crystal(
 
 
 def get_IAM_correctness_score(
-    xrs: random_structure.xray_structure, d_min: float = 2
+    xrs: random_structure.xray_structure, d_min: float = 2, **kwargs
 ) -> float:
     fcalc_cctbx = xrs.structure_factors(algorithm="direct", d_min=d_min).f_calc().data()
-    fcalc_discamb = DiscambWrapper(xrs).f_calc(d_min)
+    fcalc_discamb = DiscambWrapper(xrs, **kwargs).f_calc(d_min)
 
     fcalc_discamb = flex.complex_double(fcalc_discamb)
     score = compare_structure_factors(fcalc_cctbx, fcalc_discamb)
@@ -87,6 +87,35 @@ def test_IAM_correctness_random_crystal(
         score = get_IAM_correctness_score(xrs)
         # Use 0.05% as threshold
         assert score < 0.0005
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "method",
+    [
+        FCalcMethod.IAM,
+        FCalcMethod.TAAM,
+    ],
+)
+def test_algorithm_equivalence(method: FCalcMethod, lysozyme):
+
+    d_min = 1.7
+
+    fcalc_standard = DiscambWrapper(
+        lysozyme,
+        method,
+        algorithm="standard",
+    ).f_calc(d_min)
+    fcalc_macromol = DiscambWrapper(
+        lysozyme,
+        method,
+        algorithm="macromol",
+    ).f_calc(d_min)
+
+    fcalc_standard = flex.complex_double(fcalc_standard)
+    fcalc_macromol = flex.complex_double(fcalc_macromol)
+    score = compare_structure_factors(fcalc_standard, fcalc_macromol)
+    assert score < 0.0005
 
 
 def test_IAM_correctness_some_random_crystals():
@@ -137,7 +166,19 @@ def test_lysozyme_high_res(lysozyme):
         FCalcMethod.TAAM,
     ],
 )
-def test_indices_order(method, tyrosine):
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        "standard",
+        pytest.param(
+            "macromol",
+            marks=pytest.mark.xfail(
+                reason="macromol relies on ordered incides",
+            ),
+        ),
+    ],
+)
+def test_indices_order(method, algorithm, tyrosine):
     from random import randint, shuffle
 
     # 1000 random indices
@@ -155,11 +196,11 @@ def test_indices_order(method, tyrosine):
     inds_2 = [inds_1[i] for i in shuffle_inds]
 
     # Calculate fcalc with both sets of indices
-    w1 = DiscambWrapper(tyrosine, method)
+    w1 = DiscambWrapper(tyrosine, method, algorithm=algorithm)
     w1.set_indices(inds_1)
     fc1 = w1.f_calc()
 
-    w2 = DiscambWrapper(tyrosine, method)
+    w2 = DiscambWrapper(tyrosine, method, algorithm=algorithm)
     w2.set_indices(inds_2)
     fc2 = w2.f_calc()
 
