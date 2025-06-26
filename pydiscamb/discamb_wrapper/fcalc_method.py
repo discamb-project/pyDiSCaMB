@@ -35,6 +35,7 @@ class FCalcMethod(Enum):
                 "electron_scattering": table == "electron",
                 "table": alias,
                 "assignment_csv": _get_tmp_assignment_filename(),
+                "algorithm": "macromol",
             }
 
         out.update(kwargs)
