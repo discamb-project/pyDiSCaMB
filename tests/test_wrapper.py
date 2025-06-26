@@ -39,7 +39,8 @@ class TestInit:
             FCalcMethod.TAAM,
         ],
     )
-    def test_no_memory_leak(self, tyrosine, method):
+    @pytest.mark.parametrize("algorithm", ["standard", "macromol"])
+    def test_no_memory_leak(self, tyrosine, method, algorithm):
         import warnings
 
         import psutil
@@ -47,7 +48,11 @@ class TestInit:
         def instatiate_wrapper(n):
             hkl = flex.miller_index(1000, (1, 2, 3))
             for _ in range(n):
-                w = DiscambWrapper(tyrosine, method)
+                w = DiscambWrapper(
+                    tyrosine,
+                    method,
+                    algorithm=algorithm,
+                )
                 w.set_indices(hkl)
                 assert len(w.hkl) == 1000
 
