@@ -88,6 +88,7 @@ def test_IAM_correctness_random_crystal(
         # Use 0.05% as threshold
         assert score < 0.0005
 
+
 @pytest.mark.veryslow
 @pytest.mark.slow
 @pytest.mark.parametrize("space_group", range(1, 231))
@@ -106,13 +107,22 @@ def test_TAAM_algorithm_equivalence(
         ["it1992", "wk1995", "electron"],
     ):
         xrs = get_random_crystal(space_group, *args)
-        fcalc_standard = DiscambWrapper(xrs, FCalcMethod.TAAM, algorithm="standard").f_calc(d_min)
-        fcalc_macromol = DiscambWrapper(xrs, FCalcMethod.TAAM, algorithm="macromol").f_calc(d_min)
+        fcalc_standard = DiscambWrapper(
+            xrs,
+            FCalcMethod.TAAM,
+            algorithm="standard",
+        ).f_calc(d_min)
+        fcalc_macromol = DiscambWrapper(
+            xrs,
+            FCalcMethod.TAAM,
+            algorithm="macromol",
+        ).f_calc(d_min)
 
         fcalc_standard = flex.complex_double(fcalc_standard)
         fcalc_macromol = flex.complex_double(fcalc_macromol)
         score = compare_structure_factors(fcalc_standard, fcalc_macromol)
         assert score < 0.0005
+
 
 def test_IAM_correctness_some_random_crystals():
     from itertools import product
