@@ -92,8 +92,16 @@ def test_IAM_correctness_random_crystal(
 @pytest.mark.veryslow
 @pytest.mark.slow
 @pytest.mark.parametrize("space_group", range(1, 231))
-def test_TAAM_algorithm_equivalence(
+@pytest.mark.parametrize(
+    "method",
+    [
+        FCalcMethod.IAM,
+        FCalcMethod.TAAM,
+    ],
+)
+def test_algorithm_equivalence(
     space_group: int,
+    method: FCalcMethod,
 ):
     from itertools import product
 
@@ -109,12 +117,12 @@ def test_TAAM_algorithm_equivalence(
         xrs = get_random_crystal(space_group, *args)
         fcalc_standard = DiscambWrapper(
             xrs,
-            FCalcMethod.TAAM,
+            method,
             algorithm="standard",
         ).f_calc(d_min)
         fcalc_macromol = DiscambWrapper(
             xrs,
-            FCalcMethod.TAAM,
+            method,
             algorithm="macromol",
         ).f_calc(d_min)
 
@@ -180,7 +188,7 @@ def test_lysozyme_high_res(lysozyme):
             "macromol",
             marks=pytest.mark.xfail(
                 reason="macromol relies on ordered incides",
-            )
+            ),
         ),
     ],
 )
