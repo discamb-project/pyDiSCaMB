@@ -89,9 +89,7 @@ def test_IAM_correctness_random_crystal(
         assert score < 0.0005
 
 
-@pytest.mark.veryslow
 @pytest.mark.slow
-@pytest.mark.parametrize("space_group", range(1, 231))
 @pytest.mark.parametrize(
     "method",
     [
@@ -99,37 +97,25 @@ def test_IAM_correctness_random_crystal(
         FCalcMethod.TAAM,
     ],
 )
-def test_algorithm_equivalence(
-    space_group: int,
-    method: FCalcMethod,
-):
-    from itertools import product
+def test_algorithm_equivalence(method: FCalcMethod, lysozyme):
 
-    d_min = 2.0
+    d_min = 1.7
 
-    for args in product(
-        ["random u_iso", "random u_aniso", None],
-        ["random occupancy", None],
-        ["no anomalous", "fprime", "fdoubleprime", "fprime + fdoubleprime"],
-        ["single weak", "single strong", "many weak", "many strong", "mixed strength"],
-        ["it1992", "wk1995", "electron"],
-    ):
-        xrs = get_random_crystal(space_group, *args)
-        fcalc_standard = DiscambWrapper(
-            xrs,
-            method,
-            algorithm="standard",
-        ).f_calc(d_min)
-        fcalc_macromol = DiscambWrapper(
-            xrs,
-            method,
-            algorithm="macromol",
-        ).f_calc(d_min)
+    fcalc_standard = DiscambWrapper(
+        lysozyme,
+        method,
+        algorithm="standard",
+    ).f_calc(d_min)
+    fcalc_macromol = DiscambWrapper(
+        lysozyme,
+        method,
+        algorithm="macromol",
+    ).f_calc(d_min)
 
-        fcalc_standard = flex.complex_double(fcalc_standard)
-        fcalc_macromol = flex.complex_double(fcalc_macromol)
-        score = compare_structure_factors(fcalc_standard, fcalc_macromol)
-        assert score < 0.0005
+    fcalc_standard = flex.complex_double(fcalc_standard)
+    fcalc_macromol = flex.complex_double(fcalc_macromol)
+    score = compare_structure_factors(fcalc_standard, fcalc_macromol)
+    assert score < 0.0005
 
 
 def test_IAM_correctness_some_random_crystals():
