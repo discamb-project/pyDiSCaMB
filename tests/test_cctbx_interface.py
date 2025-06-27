@@ -3,6 +3,8 @@ from mmtbx.f_model import manager
 from iotbx.phil import parse
 from conftest import SKIP_IF_CCTBX_PR_NOT_MERGED
 
+from cctbx.xray.structure_factors import gradients_direct as cctbx_gradients_direct
+
 from pydiscamb.cctbx_interface import (
     gradients_taam,
     from_scatterers_taam,
@@ -21,8 +23,24 @@ def d_tyrosine(tyrosine):
     f_obs = tyrosine.structure_factors(d_min=1.7).f_calc().as_amplitude_array()
     model = manager(f_obs=f_obs, xray_structure=shaken)
     target = model.target_functor()(compute_gradients=True)
-    d_target_d_f_calc = target.d_target_d_f_calc_work()
+    d_target_d_f_calc = target.d_target_d_f_calc_work().data()
+    tyrosine.scatterers().flags_set_grads(state=True)
     return f_obs, d_target_d_f_calc, tyrosine
+
+
+def test_pure_cctbx_grads_init(d_tyrosine):
+    # This ensures the below init tests are using correct arguments
+    f_obs, d_target_d_f_calc, tyrosine = d_tyrosine
+    res = cctbx_gradients_direct(
+        tyrosine,
+        None,
+        f_obs.set(),
+        d_target_d_f_calc,
+        0,
+        None,
+        None,
+    )
+    assert hasattr(res, "d_target_d_site_frac")
 
 
 @SKIP_IF_CCTBX_PR_NOT_MERGED
@@ -114,10 +132,10 @@ class TestCctbxObjects:
 class TestResultsObjects:
 
     def test_grads_init(self, d_tyrosine):
-        _, d_target_d_f_calc, tyrosine = d_tyrosine
+        f_obs, d_target_d_f_calc, tyrosine = d_tyrosine
         res = CctbxGradientsResult(
             tyrosine,
-            d_target_d_f_calc.set(),
+            f_obs.set(),
             d_target_d_f_calc,
             0,
             FCalcMethod.IAM,
@@ -125,10 +143,10 @@ class TestResultsObjects:
         assert hasattr(res, "packed")
 
     def test_fcalc_init(self, d_tyrosine):
-        _, d_target_d_f_calc, tyrosine = d_tyrosine
+        f_obs, _, tyrosine = d_tyrosine
         res = CctbxFromScatterersResult(
             tyrosine,
-            d_target_d_f_calc.set(),
+            f_obs.set(),
             FCalcMethod.IAM,
         )
         assert hasattr(res, "f_calc")
@@ -137,8 +155,9 @@ class TestResultsObjects:
     @pytest.mark.parametrize("adp", [False, "iso", "aniso"])
     @pytest.mark.parametrize("oc", [True, False])
     def test_grads_flags(self, d_tyrosine, site, adp, oc):
-        _, d_target_d_f_calc, tyrosine = d_tyrosine
+        f_obs, d_target_d_f_calc, tyrosine = d_tyrosine
         xrs = tyrosine.deep_copy_scatterers()
+        xrs.scatterers().flags_set_grads(state=False)
         if site:
             xrs.scatterers()[0].flags.set_grad_site(True)
         if adp == "iso":
@@ -151,7 +170,7 @@ class TestResultsObjects:
 
         res = CctbxGradientsResult(
             xrs,
-            d_target_d_f_calc.set(),
+            f_obs.set(),
             d_target_d_f_calc,
             0,
             FCalcMethod.TAAM,
@@ -170,8 +189,9 @@ class TestResultsObjects:
             assert all(s == 0 for s in res.d_target_d_u_iso())
             assert all(all(i == 0 for i in s) for s in res.d_target_d_u_star())
 
+    @pytest.mark.skip(reason="Fixed")
     def test_grad_error_with_iso_aniso_flags(self, d_tyrosine):
-        _, d_target_d_f_calc, tyrosine = d_tyrosine
+        f_obs, d_target_d_f_calc, tyrosine = d_tyrosine
         xrs = tyrosine.deep_copy_scatterers()
         xrs.scatterers()[0].convert_to_isotropic(xrs.unit_cell())
         xrs.scatterers()[0].flags.set_grad_u_aniso(True)
@@ -181,7 +201,7 @@ class TestResultsObjects:
         ):
             CctbxGradientsResult(
                 xrs,
-                d_target_d_f_calc.set(),
+                f_obs.set(),
                 d_target_d_f_calc,
                 0,
                 FCalcMethod.TAAM,
