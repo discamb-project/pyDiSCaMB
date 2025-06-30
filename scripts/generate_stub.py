@@ -6,6 +6,8 @@ import subprocess
 
 def main():
     # Check dependency
+
+    import pydiscamb
     import mypy
 
     root = Path(__file__).parent.parent

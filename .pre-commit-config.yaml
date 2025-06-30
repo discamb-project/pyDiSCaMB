@@ -19,9 +19,9 @@ repos:
     hooks:
     - id: stubgen
       name: check stub file
-      entry: phenix.python scripts/generate_stub.py
+      entry: "python scripts/generate_stub.py"
       description: check if stub file of the API is up-to-date
-      language: python
+      language: system
       types: [python]
       pass_filenames: false
   
