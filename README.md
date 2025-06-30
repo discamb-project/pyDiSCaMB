@@ -56,10 +56,18 @@ Otherwise the instructions are like before.
 
 To debug, install in an editable state:
 ```bash
-pip install -e pyDiSCaMB/
+pip install -e pyDiSCaMB/[dev]
 ```
 This sets the `Debug` flag in cmake, allowing you to use e.g. gdb.
 Confirmed to work with both C++ and python breakpoints in WSL Ubuntu, using gdb and [Python C++ Debugger](https://marketplace.visualstudio.com/items/?itemName=benjamin-simmonds.pythoncpp-debug) for VS Code.
+
+When opening a PR, the code will be checked with `black` and `clang-format`. Using `pre-commit` avoids having to fix the formatting afterwards.
+Set it up with:
+
+```bash
+cd pyDiSCaMB
+pre-commit install
+```
 
 ## Testing
 
