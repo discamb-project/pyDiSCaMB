@@ -73,15 +73,8 @@ target_include_directories(_cpp_module PUBLIC include)
 set_target_properties(_cpp_module PROPERTIES CXX_VISIBILITY_PRESET hidden)
 install(TARGETS _cpp_module DESTINATION pydiscamb)
 
-# Generate stub
-if (NOT MSVC) # Does not work properly on windows. Might be due to windows adding "Release" to the folder structure.
-add_custom_command(TARGET _cpp_module POST_BUILD
-COMMAND stubgen -m _cpp_module --include-docstrings -o ${CMAKE_BINARY_DIR}/stubs
-BYPRODUCTS ${CMAKE_BINARY_DIR}/stubs
-COMMENT "Use stubgen to create .pyi for statement completion"
-)
-install(DIRECTORY ${CMAKE_BINARY_DIR}/stubs/ DESTINATION pydiscamb)
-endif()
+# Install stub
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/pydiscamb/_cpp_module.pyi DESTINATION pydiscamb)
 
 # TAAM databank
 file(GLOB_RECURSE TAAM_DATA_FILES "${PROJECT_SOURCE_DIR}/data/*databank.txt") 

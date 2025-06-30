@@ -66,3 +66,6 @@ markers = [
   "veryslow",
 ]
 xfail_strict=true
+
+[tool.black]
+force-exclude = '\.pyi$'
