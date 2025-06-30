@@ -146,11 +146,14 @@ def test_IAM_correctness_some_random_crystals():
         assert score < 0.0005
 
 
-@pytest.mark.xfail(reason="n_gaussian table has no counterpart in DiSCaMB")
+@pytest.mark.xfail(
+    raises=AssertionError,
+    reason="n_gaussian table has no counterpart in DiSCaMB",
+)
 def test_n_gaussian_table():
-    xrs = get_random_crystal(1, None, "no anomalous", "single weak", None)
+    xrs = get_random_crystal(1, None, None, "no anomalous", "single weak", None)
     score = get_IAM_correctness_score(xrs)
-    assert score < 0.0005
+    assert score < 0.0001
 
 
 @pytest.mark.veryslow
