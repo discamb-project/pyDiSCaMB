@@ -69,6 +69,8 @@ target_include_directories(_cpp_module PRIVATE lib/pybind11_json/include)
 get_target_property(DISCAMB_INCLUDE_DIRECTORIES discamb INCLUDE_DIRECTORIES)
 target_include_directories(_cpp_module PUBLIC ${DISCAMB_INCLUDE_DIRECTORIES})
 target_include_directories(_cpp_module PUBLIC include)
+# pybind11 required flag
+set_target_properties(_cpp_module PROPERTIES CXX_VISIBILITY_PRESET hidden)
 install(TARGETS _cpp_module DESTINATION pydiscamb)
 
 # Generate stub
