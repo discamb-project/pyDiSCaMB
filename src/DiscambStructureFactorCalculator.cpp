@@ -10,12 +10,18 @@ using namespace std;
 DiscambStructureFactorCalculator::DiscambStructureFactorCalculator(
     nlohmann::json calculator_parameters, Crystal crystal,
     vector<complex<double>> anomalous)
-    : mCalculator(init_calc(crystal, calculator_parameters)),
+    : mParams(calculator_parameters),
+      mCalculator(),
       crystal(crystal),
       anomalous(anomalous),
       mConverter(crystal.unitCell),
       mStale(true),
       mFcalc({{0.0, 0.0}}) {
+    init();
+}
+
+void DiscambStructureFactorCalculator::init() {
+    mCalculator = init_calc(crystal, mParams);
     assert(crystal.atoms.size() > 0);
     assert(anomalous.size() > 0);
     assert(crystal.atoms.size() == anomalous.size());

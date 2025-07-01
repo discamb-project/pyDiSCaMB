@@ -10,11 +10,14 @@
 #include "discamb/Scattering/SfCalculator.h"
 #include "json.hpp"
 
+struct FCalcDerivatives;
+
 class DiscambStructureFactorCalculator {
    public:
     DiscambStructureFactorCalculator(
         nlohmann::json calculator_parameters, discamb::Crystal crystal,
         std::vector<std::complex<double>> anomalous);
+    virtual void init();
     ~DiscambStructureFactorCalculator();
 
     virtual std::vector<std::complex<double>> f_calc();
@@ -39,6 +42,7 @@ class DiscambStructureFactorCalculator {
         discamb::Crystal crystal, nlohmann::json calculator_parameters);
 
    private:
+    nlohmann::json mParams;
     discamb::SfCalculator *mCalculator;
     discamb::StructuralParametersConverter mConverter;
     std::vector<std::complex<double>> mFcalc;

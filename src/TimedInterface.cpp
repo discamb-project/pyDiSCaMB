@@ -11,6 +11,14 @@ namespace py = pybind11;
 std::vector<Runtime> TimedInterface::get_runtimes() const { return mRuntimes; }
 
 // clang-format off
+void TimedInterface::init() {
+    auto runtime_start = high_resolution_clock::now();
+    PythonInterface::init();
+    auto runtime_end = high_resolution_clock::now();
+    duration<double> delta = runtime_end - runtime_start;
+    mRuntimes.push_back({std::string("init"), delta.count()});
+}
+
 discamb::SfCalculator* TimedInterface::init_calc(discamb::Crystal crystal, nlohmann::json calculator_parameters) {
     auto runtime_start = high_resolution_clock::now();
     discamb::SfCalculator* res = PythonInterface::init_calc(crystal, calculator_parameters);
