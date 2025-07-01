@@ -7,25 +7,21 @@
 using namespace discamb;
 using namespace std;
 
-vector<vector<complex<double>>> FCalcDerivatives::siteDerivatives() const {
-    vector<vector<complex<double>>> out;
-    for (int i = 0; i < atomicPostionDerivatives.size(); i++) {
-        out.push_back({atomicPostionDerivatives[i].x,
-                       atomicPostionDerivatives[i].y,
-                       atomicPostionDerivatives[i].z});
-    }
-    return out;
-}
-
 DiscambStructureFactorCalculator::DiscambStructureFactorCalculator(
     nlohmann::json calculator_parameters, Crystal crystal,
     vector<complex<double>> anomalous)
-    : mCalculator(SfCalculator::create(crystal, calculator_parameters)),
+    : mParams(calculator_parameters),
+      mCalculator(),
       crystal(crystal),
       anomalous(anomalous),
       mConverter(crystal.unitCell),
       mStale(true),
       mFcalc({{0.0, 0.0}}) {
+    init();
+}
+
+void DiscambStructureFactorCalculator::init() {
+    mCalculator = init_calc(crystal, mParams);
     assert(crystal.atoms.size() > 0);
     assert(anomalous.size() > 0);
     assert(crystal.atoms.size() == anomalous.size());
@@ -140,4 +136,19 @@ void DiscambStructureFactorCalculator::update_calculator() {
     mCalculator->setAnomalous(anomalous);
     mConverter.set(crystal.unitCell);
     mStale = true;
+}
+
+discamb::SfCalculator* DiscambStructureFactorCalculator::init_calc(
+    discamb::Crystal crystal, nlohmann::json calculator_parameters) {
+    return SfCalculator::create(crystal, calculator_parameters);
+}
+
+vector<vector<complex<double>>> FCalcDerivatives::siteDerivatives() const {
+    vector<vector<complex<double>>> out;
+    for (int i = 0; i < atomicPostionDerivatives.size(); i++) {
+        out.push_back({atomicPostionDerivatives[i].x,
+                       atomicPostionDerivatives[i].y,
+                       atomicPostionDerivatives[i].z});
+    }
+    return out;
 }

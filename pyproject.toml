@@ -6,12 +6,10 @@ readme = "README.md"
 authors = [
   { name = "Viljar Femoen", email = "viljar.femoen@mmk.su.se" },
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 classifiers = [
   "Development Status :: 1 - Planning",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -26,6 +24,10 @@ requires = [
   "mypy"
 ]
 build-backend = "scikit_build_core.build"
+
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-xdist", "pre-commit"]
 
 [tool.scikit-build]
 # The build type to use when building the project.
@@ -64,3 +66,6 @@ markers = [
   "veryslow",
 ]
 xfail_strict=true
+
+[tool.black]
+force-exclude = '\.pyi$'

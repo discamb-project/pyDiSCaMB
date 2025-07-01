@@ -1,0 +1,26 @@
+exclude: "^\
+  (lib/.*)\
+  "
+
+repos:
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 25.1.0
+    hooks:
+      - id: black
+        
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v20.1.7
+    hooks:
+    - id: clang-format
+      args: [-Werror]
+      exclude_types: [json]
+      
+  - repo: local
+    hooks:
+    - id: stubgen
+      name: check stub file
+      entry: "python scripts/generate_stub.py"
+      description: check if stub file of the API is up-to-date
+      language: system
+      types: [python]
+      pass_filenames: false

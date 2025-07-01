@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        python-version: [3.9, "3.10", 3.11, 3.12]
+        python-version: [3.9, "3.10", 3.11, 3.12, 3.13]
     defaults:
       run:
         shell: bash -el {0}
@@ -52,11 +52,7 @@ jobs:
       - name: Install pyDiSCaMB
         run: pip install .
       - name: Install test tools
-        run: pip install pytest pytest-cov
+        run: pip install pytest
       - name: Test with pytest
-        run: pytest --cov=pydiscamb -m "not veryslow" .
-      - name: Write coverage report
-        if: |
-          ${{ matrix.os == 'ubuntu-latest' }} && 
-          ${{ matrix.python-version == '3.12' }}
-        run: coverage report --show-missing
+        run: pytest -m "not veryslow" .
+
