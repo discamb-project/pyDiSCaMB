@@ -155,7 +155,7 @@ PYBIND11_MODULE(_cpp_module, m) {
         py::arg("table")
     );
 
-    auto m_tests = m.def_submodule("wrapper_tests", "Tests for the wrapper, written in C++");
+    auto m_tests = m.def_submodule("_wrapper_tests", "Tests for the wrapper, written in C++");
     m_tests.def(
         "f_calc_custom_gaussian_parameters", 
         &f_calc_custom_gaussian_parameters,

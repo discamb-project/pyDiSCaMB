@@ -5,8 +5,7 @@ from cctbx.development import random_structure
 from cctbx.eltbx import xray_scattering
 from cctbx.sgtbx import space_group_info
 from pydiscamb import DiscambWrapper, FCalcMethod
-
-import pydiscamb
+from pydiscamb._cpp_module import _wrapper_tests
 
 
 def compare_structure_factors(f_calc_a, f_calc_b):
@@ -258,7 +257,7 @@ class TestCustomTable:
 
         indices = [[int(h), int(k), int(l)] for h, k, l in sf_1.indices()]
 
-        sf_2 = pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+        sf_2 = _wrapper_tests.f_calc_custom_gaussian_parameters(
             xrs, indices, elements, a, b, c
         )
         score = compare_structure_factors(sf_1.data(), flex.complex_double(sf_2))
@@ -267,7 +266,7 @@ class TestCustomTable:
     def test_missing_element(self, xrs, a, b, c):
         elements = ["does not exist"] * len(a)
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, [[0, 0, 0]], elements, a, b, c
             )
 
@@ -275,68 +274,68 @@ class TestCustomTable:
         i = [[0, 0, 0]]
         # Too few
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, i, elements[:-1], a, b, c
             )
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, i, elements, a[:-1], b, c
             )
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, i, elements, a, b[:-1], c
             )
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, i, elements, a, b, c[:-1]
             )
 
         # Too many
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, i, elements + [elements[-1]], a, b, c
             )
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, i, elements, a + [a[-1]], b, c
             )
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, i, elements, a, b + [b[-1]], c
             )
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, i, elements, a, b, c + [c[-1]]
             )
 
     def test_wrong_length_gaussian_parameters(self, xrs, elements, a, b, c):
         i = [[0, 0, 0]]
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, i, elements, [ai[:-1] for ai in a], b, c
             )
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, i, elements, a, [bi[:-1] for bi in b], c
             )
 
     def test_hkl(self, xrs, elements, a, b, c):
         # Wrong number of elements
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, [[0, 0, 0], [0, 0]], elements, a, b, c
             )
         with pytest.raises(AssertionError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, [[0, 0, 0], [0, 0, 0, 0]], elements, a, b, c
             )
         # Wrong type
         with pytest.raises(TypeError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, [0, 0, 0], elements, a, b, c
             )
         with pytest.raises(TypeError):
-            pydiscamb.wrapper_tests.f_calc_custom_gaussian_parameters(
+            _wrapper_tests.f_calc_custom_gaussian_parameters(
                 xrs, [(0.2, 0.3, 0.0)], elements, a, b, c
             )
 

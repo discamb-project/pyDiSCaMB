@@ -1,6 +1,6 @@
 # Script to measure the runtime of the wrapper specifically, e.g. initialization and cctbx-discamb translation
 
-from pydiscamb._cpp_module.wrapper_tests import TimedInterface
+from pydiscamb._cpp_module._wrapper_tests import TimedInterface
 from pydiscamb._cpp_module import PythonInterface
 from pydiscamb.taam_parameters import get_default_databank
 from measure_fcalc_gradients_runtime import get_dispersed_tyrosines

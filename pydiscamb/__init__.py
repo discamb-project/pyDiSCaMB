@@ -1,4 +1,4 @@
-from ._cpp_module import __doc__, get_discamb_version, get_table, wrapper_tests
+from ._cpp_module import __doc__, get_discamb_version, get_table
 from .discamb_wrapper import (
     DiscambWrapper,
     FCalcMethod,
