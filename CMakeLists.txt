@@ -59,6 +59,7 @@ python_add_library(_cpp_module MODULE
   src/scattering_table.cpp
   src/atom_assignment.cpp
   src/read_structure.cpp
+  src/TimedInterface.cpp
   src/tests.cpp
 )
 target_link_libraries(_cpp_module PRIVATE pybind11::headers)

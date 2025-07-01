@@ -11,6 +11,7 @@
 #include "discamb/BasicUtilities/discamb_version.h"
 
 #include "PythonInterface.hpp"
+#include "TimedInterface.hpp"
 #include "scattering_table.hpp"
 #include "tests.hpp"
 #include "assert.hpp"
@@ -166,4 +167,32 @@ PYBIND11_MODULE(_cpp_module, m) {
         py::arg("b"),
         py::arg("c")
     );
+    py::class_<TimedInterface>(m_tests, "TimedInterface")
+        .def(py::init<py::object &, py::dict>())
+        .def(
+            "f_calc", 
+            &TimedInterface::f_calc
+        )
+        .def(
+            "selected_d_target_d_params",
+            &TimedInterface::selected_d_target_d_params,
+            py::return_value_policy::take_ownership
+        )
+        .def(
+            "set_indices",
+            &TimedInterface::set_indices
+        )
+        .def(
+            "set_d_min",
+            &TimedInterface::set_d_min
+        )
+        .def(
+            "update_structure",
+            &TimedInterface::update_structure
+        )
+        .def(
+            "get_runtimes",
+            &TimedInterface::get_runtimes
+        )
+    ;
 }
