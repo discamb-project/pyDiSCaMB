@@ -9,8 +9,7 @@ using namespace discamb;
 namespace py = pybind11;
 
 PythonInterface::PythonInterface(py::object &structure, py::dict kwargs)
-    : mStructure(structure),
-      DiscambStructureFactorCalculator(
+    : DiscambStructureFactorCalculator(
           kwargs.cast<nlohmann::json>(), crystal_from_xray_structure(structure),
           anomalous_from_xray_structure(structure)) {};
 
@@ -22,16 +21,6 @@ void PythonInterface::set_indices(py::object &indices) {
                                hkl_py[1].cast<int>(),
                                hkl_py[2].cast<int>()});
     }
-}
-
-void PythonInterface::set_d_min(const double d_min) {
-    bool anomalous_flag =
-        mStructure.attr("scatterers")().attr("count_anomalous")().cast<int>() !=
-        0;
-    py::object miller_py =
-        mStructure.attr("build_miller_set")(anomalous_flag, d_min);
-    py::object miller_indices = miller_py.attr("indices")();
-    set_indices(miller_indices);
 }
 
 void PythonInterface::update_structure(py::object &structure) {

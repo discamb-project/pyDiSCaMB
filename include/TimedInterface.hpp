@@ -20,7 +20,6 @@ class TimedInterface : public PythonInterface {
     void init() override;
     discamb::SfCalculator* init_calc(discamb::Crystal crystal, nlohmann::json calculator_parameters) override;
     void set_indices(py::object& indices) override;
-    void set_d_min(const double d_min) override;
     void update_structure(py::object& structure) override;
     std::vector<std::complex<double>> f_calc() override;
     std::vector<FCalcDerivatives> d_f_calc_d_params() override;

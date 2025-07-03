@@ -87,6 +87,9 @@ class TestFCalc:
         w.set_d_min(4.0)
         sf = w.f_calc()
         assert isinstance(sf[0], complex)
+        # Also check indices order for setting with d_min
+        miller_set = random_structure.structure_factors(d_min=4.0).f_calc().indices()
+        assert all(tuple(i) == j for i, j in zip(miller_set, w.hkl))
 
     def test_indices(self, random_structure):
         inds = [(0, 1, 2), (0, 1, 2), (10, 20, 30)]
@@ -105,6 +108,7 @@ class TestFCalc:
         sf = w.f_calc()
         assert len(sf) == 0
 
+    # Skip (False, False) as this will compare equal
     @pytest.mark.parametrize(["p", "dp"], [(False, True), (True, False), (True, True)])
     def test_anomalous_scattering(self, p: bool, dp: bool, random_structure):
         wrapper = DiscambWrapper(random_structure)
@@ -197,20 +201,56 @@ class TestUpdateStructure:
             s.label for s in random_structure_u_iso.scatterers()
         )
         assert random_structure_u_iso.unit_cell() != random_structure.unit_cell()
+        assert not random_structure.crystal_symmetry().is_identical_symmetry(
+            random_structure_u_iso.crystal_symmetry()
+        )
 
         w = DiscambWrapper(random_structure)
         with pytest.raises(ValueError, match="Incompatible structures"):
             w.update_structure(random_structure_u_iso)
 
+    def test_compare_with_cctbx(self, large_random_structure):
+        wrapper = DiscambWrapper(large_random_structure)
+        sf_before = wrapper.f_calc(5)
+        sf_before_cctbx = (
+            large_random_structure.structure_factors(algorithm="direct", d_min=5.0)
+            .f_calc()
+            .data()
+        )
+        large_random_structure.shake_sites_in_place(0.1)
+        wrapper.update_structure(large_random_structure)
+        sf_after = wrapper.f_calc(5)
+        sf_after_cctbx = (
+            large_random_structure.structure_factors(algorithm="direct", d_min=5.0)
+            .f_calc()
+            .data()
+        )
+
+        assert pytest.approx(list(sf_before), rel=0.0005) == list(sf_before_cctbx)
+        assert pytest.approx(list(sf_after), rel=0.0005) == list(sf_after_cctbx)
+        assert not pytest.approx(list(sf_before), rel=0.0005) == list(sf_after)
+        assert not pytest.approx(list(sf_before_cctbx), rel=0.0005) == list(
+            sf_after_cctbx
+        )
+
 
 class TestCache:
-    def test_simple(self, random_structure):
+
+    @pytest.fixture(autouse=True)
+    def delete_cache_on_test_start(self):
         DiscambWrapperCached.__cache = {}
+        yield
+
+    @pytest.mark.parametrize(
+        "method",
+        [FCalcMethod.IAM, FCalcMethod.TAAM],
+    )
+    def test_simple(self, method, random_structure):
         # Show that, even when objects are created in an unavailable scope,
         # the object is still cached
 
         def init_wrapper():
-            w = DiscambWrapperCached(random_structure)
+            w = DiscambWrapperCached(random_structure, method=method)
             res = id(w)
             del w
             return res
@@ -227,11 +267,10 @@ class TestCache:
         ]
         assert all(wi == init_wrapper() for wi in wrapper_ids)
 
-    @pytest.mark.xfail(
+    @pytest.mark.skip(
         reason="Assignment is very fast now. Update test to larger structure"
     )
     def test_timesave(self, lysozyme):
-        DiscambWrapperCached.__cache = {}
         from time import perf_counter
 
         start = perf_counter()
@@ -250,13 +289,11 @@ class TestCache:
         assert w1 is w2
 
     def test_different_structures(self, random_structure, tyrosine):
-        DiscambWrapperCached.__cache = {}
         w1 = DiscambWrapperCached(random_structure)
         w2 = DiscambWrapperCached(tyrosine)
         assert w1 is not w2
 
     def test_different_unit_cell(self, random_structure, random_structure_u_iso):
-        DiscambWrapperCached.__cache = {}
 
         assert "".join(s.label for s in random_structure.scatterers()) == "".join(
             s.label for s in random_structure_u_iso.scatterers()
@@ -270,6 +307,32 @@ class TestCache:
         random_structure.shake_sites_in_place(0.1)
         w2 = DiscambWrapperCached(random_structure)
         assert w1 is w2
+
+    def test_shaking_structure(self, random_structure):
+        # Set up calc
+        w1 = DiscambWrapperCached(random_structure)
+        d_min = 3.0
+
+        # shake AFTER
+        random_structure.shake_sites_in_place(0.1)
+        assert (
+            not pytest.approx(w1.f_calc(d_min), rel=0.0005)
+            == random_structure.structure_factors(algorithm="direct", d_min=d_min)
+            .f_calc()
+            .data()
+        )
+
+        # Make different cached object
+        w2 = DiscambWrapperCached(random_structure)
+        assert w1 is w2
+
+        # Check first object against cctbx
+        assert (
+            pytest.approx(w1.f_calc(d_min), rel=0.0005)
+            == random_structure.structure_factors(algorithm="direct", d_min=d_min)
+            .f_calc()
+            .data()
+        )
 
 
 class TestFromFile:

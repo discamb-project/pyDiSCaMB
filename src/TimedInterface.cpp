@@ -36,14 +36,6 @@ void TimedInterface::set_indices(py::object& indices) {
     mRuntimes.push_back({std::string("set_indices"), delta.count()});
 }
 
-void TimedInterface::set_d_min(const double d_min) {
-    auto runtime_start = high_resolution_clock::now();
-    PythonInterface::set_d_min(d_min);
-    auto runtime_end = high_resolution_clock::now();
-    duration<double> delta = runtime_end - runtime_start;
-    mRuntimes.push_back({std::string("set_d_min"), delta.count()});
-}
-
 void TimedInterface::update_structure(py::object& structure) {
     auto runtime_start = high_resolution_clock::now();
     PythonInterface::update_structure(structure);

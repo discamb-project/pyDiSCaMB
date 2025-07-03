@@ -111,12 +111,6 @@ PYBIND11_MODULE(_cpp_module, m) {
             py::arg("indices")
         )
         .def(
-            "set_d_min",
-            &PythonInterface::set_d_min,
-            R"pbdoc(Set minimum d-spacing for calculating f_calc)pbdoc",
-            py::arg("d_min")
-        )
-        .def(
             "update_structure",
             &PythonInterface::update_structure,
             R"pbdoc(Update atoms read from the given structure)pbdoc",
@@ -181,10 +175,6 @@ PYBIND11_MODULE(_cpp_module, m) {
         .def(
             "set_indices",
             &TimedInterface::set_indices
-        )
-        .def(
-            "set_d_min",
-            &TimedInterface::set_d_min
         )
         .def(
             "update_structure",
