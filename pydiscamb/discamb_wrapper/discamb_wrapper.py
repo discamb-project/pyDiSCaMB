@@ -81,8 +81,8 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
                 pass
 
     def update_structure(self, xrs: "structure"):
-        if self._atomstr != _concat_scatterer_labels(
-            xrs
+        if (
+            self._atomstr != _concat_scatterer_labels(xrs)
         ) or not self._crystal_symmetry.is_identical_symmetry(xrs.crystal_symmetry()):
             raise ValueError(
                 "Incompatible structures. "

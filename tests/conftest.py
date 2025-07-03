@@ -21,6 +21,7 @@ def random_structure() -> structure:
         use_u_iso=True,
         random_u_iso=False,
         random_occupancy=False,
+        volume_per_atom=60,
     )
     xrs.scattering_type_registry(table="electron")
     return xrs
