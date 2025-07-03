@@ -51,9 +51,10 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
         super().__init__(xrs, calculator_params)
 
         # Store some stuff from xrs
-        self._scatterer_flags = xrs.scatterer_flags()
         self._atomstr = _concat_scatterer_labels(xrs)
-        self._unit_cell = xrs.unit_cell()
+        self._crystal_symmetry = xrs.crystal_symmetry()
+        self._scatterer_flags = xrs.scatterer_flags()
+        self._anomalous_flag = xrs.scatterers().count_anomalous() > 0
 
         # Get assignment info
         if calculator_params["model"] != "taam":
@@ -80,15 +81,15 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
                 pass
 
     def update_structure(self, xrs: "structure"):
-        if (
-            self._atomstr != _concat_scatterer_labels(xrs)
-            or self._unit_cell != xrs.unit_cell()
-        ):
+        if self._atomstr != _concat_scatterer_labels(
+            xrs
+        ) or not self._crystal_symmetry.is_identical_symmetry(xrs.crystal_symmetry()):
             raise ValueError(
                 "Incompatible structures. "
                 "Must have same scatterers in the same order, and same unit cell"
             )
         self._scatterer_flags = xrs.scatterer_flags()
+        self._anomalous_flag = xrs.scatterers().count_anomalous() > 0
         super().update_structure(xrs)
 
     ## Annotations

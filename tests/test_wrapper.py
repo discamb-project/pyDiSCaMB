@@ -201,6 +201,9 @@ class TestUpdateStructure:
             s.label for s in random_structure_u_iso.scatterers()
         )
         assert random_structure_u_iso.unit_cell() != random_structure.unit_cell()
+        assert not random_structure.crystal_symmetry().is_identical_symmetry(
+            random_structure_u_iso.crystal_symmetry()
+        )
 
         w = DiscambWrapper(random_structure)
         with pytest.raises(ValueError, match="Incompatible structures"):

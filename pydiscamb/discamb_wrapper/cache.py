@@ -46,5 +46,4 @@ class DiscambWrapperCached(DiscambWrapper):
         unitcell = xrs.unit_cell()
         params = method.to_cache_lookup_key(xrs, kwargs)
         key = (atomstr, unitcell, *params)
-        print(key)
         return key

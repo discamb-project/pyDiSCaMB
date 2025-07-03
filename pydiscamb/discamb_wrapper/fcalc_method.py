@@ -1,3 +1,4 @@
+import os
 import tempfile
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, Tuple, List
@@ -53,7 +54,11 @@ class FCalcMethod(Enum):
             pass
         elif self == FCalcMethod.TAAM:
             # We might have a new assignment csv being generated
-            if kwargs.get("assignment csv") is None:
-                dct.pop("assignment csv")
+            if kwargs.get("assignment_csv") is None:
+                try:
+                    os.remove(dct.pop("assignment csv"))
+                except PermissionError:
+                    # Known failure on windows
+                    pass
 
         return sorted(dct.items())
