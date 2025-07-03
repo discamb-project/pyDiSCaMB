@@ -28,7 +28,7 @@ class FCalcMethod(Enum):
                 "model": "iam",
                 "table": alias,
                 "electron_scattering": False,
-                "algorithm": "macromol",
+                "algorithm": "standard",
             }
         elif self == FCalcMethod.TAAM:
             out = {
