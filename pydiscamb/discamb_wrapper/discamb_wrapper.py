@@ -81,8 +81,8 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
                 pass
 
     def update_structure(self, xrs: "structure"):
-        if (
-            self._atomstr != _concat_scatterer_labels(xrs)
+        if self._atomstr != _concat_scatterer_labels(
+            xrs
         ) or not self._crystal_symmetry.is_identical_symmetry(xrs.crystal_symmetry()):
             raise ValueError(
                 "Incompatible structures. "
@@ -91,6 +91,14 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
         self._scatterer_flags = xrs.scatterer_flags()
         self._anomalous_flag = xrs.scatterers().count_anomalous() > 0
         super().update_structure(xrs)
+
+    def set_d_min(self, d_min: float):
+        from cctbx import miller
+
+        miller_set = miller.build_set(
+            self._crystal_symmetry, self._anomalous_flag, d_min=d_min
+        )
+        self.set_indices(miller_set.indices())
 
     ## Annotations
     @overload
