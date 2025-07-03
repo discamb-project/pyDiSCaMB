@@ -117,7 +117,20 @@ def test_algorithm_equivalence(method: FCalcMethod, lysozyme):
     assert score < 0.0005
 
 
-def test_IAM_correctness_some_random_crystals():
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        "standard",
+        pytest.parameter(
+            "macromol",
+            marks=pytest.mark.xfail(
+                raises=AssertionError,
+                reason="Anomalous does not work properly on macromol yet",
+            ),
+        ),
+    ],
+)
+def test_IAM_correctness_some_random_crystals(algorithm):
     from itertools import product
 
     for args in choices(
@@ -140,9 +153,9 @@ def test_IAM_correctness_some_random_crystals():
         k=250,
     ):
         xrs = get_random_crystal(*args)
-        score = get_IAM_correctness_score(xrs)
+        score = get_IAM_correctness_score(xrs, algorithm=algorithm)
         # Use 0.05% as threshold
-        assert score < 0.0005
+        assert score < 0.0005, (xrs, args)
 
 
 @pytest.mark.xfail(
