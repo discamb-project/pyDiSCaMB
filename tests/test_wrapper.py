@@ -202,6 +202,30 @@ class TestUpdateStructure:
         with pytest.raises(ValueError, match="Incompatible structures"):
             w.update_structure(random_structure_u_iso)
 
+    def test_compare_with_cctbx(self, large_random_structure):
+        wrapper = DiscambWrapper(large_random_structure)
+        sf_before = wrapper.f_calc(5)
+        sf_before_cctbx = (
+            large_random_structure.structure_factors(algorithm="direct", d_min=5.0)
+            .f_calc()
+            .data()
+        )
+        large_random_structure.shake_sites_in_place(0.1)
+        wrapper.update_structure(large_random_structure)
+        sf_after = wrapper.f_calc(5)
+        sf_after_cctbx = (
+            large_random_structure.structure_factors(algorithm="direct", d_min=5.0)
+            .f_calc()
+            .data()
+        )
+
+        assert pytest.approx(list(sf_before), rel=0.0005) == list(sf_before_cctbx)
+        assert pytest.approx(list(sf_after), rel=0.0005) == list(sf_after_cctbx)
+        assert not pytest.approx(list(sf_before), rel=0.0005) == list(sf_after)
+        assert not pytest.approx(list(sf_before_cctbx), rel=0.0005) == list(
+            sf_after_cctbx
+        )
+
 
 class TestCache:
     def test_simple(self, random_structure):
