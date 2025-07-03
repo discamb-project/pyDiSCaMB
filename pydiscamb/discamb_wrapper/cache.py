@@ -44,6 +44,7 @@ class DiscambWrapperCached(DiscambWrapper):
     ):
         atomstr = _concat_scatterer_labels(xrs)
         unitcell = xrs.unit_cell()
-        params = method.to_dict(xrs, kwargs)
-        key = (atomstr, unitcell, *sorted(params.items()))
+        params = method.to_cache_lookup_key(xrs, kwargs)
+        key = (atomstr, unitcell, *params)
+        print(key)
         return key
