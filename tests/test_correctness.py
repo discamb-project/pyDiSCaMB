@@ -121,7 +121,7 @@ def test_algorithm_equivalence(method: FCalcMethod, lysozyme):
     "algorithm",
     [
         "standard",
-        pytest.parameter(
+        pytest.param(
             "macromol",
             marks=pytest.mark.xfail(
                 raises=AssertionError,
