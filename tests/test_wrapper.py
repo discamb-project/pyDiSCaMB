@@ -87,6 +87,9 @@ class TestFCalc:
         w.set_d_min(4.0)
         sf = w.f_calc()
         assert isinstance(sf[0], complex)
+        # Also check indices order for setting with d_min
+        miller_set = random_structure.structure_factors(d_min=4.0).f_calc().indices()
+        assert all(tuple(i) == j for i, j in zip(miller_set, w.hkl))
 
     def test_indices(self, random_structure):
         inds = [(0, 1, 2), (0, 1, 2), (10, 20, 30)]
@@ -105,6 +108,7 @@ class TestFCalc:
         sf = w.f_calc()
         assert len(sf) == 0
 
+    # Skip (False, False) as this will compare equal
     @pytest.mark.parametrize(["p", "dp"], [(False, True), (True, False), (True, True)])
     def test_anomalous_scattering(self, p: bool, dp: bool, random_structure):
         wrapper = DiscambWrapper(random_structure)

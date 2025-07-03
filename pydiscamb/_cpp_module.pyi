@@ -45,11 +45,6 @@ class PythonInterface:
 
         Calculate the derivatives of a target function
         """
-    def set_d_min(self, d_min: float) -> None:
-        """set_d_min(self: pydiscamb._cpp_module.PythonInterface, d_min: float) -> None
-
-        Set minimum d-spacing for calculating f_calc
-        """
     def set_indices(self, indices: object) -> None:
         """set_indices(self: pydiscamb._cpp_module.PythonInterface, indices: object) -> None
 
