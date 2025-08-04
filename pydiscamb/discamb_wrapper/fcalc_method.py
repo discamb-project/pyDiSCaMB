@@ -12,7 +12,8 @@ if TYPE_CHECKING:
 
 
 def _get_tmp_assignment_filename() -> str:
-    _, out = tempfile.mkstemp(".csv", "pyDiSCaMB-atom-assignment")
+    fd, out = tempfile.mkstemp(".csv", "pyDiSCaMB-atom-assignment")
+    os.close(fd)
     return out
 
 
