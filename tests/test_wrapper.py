@@ -334,6 +334,30 @@ class TestCache:
             .data()
         )
 
+    @pytest.mark.skipif(
+        condition=sys.platform != "linux",
+        reason="Needs the resource package, only available on unix",
+    )
+    def test_no_too_many_open_files_error(self):
+        # There was an issue with the default TAAM parameters
+        # requiring opening the parameters file too many times.
+        # We test this by limiting the number of open file handles in another process,
+        # and then instantiating a bunch of wrapper objects
+        import sys
+        import resource
+        import subprocess
+        from pathlib import Path
+
+        def limit_nofiles():
+            resource.setrlimit(resource.RLIMIT_NOFILE, (256, 256))
+
+        # Get location of test script
+        script = Path(__file__).with_name("_open_many_cached_wrappers.py")
+        process = subprocess.Popen(
+            [sys.executable, str(script)], preexec_fn=limit_nofiles
+        )
+        assert process.wait() == 0, process.stdout
+
 
 class TestFromFile:
     def test_pdb(self, tmp_path, random_structure):
