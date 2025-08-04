@@ -356,7 +356,7 @@ class TestCache:
         process = subprocess.Popen(
             [sys.executable, str(script)], preexec_fn=limit_nofiles
         )
-        assert process.wait() == 0
+        assert process.wait() == 0, process.stdout
 
 
 class TestFromFile:
