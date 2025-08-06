@@ -120,3 +120,63 @@ def test_switching_banks(tyrosine):
             FCalcMethod.TAAM,
             bank_path=bank,
         )
+
+
+@pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        "standard",
+        pytest.param(
+            "macromol",
+            marks=pytest.mark.xfail(
+                raises=RuntimeError,
+                reason="Macromol does not yet support frozen_lcs",
+            ),
+        ),
+    ],
+)
+def test_frozen_lcs(tyrosine, algorithm):
+    from cctbx.array_family import flex
+
+    xrs = tyrosine.deep_copy_scatterers()
+
+    indices = flex.miller_index(10, (1, 2, 3))
+    d_target_d_fcalc = [1 + 1j] * 10
+
+    # Get gradients from default parameters
+    default = DiscambWrapper(
+        xrs, FCalcMethod.TAAM, frozen_lcs=False, algorithm=algorithm
+    )
+    # Check assignment
+    assert all(lcs != "" for atomtype, lcs in default.atom_type_assignment.values())
+
+    default.set_indices(indices)
+    grads = default.d_target_d_params(d_target_d_fcalc)
+    default_1st_site = grads[0].site_derivatives
+
+    # Get gradients with frozen_lcs
+    frozen = DiscambWrapper(xrs, FCalcMethod.TAAM, frozen_lcs=True, algorithm=algorithm)
+    assert all(lcs != "" for atomtype, lcs in frozen.atom_type_assignment.values())
+
+    frozen.set_indices(indices)
+    grads = frozen.d_target_d_params(d_target_d_fcalc)
+    frozen_1st_site = grads[0].site_derivatives
+
+    # Shake the scatterers and update the wrappers
+    xrs.shake_sites_in_place(0.2)
+    default.update_structure(xrs)
+    frozen.update_structure(xrs)
+
+    # Compute gradients again
+    grads = default.d_target_d_params(d_target_d_fcalc)
+    default_shaken_1st_site = grads[0].site_derivatives
+
+    grads = frozen.d_target_d_params(d_target_d_fcalc)
+    frozen_shaken_1st_site = grads[0].site_derivatives
+
+    assert all(a == b for a, b in zip(default_1st_site, frozen_1st_site))
+
+    # This xfails on macromol, raise different error to seperate from other assertions failing
+    if not all(a != b for a, b in zip(default_shaken_1st_site, frozen_shaken_1st_site)):
+        raise RuntimeError
