@@ -1,7 +1,7 @@
 from time import perf_counter
 from pathlib import Path
 from functools import reduce, wraps
-from typing import Callable
+from typing import Callable, Union
 import dataclasses
 
 from cctbx.array_family import flex
@@ -55,7 +55,13 @@ class RuntimeResult:
         self.time = self.end - self.start
 
     def csv(self) -> str:
-        return str(dataclasses.astuple(self))[1:-1].replace(" ", "").replace("'", "")
+        return ",".join(
+            str(getattr(self, field.name)) for field in dataclasses.fields(self)
+        )
+
+    @classmethod
+    def csv_header(cls) -> str:
+        return ",".join(field.name for field in dataclasses.fields(cls))
 
 
 CALCS: list[type["RuntimeBase"]] = []
@@ -98,6 +104,7 @@ class RuntimeBase:
     def run(
         self,
         n: int = 1,
+        show_pbar: bool = False,
         pbar_position: int = 0,
         pbar_leave: bool = False,
         overall_pbar: tqdm = None,
@@ -108,6 +115,8 @@ class RuntimeBase:
         ----------
         n : int, optional
             Number of runs, by default 1
+        show_pbar : bool
+            Whether to show a progress bar, by default False
         pbar_position : int, optional
             Sent to tqdm (position=pbar_position), by default 0
         pbar_leave : bool, optional
@@ -128,12 +137,15 @@ class RuntimeBase:
         dpdfc = target.d_target_d_f_calc_work().data()
 
         # Run
-        for _ in trange(
-            n,
-            desc=self.__class__.__name__.ljust(32),
-            position=pbar_position,
-            leave=pbar_leave,
-        ):
+        r = range(n)
+        if show_pbar:
+            r = tqdm(
+                r,
+                desc=self.__class__.__name__.ljust(32),
+                position=pbar_position,
+                leave=pbar_leave,
+            )
+        for _ in r:
             self.f_calc()
             self.grads(dpdfc)
             if overall_pbar is not None:
@@ -171,21 +183,23 @@ class RuntimeBase:
             )
         return "\n".join(out)
 
-    def save(self, filepath: Path = None):
+    def save(self, filepath: Union[Path, str] = None):
         """Save results to csv file by appending. Creates the file with a header if it does not exist.
 
         Parameters
         ----------
-        filepath : Path, optional
-            Where to save the data. If None, uses `Path(__file__).parent / "data" / "runtime.csv"`, by default None
+        filepath : Path | str, optional
+            Where to save the data.
+            If str, uses  `Path(__file__).parent / "data" / filepath`.
+            If None, uses `Path(__file__).parent / "data" / "runtime.csv"`, by default None
         """
         if filepath is None:
-            filepath = Path(__file__).parent / "data" / "runtime.csv"
+            filepath = "runtime.csv"
+        if isinstance(filepath, str):
+            filepath = Path(__file__).parent / "data" / filepath
         if not filepath.exists():
             filepath.parent.mkdir(parents=True, exist_ok=True)
-            filepath.write_text(
-                ",".join(dataclasses.asdict(self.runtimes[0]).keys()) + "\n"
-            )
+            filepath.write_text(self.runtimes[0].csv_header() + "\n")
         with filepath.open("a") as f:
             f.write("\n".join(r.csv() for r in self.runtimes) + "\n")
 
@@ -379,6 +393,26 @@ ATOM     24  HH  TYR A   4       4.712   5.804   4.444  1.00 30.00           H
     return xrs
 
 
+def get_structure_from_pdb(code: str) -> structure:
+    import requests
+    import iotbx.pdb
+    import mmtbx.model
+    from libtbx.utils import null_out
+
+    assert isinstance(code, str)
+    assert len(code) == 4
+
+    response = requests.get(f"https://files.rcsb.org/view/{code}.pdb")
+    if response.status_code == 404:
+        raise ValueError("pdb code not found on rcsb.org")
+    elif response.status_code != 200:
+        raise RuntimeError("Communication error with rcsb.org")
+    pdb_str = response.content.decode("utf-8")
+    pdb_inp = iotbx.pdb.input(lines=pdb_str.split("\n"), source_info=None)
+    model = mmtbx.model.manager(model_input=pdb_inp, log=null_out())
+    return model.get_xray_structure()
+
+
 CctbxFFTWithCosSin = cctbx_factory(
     "CctbxFFTWithCosSin",
     "fft",
@@ -440,7 +474,7 @@ DiscambTaamMacromolMultithread = discamb_factory(
 # DiscambTaamGpu = discamb_factory(FCalcMethod.TAAM, # TODO
 
 
-def main():
+def full_sweep_main():
 
     # A little awkward, but this generates around 120k reflections.
     # Taken from a lysozyme crystal (7DER on the PDB)
@@ -496,11 +530,133 @@ def main():
                 with Calc(xrs, miller_set=miller_set) as calc:
                     calc.run(
                         n_runs,
+                        show_pbar=True,
                         pbar_position=2,
                         pbar_leave=False,
                         overall_pbar=pbar,
                     )
 
 
+def small_sweep_main():
+    # Prepare miller sets from around 40k to around 120k reflections
+    def _sets():
+        i = 4
+        while i**3 < 100_000:
+            r1 = list(range((-i) // 2, i // 2))
+            i += 1
+            r2 = list(range((-i) // 2, i // 2))
+            yield flex.miller_index([(h, k, l) for h in r1 for k in r1 for l in r1])
+            yield flex.miller_index([(h, k, l) for h in r2 for k in r1 for l in r1])
+            yield flex.miller_index([(h, k, l) for h in r2 for k in r2 for l in r1])
+
+    sets = list(_sets())
+
+    # Number of tyrosines to disperse in a large P1 unit cell
+    ns = range(1, 400, 5)
+
+    static_n = 1
+    static_set = sets[20]
+
+    print("Static number of scatterers: ", static_n * 24)
+    print("Static number of reflections:", static_set.size())
+    print("Size of scatterer sweep: ", len(ns))
+    print("Size of reflection sweep:", len(sets))
+    print("Max scatterers:", ns[-1] * 24)
+    print("Max reflections:", sets[-1].size())
+
+    # Number of runs for each parameter set
+    n_runs = 5
+    calcs = [
+        CctbxFFTNoCosSin,
+        CctbxDirectWithCosSin,
+        DiscambIamMacromol,
+        DiscambTaamMacromol,
+    ]
+
+    pbar = tqdm(
+        desc="Overall",
+        total=(len(ns) + len(sets)) * n_runs * len(calcs),
+        position=0,
+    )
+
+    xrs = get_dispersed_tyrosines(static_n)
+    # Ensure we compute gradients
+    xrs.scatterers().flags_set_grads(state=True)
+    # Make the indices compatible with the structure
+    for miller_set in sets:
+        miller_set = miller.set(
+            xrs.crystal_symmetry(),
+            miller_set,
+            True,
+        )
+        assert miller_set.is_unique_set_under_symmetry()
+        for Calc in calcs:
+            calc = Calc(xrs, miller_set=miller_set)
+            try:
+                calc.run(n_runs, overall_pbar=pbar)
+            finally:
+                calc.save("refl_sweep.csv")
+
+    for n_trsn in ns:
+        xrs = get_dispersed_tyrosines(n_trsn)
+        # Ensure we compute gradients
+        xrs.scatterers().flags_set_grads(state=True)
+        # Make the indices compatible with the structure
+        miller_set = miller.set(
+            xrs.crystal_symmetry(),
+            static_set,
+            True,
+        )
+        # Run
+        for Calc in calcs:
+            calc = Calc(xrs, miller_set=miller_set)
+            try:
+                calc.run(n_runs, overall_pbar=pbar)
+            finally:
+                calc.save("sctr_sweep.csv")
+
+
+def pdb_main():
+    entries = [
+        ("7DER", 1.03),
+        ("4ZNN", 1.41),
+        ("6GER", 2.0),
+        ("7ETN", 0.82),
+    ]
+
+    # Number of runs for each parameter set
+    n_runs = 5
+
+    for pdb_code, d_min in entries:
+        xrs = get_structure_from_pdb(pdb_code)
+        xrs.scatterers().flags_set_grads(state=True)
+        # Compute values for progress bar
+        n = xrs.scatterers().size()
+        _w = DiscambWrapper(xrs, FCalcMethod.TAAM)
+        type_assignment = _w.atom_type_assignment
+        _w.set_d_min(d_min)
+        hkl = len(_w.hkl)
+        typed = sum(map(lambda el: bool(el[1]), type_assignment.values())) / n
+        # Run
+        for Calc in tqdm(
+            [
+                CctbxFFTWithCosSin,
+                CctbxDirectWithCosSin,
+                DiscambIamMacromol,
+                DiscambTaamMacromol,
+            ],
+            position=0,
+            desc=f"{pdb_code} | {n = }, {hkl = }, {typed = :.1%}",
+            leave=True,
+        ):
+            calc = Calc(xrs, d_min=d_min)
+            try:
+                calc.run(n_runs, pbar_position=1)
+            finally:
+                calc.save("pdb.csv")
+
+
 if __name__ == "__main__":
-    main()
+    # small_sweep_main()
+    # pdb_main()
+    full_sweep_main()
