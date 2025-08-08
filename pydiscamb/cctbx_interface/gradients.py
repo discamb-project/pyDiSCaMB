@@ -5,6 +5,10 @@ from cctbx.xray.structure_factors.gradients_direct import gradients_direct
 from pydiscamb.cctbx_interface.phil_scope import scope_to_taam_dict
 from pydiscamb.discamb_wrapper import DiscambWrapperCached, FCalcMethod
 
+from pydiscamb._cpp_module._wrapper_tests import TimedInterface
+
+from time import perf_counter
+
 
 class gradients_taam(gradients_direct):
     # TODO consider moving this class to cctbx
@@ -47,8 +51,6 @@ class CctbxGradientsResult:
     def __init__(
         self, xrs, miller_set, d_target_d_f_calc, n_parameters, method, **kwargs
     ):
-        w = DiscambWrapperCached(xrs, method, **kwargs)
-        w.set_indices(miller_set.indices())
 
         self._d_target_d_site_frac = flex.vec3_double(
             xrs.scatterers().size(), (0, 0, 0)
@@ -61,6 +63,11 @@ class CctbxGradientsResult:
         self._d_target_d_fp = flex.double(xrs.scatterers().size(), 0)
         self._d_target_d_fdp = flex.double(xrs.scatterers().size(), 0)
 
+        start = perf_counter()
+        w = TimedInterface(xrs, method.to_dict(xrs, kwargs))
+        init = perf_counter()
+        w.set_indices(miller_set.indices())
+        inds = perf_counter()
         grads = w.selected_d_target_d_params(
             list(d_target_d_f_calc),
             any(s.grad_site() for s in xrs.scatterer_flags()),
@@ -68,6 +75,14 @@ class CctbxGradientsResult:
             any(s.grad_occupancy() for s in xrs.scatterer_flags()),
             any(s.grad_fp() or s.grad_fdp() for s in xrs.scatterer_flags()),
         )
+        end = perf_counter()
+        print("pydiscamb c++")
+        print(w.get_runtimes())
+        print("pydiscamb python")
+        print("init", init - start)
+        print("set_indices", inds - init)
+        print("grads", end - inds)
+        print("pydiscamb total:", end - start)
         for i, s in enumerate(xrs.scatterer_flags()):
             if s.grad_site():
                 self._d_target_d_site_frac[i] = grads[i].site_derivatives

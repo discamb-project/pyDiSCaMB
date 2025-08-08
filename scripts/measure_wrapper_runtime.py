@@ -1,26 +1,30 @@
-# Script to measure the runtime of the wrapper specifically, e.g. initialization and cctbx-discamb translation
+# Script to measure the runtime of the wrapper, Python and C++ side
 
-from pydiscamb._cpp_module._wrapper_tests import TimedInterface
-from pydiscamb._cpp_module import PythonInterface
-from pydiscamb.taam_parameters import get_default_databank
-from measure_fcalc_gradients_runtime import get_dispersed_tyrosines
+from measure_fcalc_gradients_runtime import get_structure_from_pdb
+from time import perf_counter
+
+from cctbx.xray.structure_factors import gradients
 
 
 def main():
-    xrs = get_dispersed_tyrosines(100)
-    print(xrs)
-    kwargs = {
-        "model": "taam",
-        "bank path": get_default_databank(),
-        "algorithm": "macromol",
-    }
-    hkl = [(h, k, l) for h in range(30) for k in range(30) for l in range(30)]
-    print(len(hkl))
+    xrs = get_structure_from_pdb("7DER")
+    fc = xrs.structure_factors(d_min=1.03).f_calc()
+    ms = fc.set()
 
-    w = TimedInterface(xrs, kwargs)
-    w.set_indices(hkl)
-    w.f_calc()
-    print(w.get_runtimes())
+    start = perf_counter()
+    gradients(
+        ms,
+    )(
+        xrs,
+        None,
+        ms,
+        fc.data(),
+        xrs.n_parameters(),
+        "taam",
+    )
+    end = perf_counter()
+
+    print("total", end - start)
 
 
 if __name__ == "__main__":

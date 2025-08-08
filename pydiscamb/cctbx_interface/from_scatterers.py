@@ -3,6 +3,9 @@ from cctbx.xray.structure_factors.manager import managed_calculation_base
 
 from pydiscamb.cctbx_interface.phil_scope import scope_to_taam_dict
 from pydiscamb.discamb_wrapper import DiscambWrapperCached, FCalcMethod
+from pydiscamb._cpp_module._wrapper_tests import TimedInterface
+
+from time import perf_counter
 
 
 class from_scatterers_taam(from_scatterers_direct):
@@ -31,9 +34,12 @@ class from_scatterers_taam(from_scatterers_direct):
 
 class CctbxFromScatterersResult:
     def __init__(self, xrs, miller_set, method, **kwargs):
-        w = DiscambWrapperCached(xrs, method, **kwargs)
+        start = perf_counter()
+        w = TimedInterface(xrs, method.to_dict(xrs, kwargs))
         w.set_indices(miller_set.indices())
         self._fcalc = w.f_calc()
+        print("pydiscamb", perf_counter() - start)
+        print(w.get_runtimes())
 
     def f_calc(self):
         return self._fcalc

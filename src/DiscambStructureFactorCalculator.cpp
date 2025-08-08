@@ -1,5 +1,7 @@
 #include "DiscambStructureFactorCalculator.hpp"
 
+#include <chrono>
+
 #include "assert.hpp"
 #include "atom_assignment.hpp"
 #include "discamb/CrystalStructure/StructuralParametersConverter.h"
@@ -17,15 +19,26 @@ DiscambStructureFactorCalculator::DiscambStructureFactorCalculator(
       mConverter(crystal.unitCell),
       mStale(true),
       mFcalc({{0.0, 0.0}}) {
-    init();
+    // init();
 }
 
 void DiscambStructureFactorCalculator::init() {
+    auto runtime_start = chrono::high_resolution_clock::now();
     mCalculator = init_calc(crystal, mParams);
+    auto runtime_end = chrono::high_resolution_clock::now();
+    chrono::duration<double> delta =
+        chrono::duration_cast<chrono::nanoseconds>(runtime_end - runtime_start);
+    double time = delta.count();
+    cout << "init_calc: " << time << endl;
     assert(crystal.atoms.size() > 0);
     assert(anomalous.size() > 0);
     assert(crystal.atoms.size() == anomalous.size());
     update_calculator();
+    runtime_end = chrono::high_resolution_clock::now();
+    delta =
+        chrono::duration_cast<chrono::nanoseconds>(runtime_end - runtime_start);
+    time = delta.count();
+    cout << "init: " << time << endl;
 }
 DiscambStructureFactorCalculator::~DiscambStructureFactorCalculator() {
     delete mCalculator;
@@ -35,8 +48,15 @@ vector<complex<double>> DiscambStructureFactorCalculator::f_calc() {
     if (mStale) {
         mFcalc.resize(hkl.size());
         vector<bool> count_atom_contribution(crystal.atoms.size(), true);
+        auto runtime_start = chrono::high_resolution_clock::now();
         mCalculator->calculateStructureFactors(
             crystal.atoms, hkl, mFcalc, count_atom_contribution);
+        auto runtime_end = chrono::high_resolution_clock::now();
+        chrono::duration<double> delta =
+            chrono::duration_cast<chrono::nanoseconds>(runtime_end -
+                                                       runtime_start);
+        double time = delta.count();
+        cout << "f_calc: " << time << endl;
         mStale = false;
     }
     return mFcalc;
@@ -80,6 +100,7 @@ DiscambStructureFactorCalculator::selected_d_target_d_params(
     vector<bool> count_atom_contribution(crystal.atoms.size(), true);
 
     DerivativesSelector ds{site, adp, occupancy, fp};
+    auto runtime_start = chrono::high_resolution_clock::now();
     mCalculator->calculateStructureFactorsAndDerivatives(
         crystal.atoms,
         hkl,
@@ -88,6 +109,11 @@ DiscambStructureFactorCalculator::selected_d_target_d_params(
         d_target_d_f_calc,
         count_atom_contribution,
         ds);
+    auto runtime_end = chrono::high_resolution_clock::now();
+    chrono::duration<double> delta =
+        chrono::duration_cast<chrono::nanoseconds>(runtime_end - runtime_start);
+    double time = delta.count();
+    cout << "grad: " << time << endl;
 
     mStale = false;
 
@@ -133,8 +159,14 @@ void DiscambStructureFactorCalculator::update_calculator() {
     // mCalculator->update(crystal.atoms); // Already handled since we pass
     // atoms to calculations
     assert(anomalous.size() == crystal.atoms.size());
+    auto runtime_start = chrono::high_resolution_clock::now();
     mCalculator->setAnomalous(anomalous);
     mConverter.set(crystal.unitCell);
+    auto runtime_end = chrono::high_resolution_clock::now();
+    chrono::duration<double> delta =
+        chrono::duration_cast<chrono::nanoseconds>(runtime_end - runtime_start);
+    double time = delta.count();
+    cout << "update calculator: " << time << endl;
     mStale = true;
 }
 

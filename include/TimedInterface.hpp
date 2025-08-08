@@ -12,7 +12,7 @@ class TimedInterface : public PythonInterface {
     TimedInterface(py::object& structure, py::dict params)
         : PythonInterface(structure, params) {
         init();
-        update_structure(structure);
+        // update_structure(structure);
     }
     std::vector<Runtime> get_runtimes() const;
 
