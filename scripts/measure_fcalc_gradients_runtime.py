@@ -555,7 +555,7 @@ def small_sweep_main():
     ns = range(1, 400, 5)
 
     static_n = 1
-    static_set = sets[20]
+    static_set = sets[18]
 
     print("Static number of scatterers: ", static_n * 24)
     print("Static number of reflections:", static_set.size())
