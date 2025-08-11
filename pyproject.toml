@@ -1,6 +1,6 @@
 [project]
 name = "pydiscamb"
-version = "0.3.2"
+version = "0.4.0"
 description="A python wrapper for DiSCaMB"
 readme = "README.md"
 authors = [
@@ -8,12 +8,13 @@ authors = [
 ]
 requires-python = ">=3.9"
 classifiers = [
-  "Development Status :: 1 - Planning",
+  "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 
 
