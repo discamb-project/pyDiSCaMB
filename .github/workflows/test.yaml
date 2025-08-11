@@ -34,7 +34,7 @@ jobs:
     defaults:
       run:
         shell: bash -el {0}
-    name: Build and test on ${{ matrix.os }} for Python ${{ matrix.python-version }}
+    name: ${{ matrix.os }}, Python ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,7 +50,7 @@ jobs:
       - name: Install compiler
         run: conda env update --file ${{ format('conda/compiler_{0}.yml', matrix.os) }}
       - name: Install pyDiSCaMB
-        run: pip install .
+        run: pip install -v .
       - name: Install test tools
         run: pip install pytest
       - name: Test with pytest
