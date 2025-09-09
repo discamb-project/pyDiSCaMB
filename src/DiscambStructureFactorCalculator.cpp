@@ -138,7 +138,7 @@ void DiscambStructureFactorCalculator::update_calculator() {
     mStale = true;
 }
 
-discamb::SfCalculator* DiscambStructureFactorCalculator::init_calc(
+discamb::SfCalculator *DiscambStructureFactorCalculator::init_calc(
     discamb::Crystal crystal, nlohmann::json calculator_parameters) {
     return SfCalculator::create(crystal, calculator_parameters);
 }

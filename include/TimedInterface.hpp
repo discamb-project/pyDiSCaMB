@@ -9,7 +9,7 @@ using Runtime = std::pair<std::string, double>;
 
 class TimedInterface : public PythonInterface {
    public:
-    TimedInterface(py::object& structure, py::dict params)
+    TimedInterface(py::object &structure, py::dict params)
         : PythonInterface(structure, params) {
         init();
         update_structure(structure);
