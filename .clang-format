@@ -3,3 +3,4 @@ Language:        Cpp
 BasedOnStyle: google
 IndentWidth: 4
 BinPackArguments: false
+PointerAlignment: Right

@@ -127,13 +127,7 @@ def test_switching_banks(tyrosine):
     "algorithm",
     [
         "standard",
-        pytest.param(
-            "macromol",
-            marks=pytest.mark.xfail(
-                raises=RuntimeError,
-                reason="Macromol does not yet support frozen_lcs",
-            ),
-        ),
+        "macromol",
     ],
 )
 def test_frozen_lcs(tyrosine, algorithm):
