@@ -1,4 +1,4 @@
-from time import perf_counter
+from time import perf_counter, sleep
 from pathlib import Path
 from functools import reduce, wraps
 from typing import Callable, Union
@@ -10,6 +10,9 @@ from mmtbx.f_model import manager as f_model
 from tqdm import trange, tqdm
 from cctbx.development import random_structure as cctbx_random_structure
 import numpy as np
+import iotbx.pdb
+import mmtbx.model
+from libtbx.utils import null_out
 
 from pydiscamb import DiscambWrapper, FCalcMethod
 from cctbx.xray import structure_factors
@@ -199,7 +202,9 @@ class RuntimeBase:
             filepath = Path(__file__).parent / "data" / filepath
         if not filepath.exists():
             filepath.parent.mkdir(parents=True, exist_ok=True)
-            filepath.write_text(self.runtimes[0].csv_header() + "\n")
+            filepath.write_text(
+                ",".join(dataclasses.asdict(self.runtimes[0]).keys()) + "\n"
+            )
         with filepath.open("a") as f:
             f.write("\n".join(r.csv() for r in self.runtimes) + "\n")
 
@@ -393,11 +398,66 @@ ATOM     24  HH  TYR A   4       4.712   5.804   4.444  1.00 30.00           H
     return xrs
 
 
-def get_structure_from_pdb(code: str) -> structure:
+def sanitize_pdb(file: Path) -> Path:
+    import subprocess
+
+    stage_1 = Path(file.name[:4] + "_1_no_disorder").with_suffix(".pdb")
+    stage_2 = Path(file.name[:4] + "_2_hydrogens").with_suffix(".pdb")
+    stage_3 = Path(file.name[:4] + "_3_no_water").with_suffix(".pdb")
+    stage_4 = Path(file.name[:4] + "_4_no_ions").with_suffix(".pdb")
+    out = Path(file.name[:4]).with_suffix(".pdb")
+    if out.exists() and out.read_text():
+        return out
+
+    # Remove disorder
+    subprocess.call(
+        [
+            "phenix.pdbtools",
+            str(file),
+            "remove_alt_confs=True",
+            "output.filename=" + str(stage_1),
+        ],
+    )
+
+    # Add hydrogens
+    with stage_2.open("w") as stdout:
+        subprocess.call(
+            [
+                "phenix.reduce",
+                "-DROP_HYDROGENS_ON_ATOM_RECORDS",
+                str(stage_1),
+            ],
+            stdout=stdout,
+        )
+
+    # Remove waters
+    subprocess.call(
+        [
+            "phenix.ready_set",
+            "pdb_file_name=" + str(stage_2),
+            "ligands=False",
+            "remove_waters=True",
+            "output_file_name=" + str(stage_3.with_suffix("")),
+        ],
+    )
+
+    # Remove ions
+    with stage_4.open("w") as fout, stage_3.open("r") as fin:
+        for line in fin:
+            if line[-2] == "-":
+                line = line[:-3] + "\n"
+            fout.write(line)
+
+    out.write_text(stage_4.read_text())
+
+    return out
+
+
+def download_pdb(code: str) -> Path:
+    out = Path(code + "_raw").with_suffix(".pdb")
+    if out.exists():
+        return out
     import requests
-    import iotbx.pdb
-    import mmtbx.model
-    from libtbx.utils import null_out
 
     assert isinstance(code, str)
     assert len(code) == 4
@@ -410,7 +470,39 @@ def get_structure_from_pdb(code: str) -> structure:
     pdb_str = response.content.decode("utf-8")
     pdb_inp = iotbx.pdb.input(lines=pdb_str.split("\n"), source_info=None)
     model = mmtbx.model.manager(model_input=pdb_inp, log=null_out())
-    return model.get_xray_structure()
+
+    with out.open("w") as f:
+        f.write(model.as_pdb_or_mmcif_string("pdb"))
+    assert out.exists()
+    return out
+
+
+def get_structure_from_pdb(code: str) -> structure:
+
+    original = download_pdb(code)
+    sanitized = sanitize_pdb(original)
+
+    pdb_str = sanitized.read_text()
+    pdb_inp = iotbx.pdb.input(lines=pdb_str.split("\n"), source_info=None)
+    model = mmtbx.model.manager(model_input=pdb_inp, log=null_out())
+    xrs = model.get_xray_structure()
+
+    # Produce type file
+    w = DiscambWrapper(xrs, FCalcMethod.TAAM, assignment_info=code + ".log")
+    type_assignment = w.atom_type_assignment
+
+    model.set_occupancies(
+        flex.double(
+            [
+                0 if type == "" else 0.5 if lcs == "" else 1
+                for type, lcs in type_assignment.values()
+            ]
+        )
+    )
+    with open(code + "_typed.pdb", "w") as f:
+        f.write(model.as_pdb_or_mmcif_string("pdb"))
+
+    return xrs
 
 
 CctbxFFTWithCosSin = cctbx_factory(
@@ -522,19 +614,27 @@ def full_sweep_main():
             typed = sum(map(lambda el: bool(el[1]), type_assignment.values())) / n
             # Run
             for Calc in tqdm(
-                CALCS,
+                [
+                    CctbxFFTWithCosSin,
+                    CctbxDirectWithCosSin,
+                    # DiscambIamMacromol,
+                    DiscambTaamMacromol,
+                ],
                 position=1,
                 desc=f"{n = }, {hkl = }, {typed = :.1%}",
                 leave=False,
             ):
                 with Calc(xrs, miller_set=miller_set) as calc:
-                    calc.run(
-                        n_runs,
-                        show_pbar=True,
-                        pbar_position=2,
-                        pbar_leave=False,
-                        overall_pbar=pbar,
-                    )
+                    try:
+                        calc.run(
+                            n_runs,
+                            show_pbar=True,
+                            pbar_position=2,
+                            pbar_leave=False,
+                            overall_pbar=pbar,
+                        )
+                    finally:
+                        calc.save("full_sweep.csv")
 
 
 def small_sweep_main():
@@ -618,17 +718,22 @@ def small_sweep_main():
 
 def pdb_main():
     entries = [
-        ("7DER", 1.03),
-        ("4ZNN", 1.41),
-        ("6GER", 2.0),
-        ("7ETN", 0.82),
+        # ("4ZNN", 1.41),
+        ("3NIR", 0.48, "xray"),  # Crambin
+        ("7ETN", 0.82, "xray"),  # Decent small molecule
+        ("7DER", 1.03, "xray"),  # Lysozyme
+        ("6GER", 2.00, "xray"),  # 8k atoms after adding H
+        # ("1EEN", 1.90, "xray"), #
+        ("6G1T", 1.90, "xray"),  # dna and protein
+        ("7THB", 1.64, "xray"),  # pretty triple dna vortex
     ]
 
     # Number of runs for each parameter set
     n_runs = 5
 
-    for pdb_code, d_min in entries:
+    for pdb_code, d_min, table in entries:
         xrs = get_structure_from_pdb(pdb_code)
+        xrs.scattering_type_registry(table=table)
         xrs.scatterers().flags_set_grads(state=True)
         # Compute values for progress bar
         n = xrs.scatterers().size()
@@ -637,6 +742,7 @@ def pdb_main():
         _w.set_d_min(d_min)
         hkl = len(_w.hkl)
         typed = sum(map(lambda el: bool(el[1]), type_assignment.values())) / n
+
         # Run
         for Calc in tqdm(
             [
@@ -658,5 +764,5 @@ def pdb_main():
 
 if __name__ == "__main__":
     # small_sweep_main()
-    # pdb_main()
-    full_sweep_main()
+    pdb_main()
+    # full_sweep_main()
