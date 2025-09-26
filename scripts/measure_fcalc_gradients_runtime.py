@@ -719,13 +719,14 @@ def small_sweep_main():
 def pdb_main():
     entries = [
         # ("4ZNN", 1.41),
+        # ("5S5D", 2.90, "xray"),  # Very big
+        ("6IPU", 1.99, "xray"),  # Very big and has DNA
         ("3NIR", 0.48, "xray"),  # Crambin
         ("7ETN", 0.82, "xray"),  # Decent small molecule
         ("7DER", 1.03, "xray"),  # Lysozyme
         ("6GER", 2.00, "xray"),  # 8k atoms after adding H
-        # ("1EEN", 1.90, "xray"), #
         ("6G1T", 1.90, "xray"),  # dna and protein
-        ("7THB", 1.64, "xray"),  # pretty triple dna vortex
+        # ("7THB", 1.64, "xray"),  # pretty triple dna vortex
     ]
 
     # Number of runs for each parameter set
@@ -757,7 +758,7 @@ def pdb_main():
         ):
             calc = Calc(xrs, d_min=d_min)
             try:
-                calc.run(n_runs, pbar_position=1)
+                calc.run(n_runs, show_pbar=pdb_code == "6IPU", pbar_position=1)
             finally:
                 calc.save("pdb.csv")
 
