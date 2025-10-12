@@ -81,39 +81,56 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
                 pass
 
     def show_atom_type_assignment(self, log=sys.stdout):
-      ata = self.atom_type_assignment
+        ata = self.atom_type_assignment
 
-      multipolar = {k: v for k, v in ata.items() if (v[0]!= '' and not v[0].endswith('000'))}
-      spherical_multipolar = {k: v for k, v in ata.items() if v[0].endswith('000')}
-      spherical_iam = {k: v for k, v in ata.items() if (v[0]== '' and v[1]=='')}
+        multipolar = {
+            k: v for k, v in ata.items() if (v[0] != "" and not v[0].endswith("000"))
+        }
+        spherical_multipolar = {k: v for k, v in ata.items() if v[0].endswith("000")}
+        spherical_iam = {k: v for k, v in ata.items() if (v[0] == "" and v[1] == "")}
 
-      n_atoms = len(ata)
-      n_multipolar = len(multipolar.keys())
-      n_spherical_multipolar = len(spherical_multipolar.keys())
-      n_spherical_iam = len(spherical_iam.keys())
+        n_atoms = len(ata)
+        n_multipolar = len(multipolar.keys())
+        n_spherical_multipolar = len(spherical_multipolar.keys())
+        n_spherical_iam = len(spherical_iam.keys())
 
-      assert(n_multipolar + n_spherical_multipolar + n_spherical_iam == n_atoms)
+        assert n_multipolar + n_spherical_multipolar + n_spherical_iam == n_atoms
 
-      n_spherical_multipolar_water = sum(1 for k in spherical_multipolar if "HOH" in k)
-      n_spherical_iam_water = sum(1 for k in spherical_iam if "HOH" in k)
+        n_spherical_multipolar_water = sum(
+            1 for k in spherical_multipolar if "HOH" in k
+        )
+        n_spherical_iam_water = sum(1 for k in spherical_iam if "HOH" in k)
 
-      print('\nTotal number of atoms ', n_atoms, file=log)
-      print('Atom type multipolar', n_multipolar, file=log)
-      print('Atom type spherical multipolar', n_spherical_multipolar,
-          '(HOH: ',n_spherical_multipolar_water,')', file=log)
-      print('Atom type spherical IAM', n_spherical_iam,
-          '(HOH: ',n_spherical_iam_water,')', file=log)
+        print("\nTotal number of atoms ", n_atoms, file=log)
+        print("Atom type multipolar", n_multipolar, file=log)
+        print(
+            "Atom type spherical multipolar",
+            n_spherical_multipolar,
+            "(HOH: ",
+            n_spherical_multipolar_water,
+            ")",
+            file=log,
+        )
+        print(
+            "Atom type spherical IAM",
+            n_spherical_iam,
+            "(HOH: ",
+            n_spherical_iam_water,
+            ")",
+            file=log,
+        )
 
-      if n_spherical_multipolar > 0:
-          print('\nThe following atoms have spherical multipolar parameters:',
-              file=log)
-          for k in spherical_multipolar.keys():
-              print(k.split('"')[1], file=log)
+        if n_spherical_multipolar > 0:
+            print(
+                "\nThe following atoms have spherical multipolar parameters:", file=log
+            )
+            for k in spherical_multipolar.keys():
+                print(k.split('"')[1], file=log)
 
-      if n_spherical_iam > 0:
-          print('\nThe following atoms use regulard IAM:', file=log)
-          for k in spherical_iam.keys():
-              print(k.split('"')[1], file=log)
+        if n_spherical_iam > 0:
+            print("\nThe following atoms use regulard IAM:", file=log)
+            for k in spherical_iam.keys():
+                print(k.split('"')[1], file=log)
 
     def update_structure(self, xrs: "structure"):
         if self._atomstr != _concat_scatterer_labels(
