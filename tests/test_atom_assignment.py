@@ -163,17 +163,17 @@ def test_assignment_log_tyrosine(tyrosine, tmp_path):
 
 @pytest.mark.skipif(not is_MATTS_installed(), reason="Must have MATTS installed")
 def test_assignment_symmetry_wrapping(tmp_path):
-    # Download a graphene cif
-    import iotbx.cif
-    import requests
+    # Graphene
+    from cctbx.crystal import symmetry
+    from cctbx.xray.structure import structure
+    from cctbx.xray import scatterer
+    from cctbx.array_family.flex import xray_scatterer
 
-    data = requests.get(
-        "https://legacy.materialsproject.org/materials/mp-48/cif?type=symmetrized&download=true"
+    sm = symmetry((2.47, 2.47, 7.8, 90, 90, 120), space_group=194)
+    at = xray_scatterer(
+        [scatterer("C1", (0, 0, 1 / 4)), scatterer("C2", (1 / 3, 2 / 3, 1 / 4))]
     )
-    cif_str = data.content.decode("utf-8")
-
-    cif = iotbx.cif.reader(input_string=cif_str)
-    xrs = cif.build_crystal_structures()["C"]
+    xrs = structure(scatterers=at, crystal_symmetry=sm)
     xrs.scattering_type_registry(table="it1992")
 
     logfile = tmp_path / "assignment.log"
