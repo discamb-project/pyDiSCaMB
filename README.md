@@ -18,7 +18,7 @@ Currently (June 2025) not available as pre-built packages, manual installation i
 A environment file is provided. You also need a C++ compiler, which is in a seperate file depending on your operating system.
 Replace the brackets below with the appropriate choice (e.g. `compiler_macOS-latest.yml`).
 ```bash
-git clone --recursive git@github.com:discamb-project/pyDiSCaMB.git
+git clone --recursive https://github.com/discamb-project/pyDiSCaMB.git
 conda create -f pyDiSCaMB/conda/dev_env.yml
 conda env update --file pyDiSCaMB/conda/compiler_[any of "macOS", "ubuntu", "windows"]-latest.yml
 conda activate pydiscamb-dev
@@ -28,7 +28,7 @@ pip install pyDiSCaMB/
 ## Using Phenix
 With [Phenix](https://phenix-online.org/), installation is even simpler:
 ```bash
-git clone --recursive git@github.com:discamb-project/pyDiSCaMB.git
+git clone --recursive https://github.com/discamb-project/pyDiSCaMB.git
 phenix.python -m pip install pyDiSCaMB/
 ```
 Only tested on versions newer than around 2.0rc1-5500.

@@ -1,9 +1,9 @@
 [submodule "lib/discamb"]
 	path = lib/discamb
-	url = git@github.com:discamb-project/DiSCaMB.git
+	url = https://github.com/discamb-project/DiSCaMB.git
 [submodule "data/MATTS"]
 	path = data/MATTS
-	url = git@github.com:discamb-project/MATTS.git
+	url = https://github.com/discamb-project/MATTS.git
 [submodule "lib/pybind11_json"]
 	path = lib/pybind11_json
-	url = git@github.com:pybind/pybind11_json.git
+	url = https://github.com/pybind/pybind11_json.git
