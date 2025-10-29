@@ -19,7 +19,7 @@ A environment file is provided. You also need a C++ compiler, which is in a sepe
 Replace the brackets below with the appropriate choice (e.g. `compiler_macOS-latest.yml`).
 ```bash
 git clone --recursive https://github.com/discamb-project/pyDiSCaMB.git
-conda create -f pyDiSCaMB/conda/dev_env.yml
+conda env create --name pydiscamb-dev -f ./pyDiSCaMB/conda/dev_env.yml
 conda env update --file pyDiSCaMB/conda/compiler_[any of "macOS", "ubuntu", "windows"]-latest.yml
 conda activate pydiscamb-dev
 pip install pyDiSCaMB/
