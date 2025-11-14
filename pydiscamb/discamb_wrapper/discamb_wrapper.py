@@ -101,18 +101,16 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
         )
         n_spherical_iam_water = sum(1 for k in spherical_iam if "HOH" in k)
 
-        print("Total number of atoms: ", n_atoms, file=log)
-        print("Number of atoms by assgnment:\nTAAM atom type: ", n_multipolar, file=log)
+        print("Total number of atoms:", n_atoms, file=log)
+        print("Number of atoms by assgnment:\nTAAM atom type:", n_multipolar, file=log)
         print(
-            "IAM (Slater): ",
+            "IAM (Slater):",
             n_spherical_multipolar,
-            "(in HOH: ",
-            n_spherical_multipolar_water,
-            ")",
+            "f(in HOH: {n_spherical_multipolar_water})",
             file=log,
         )
         print(
-            "IAM (Gaussian): ",
+            "IAM (Gaussian):",
             n_spherical_iam,
             # "(HOH: ",
             # n_spherical_iam_water,
