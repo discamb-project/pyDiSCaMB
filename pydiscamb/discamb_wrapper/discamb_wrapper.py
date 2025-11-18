@@ -84,6 +84,15 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
                 pass
 
     def show_atom_type_assignment(self, log=sys.stdout, print=True):
+        """
+        Print and/or save a summary of atom type assignment.
+        
+        Remember to open log before writing to it and close it afterwards if it's not stdout.
+
+        Args:
+            log (file object, optional): File object where the summary is written. Defaults to sys.stdout.
+            print (bool, optional): A flag used to print the summary to stdout, even if log is different. Defaults to True.
+        """
         dual = log != sys.stdout and print == True
         ata = self.atom_type_assignment
 
