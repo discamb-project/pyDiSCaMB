@@ -19,9 +19,10 @@ taam_calculator = pydiscamb.DiscambWrapper(
     method=pydiscamb.FCalcMethod.TAAM,
 )
 
-n_typed = sum(1 for type, lcs in taam_calculator.atom_type_assignment.values() if lcs)
-n_total = len(taam_calculator.atom_type_assignment)
-print(f"Ratio of atoms with assigned type: {n_typed / n_total :.1%}")
+# Log the number of typed atoms
+log = open("epm_atom_typing.log", "w")
+taam_calculator.show_atom_type_assignment(log)
+log.close()
 
 # Set resolution
 miller_set = miller.build_set(
