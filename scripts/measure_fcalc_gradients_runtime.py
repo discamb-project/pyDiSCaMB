@@ -477,7 +477,25 @@ def download_pdb(code: str) -> Path:
     return out
 
 
+PDB_EXAMPLES_DIR = Path(__file__).parent / "examples"
+
 def get_structure_from_pdb(code: str) -> structure:
+    """
+    Use local preprocessed PDB: examples/<CODE>/<CODE>.pdb
+    (No download, no sanitize, no writing.)
+    """
+    code = code.upper()
+    pdb_path = PDB_EXAMPLES_DIR / code / f"{code}.pdb"
+    if not pdb_path.exists():
+        raise FileNotFoundError(f"Local PDB not found: {pdb_path}")
+
+    pdb_inp = iotbx.pdb.input(file_name=str(pdb_path))
+    model = mmtbx.model.manager(model_input=pdb_inp, log=null_out())
+    xrs = model.get_xray_structure()
+    return xrs
+
+
+"""def get_structure_from_pdb(code: str) -> structure:
 
     original = download_pdb(code)
     sanitized = sanitize_pdb(original)
@@ -502,7 +520,7 @@ def get_structure_from_pdb(code: str) -> structure:
     with open(code + "_typed.pdb", "w") as f:
         f.write(model.as_pdb_or_mmcif_string("pdb"))
 
-    return xrs
+    return xrs"""
 
 
 CctbxFFTWithCosSin = cctbx_factory(
@@ -716,13 +734,14 @@ def small_sweep_main():
                 calc.save("sctr_sweep.csv")
 
 
+
 def pdb_main():
     entries = [
         # ("4ZNN", 1.41),
         # ("5S5D", 2.90, "xray"),  # Very big
         ("6IPU", 1.99, "xray"),  # Very big and has DNA
         ("3NIR", 0.48, "xray"),  # Crambin
-        ("7ETN", 0.82, "xray"),  # Decent small molecule
+        #("7ETN", 0.82, "xray"),  # Decent small molecule
         ("7DER", 1.03, "xray"),  # Lysozyme
         ("6GER", 2.00, "xray"),  # 8k atoms after adding H
         ("6G1T", 1.90, "xray"),  # dna and protein
@@ -736,6 +755,7 @@ def pdb_main():
         xrs = get_structure_from_pdb(pdb_code)
         xrs.scattering_type_registry(table=table)
         xrs.scatterers().flags_set_grads(state=True)
+        print(f"{xrs.n_parameters() = }")
         # Compute values for progress bar
         n = xrs.scatterers().size()
         _w = DiscambWrapper(xrs, FCalcMethod.TAAM)
