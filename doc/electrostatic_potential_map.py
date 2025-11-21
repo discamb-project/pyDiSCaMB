@@ -1,4 +1,5 @@
 import pydiscamb
+import io
 from cctbx import miller
 from iotbx import pdb
 from pathlib import Path
@@ -20,9 +21,12 @@ taam_calculator = pydiscamb.DiscambWrapper(
 )
 
 # Log the number of typed atoms
-log = open("epm_atom_typing.log", "w")
-taam_calculator.show_atom_type_assignment(log)
-log.close()
+buffer = io.StringIO()
+taam_calculator.show_atom_type_assignment(buffer)
+log_content = buffer.getvalue()
+print(log_content)
+with open("epm_atom_typing.log","w") as f:
+    f.write(log_content)
 
 # Set resolution
 miller_set = miller.build_set(

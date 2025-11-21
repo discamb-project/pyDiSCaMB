@@ -112,20 +112,23 @@ class DiscambWrapper(PythonInterface, FactoryMethodsMixin):
         n_spherical_multipolar_water = sum(
             1 for k in spherical_multipolar if "HOH" in k
         )
-        if dual:
-            print_and_save(f"Total number of atoms: {n_atoms}", log)
-            print_and_save(f"Number of atoms by assignment:\nTAAM atom type: {n_multipolar}", log)
-            print_and_save(f"IAM (Slater): {n_spherical_multipolar} (in HOH: {n_spherical_multipolar_water})", log)
-            print_and_save(f"IAM (Gaussian): {n_spherical_iam}", log)
-        else:
-            print("Number of atoms by assignment:\nTAAM atom type:", n_multipolar, file=log)
-            print("Total number of atoms:", n_atoms, file=log)
-            print(
-                "IAM (Slater):",
-                n_spherical_multipolar,
-                "f(in HOH: {n_spherical_multipolar_water})",
-                file=log,
-            )
+        n_spherical_iam_water = sum(1 for k in spherical_iam if "HOH" in k)
+
+        print("Total number of atoms:", n_atoms, file=log)
+        print("Number of atoms by assignment:\nTAAM atom type:", n_multipolar, file=log)
+        print(
+            "IAM (Slater):",
+            n_spherical_multipolar,
+            f"(in HOH: {n_spherical_multipolar_water})",
+            file=log,
+        )
+        print(
+            "IAM (Gaussian):",
+            n_spherical_iam,
+            file=log,
+        )
+
+        if n_spherical_multipolar > 0:
             print(
                 "IAM (Gaussian):",
                 n_spherical_iam,
